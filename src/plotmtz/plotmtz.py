@@ -12,7 +12,9 @@ def run(args):
 
 def main(args, log):
 
-  p      = phil.phil_parse(args = args).plotmtz
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().plotmtz
   files  = list(p.input.mtz_1)
   print('Reading', files[0])
   obj    = mtz.object(files[0])

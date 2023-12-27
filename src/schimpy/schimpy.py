@@ -2,7 +2,6 @@ from __future__ import division, print_function
 from cctbx import miller
 import iotbx
 import sys
-import os
 import glob
 import phil
 import schimpy_classes as tls
@@ -19,7 +18,9 @@ def run(args):
 
 def main(args, log):
 
-  p           = phil.phil_parse(args = args).schimpy
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().schimpy
   tls_in      = [file_name for expression in p.input.tls_in.split()
                            for file_name  in glob.glob(expression)]
   tls_origin  = list(map(float, p.input.tls_origin))

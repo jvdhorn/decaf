@@ -250,7 +250,9 @@ def write_image(array, template, filename='image.img', encoding='int16'):
 
 def main(args, log):
 
-  p    = phil.phil_parse(args = args).stimpy
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().stimpy
   pref = p.input.image.split('/')[-1].split('.')[0]
   path = p.output.directory
   if path == 'stimpy':

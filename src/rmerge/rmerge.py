@@ -10,7 +10,9 @@ def run(args):
 
 def main(args, log):
 
-  p               = phil.phil_parse(args = args).rmerge
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().rmerge
   print('Reading', p.input.mtz_1)
   mtz_object      = mtz.object(p.input.mtz_1)
   miller_array    = mtz_object.crystals()[0].miller_set(False).array(mtz_object.get_column(

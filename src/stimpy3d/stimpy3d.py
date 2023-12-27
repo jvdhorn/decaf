@@ -41,7 +41,9 @@ def run(args):
 
 def main(args, log):
 
-  p      = phil.phil_parse(args = args).stimpy3d
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().stimpy3d
   pre    = 'stimpy3d_' + p.input.mtz_1.replace('.mtz', '_' + p.input.lbl_1.lower())
   drc    = (p.input.directory if p.input.directory is not None else pre) + '/'
   os.mkdir(drc)

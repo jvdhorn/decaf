@@ -16,7 +16,9 @@ def run(args):
 
 def main(args, log):
 
-  p      = phil.phil_parse(args = args).pattsize
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().pattsize
   print('Reading', p.input.map_1)
   mmm    = map_manager(p.input.map_1).as_map_model_manager()
   origin = flex.vec3_double([[0,0,0]])
