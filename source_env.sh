@@ -1,0 +1,3 @@
+export PYTHONPATH=${PYTHONPATH}:${PWD}
+export PATH=${PATH}:${PWD}/bin
+export PHENIX_TRUST_OTHER_ENV=1

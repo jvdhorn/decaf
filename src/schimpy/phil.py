@@ -1,0 +1,214 @@
+import libtbx.phil
+
+def phil_parse(args=None):
+  '''
+  Contains default parameters, will process commandline params and 
+  changes them
+  '''
+  # Default parameters
+  master_phil = libtbx.phil.parse("""
+  schimpy
+    {
+      input
+        .help = "Input files and parameters"
+      {
+        pdb_in = None
+          .type = path
+          .help = 'PDB file containing base model'
+        tls_in = None
+          .type = path
+          .help = 'Files containing TLS matrices'
+        tls_origin = 0 0 0
+          .type = strings
+          .help = 'Origin of the TLS-matrices, if not provided elsewhere'
+        tls_multipliers = 1 1 1
+          .type = strings
+          .help = 'Multipliers for input TLS matrices - for enforcing translation or rotation'
+        max_level = 1
+          .type = int
+          .help = 'Highest order TLS layer to analyze, -1 for all'
+        min_level = 1
+          .type = int
+          .help = 'Lowest order TLS layer to analyze'
+        reverse_levels = True
+          .type = bool
+          .help = 'Reverse the order levels in which motions are applied'
+        residues = '-1'
+          .type = ints
+          .help = 'Only randomize TLS groups if they include any of these residues, -1 for all'
+        sc_size = 1 1 1
+          .type = strings
+          .help = 'Supercell size in three directions'
+        n_models = 128
+          .type = strings
+          .help = 'Number of models to generate, multiple possible'
+        strategy = environments
+          .type = str
+          .help = '(DEPRECATED) Strategy to use for structure optimization'
+        amplitude = 1.0
+          .type = float
+          .help = 'Additional amplitude for atom shifts'
+        reset_b = True
+          .type = bool
+          .help = 'Set all B-factors to 0'
+        processes = 1
+          .type = int
+          .help = 'Number of simultaneous processes in paralellization'
+        seed = 0
+          .type = int
+          .help = 'Seed offset control (-1 for random)'
+        interval = 10
+          .type = float
+          .help = 'Time delay (s) between initial simulations'
+      }
+      environments
+        .help = "Environment definition parameters"
+      {
+        rigid_only = False
+          .type = bool
+          .help = 'Only include interactions between helices and/or sheets'
+        protein_only = True
+          .type = bool
+          .help = 'Only include interactions between proteins (not solvent or ligands)'
+        heavy_only = False
+          .type = bool
+          .help = 'Only include interactions between non-hydrogen elements'
+        cutoff = 3.
+          .type = float
+          .help = 'Distance cutoff for neighouring chains'
+        contact_stretch = 0.25
+          .type = float
+          .help = 'Relative distance from the contact points to the center of mass of the corresponding group'
+      }
+      regularization
+        .help = "Parameters involving regularization"
+      {
+        regularize = False
+          .type = bool
+          .help = 'Regularize model after applying shifts'
+        scope = 1
+          .type = int
+          .help = 'Regularize internally (0) or in environment (1)'
+      }
+      correlation
+        .help = "Correlation parameters"
+      {
+        correlate = True
+          .type = bool
+          .help = 'Correlate shifts in supercell'
+        correlate_fancy = True
+          .type = bool
+          .help = '(DEPRECTATED) Correlate shifts in supercell for each level'
+        skip_levels = -1
+          .type = ints
+          .help = 'Skip these levels when applying correlations'
+        sequential = 0
+          .type = int
+          .help = 'Correlate groups within level sequentially (-1 to reverse)'
+        insideout = 0
+          .type = int
+          .help = 'Correlate groups from the protein interior outward (-1 to reverse)'
+        use_contacts = True
+          .type = bool
+          .help = 'Correlate using contact points instead of vectors'
+        contact_midpoint = False
+          .type = bool
+          .help = 'Use midpoint between groups as contact point instead of bond mean'
+        contact_level = -1
+          .type = int
+          .help = 'Use this level to define contact points (-1 for highest)'
+        allow_bad_frac = 0.0
+          .type = float
+          .help = 'Random threshold for allowing bad swaps'
+        disallow_good_frac = 0.0
+          .type = float
+          .help = 'Random threshold for disallowing good swaps'
+        require_both = False
+          .type = bool
+          .help = 'Require the energies of both positions to go down, instead of the sum'
+        uncorrelate = False
+          .type = bool
+          .help = 'Invert the result of the swap allowance'
+        energy_percentile = 0
+          .type = float
+          .help = 'Only swaps involving energies higher than this percentile after randomizing are considered'
+        inherit = True
+          .type = bool
+          .help = 'Inherit contacts from highest order level; gives a finer sampling'
+        correlate_after = 1
+          .type = int
+          .help = '(DEPRECATED) Correlate after randomizing this level (-1 for all)'
+        shifts = True
+          .type = bool
+          .help = 'Correlate translation vectors (if not use_contacts)'
+        rotvecs = True
+          .type = bool
+          .help = 'Correlate rotation vectors (if not use_contacts)'
+        weights = 1.5
+          .type = float
+          .help = 'Weights are set to n_interactions to the power of this number'
+        spring_weights = 2.
+          .type = float
+          .help = 'The spring force scales with the distance to this power'
+      }
+      params
+        .help = "Control running"
+      {
+        high_resolution = 2.0
+          .type = float
+          .help = 'High resolution limit for structure factor calculation'
+        low_resolution = 0.0
+          .type = float
+          .help = 'Low resolution limit for structure factor calculation'
+        k_sol = 0.0
+          .type = float
+          .help = 'Flat bulk solvent parameter k'
+        b_sol = 0.0
+          .type = float
+          .help = 'Flat bulk solvent parameter b'
+        b_cart = 0 0 0 0 0 0
+          .type = strings
+          .help = 'Flat bulk solvent anistropic scale matrix'
+        wavelength = 1.
+          .type = float
+          .help = 'Wavelength for determining the resolution cutoff'
+        fft_mem = 0.
+          .type = float
+          .help = 'Wait for this amount of memory (GB) to be available before starting the fft'
+      }
+      output
+        .help = "output files"
+      {
+        write_pdb = 1
+          .type = int
+          .help = 'Write PDB-file containting this many structures (-1 for all)'
+        write_mmcif = False
+          .type = bool
+          .help = 'Write mmCIF file INSTEAD OF pdb'
+        write_mtz = True
+          .type = bool
+          .help = 'Write MTZ file?'
+        write_b = True
+          .type = bool
+          .help = 'Write rmsf B-factors?'
+        pdb_out = supercell_out.pdb
+          .type = path
+          .help = 'Name of output file containing supercell'
+        superpose = False
+          .type = bool
+          .help = 'Superpose structures in the pdb'
+        mtz_out = supercell_avg.mtz
+          .type = path
+          .help = 'Name of MTZ output file'
+        b_out   = ensemble_b.json
+          .type = path
+          .help = 'Json file containing rmsf B-factors'
+      }
+    }
+    """)
+
+  interpreter = master_phil.command_line_argument_interpreter()
+  arguments = [interpreter.process(arg) for arg in args]
+  working_phil = master_phil.fetch(sources = arguments)
+
+  return working_phil.extract()
