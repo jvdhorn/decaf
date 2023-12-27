@@ -19,7 +19,7 @@ def phil_parse(args=None):
       params
         .help = "Control running"
       {
-        sc_size = 5 5 10
+        sc_size = 1 1 1
           .type = strings
           .help = 'Supercell size'
         box = 1 1 1

@@ -15,13 +15,13 @@ def phil_parse(args=None):
         mtz_1 = None
           .type = path
           .help = 'Input mtz'
+        lbl_1 = IDFF
+          .type = str
+          .help = 'Array of interest'
       }
       params
         .help = "Running parameters"
       {
-        array = IDFF
-          .type = str
-          .help = 'Array of interest'
         space_group = None
           .type = str
           .help = 'Space group symbol'

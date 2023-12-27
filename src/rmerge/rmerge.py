@@ -16,7 +16,7 @@ def main(args, log):
   print('Reading', p.input.mtz_1)
   mtz_object      = mtz.object(p.input.mtz_1)
   miller_array    = mtz_object.crystals()[0].miller_set(False).array(mtz_object.get_column(
-                    p.params.array).extract_values().as_double()).expand_to_p1()
+                    p.input.lbl_1).extract_values().as_double()).expand_to_p1()
   new_space_group = p.params.space_group or str(miller_array.space_group_info())
   new_symm        = crystal.symmetry(unit_cell          = miller_array.unit_cell(),
                                      space_group_symbol = new_space_group)
