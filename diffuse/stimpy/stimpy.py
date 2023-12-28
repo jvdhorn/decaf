@@ -18,8 +18,8 @@ def extract_data(frame, scale=None):
 
   detector = frame.get_detectorbase()
   
-  if hasattr(detector, 'header') and 'Added=' in detector.header:
-    factor  = int(float(detector.header.split('Added=')[1].split(';')[0].strip()))
+  if hasattr(detector, 'header') and 'Added=' in str(detector.header):
+    factor  = int(float(str(detector.header).split('Added=')[1].split(';')[0].strip()))
     data   -= factor
 
   if scale is not None: data = data/scale
@@ -229,13 +229,13 @@ def write_image(array, template, filename='image.img', encoding='int16'):
     head_str  = 'Added={};'.format(addfactor)
     header    = template.get_detectorbase().header
     headlines = header.splitlines()
-    if 'Added' in header:
-      n_line            = next(n for n, line in enumerate(headlines) if 'Added' in line)
+    if 'Added' in str(header):
+      n_line            = next(n for n, line in enumerate(headlines) if 'Added' in str(line))
       headlines[n_line] = head_str
     else:
-      n_line            = max(n for n, line in enumerate(headlines) if '=' in line)
+      n_line            = max(n for n, line in enumerate(headlines) if '=' in str(line))
       headlines.insert(n_line+1, head_str)
-    header    = '\n'.join(headlines)
+    header    = '\n'.join(map(str, headlines))
     head_len  = int(header.split('HEADER_BYTES=')[1].split(';')[0].strip())
     header    = '{:{}}'.format(header, head_len)[:head_len]
 
