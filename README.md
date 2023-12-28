@@ -42,15 +42,15 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 * `cutoff` - distance cutoff for intermolecular interactions (default `3.0`)
 * `weights` - power for the number of interactions (default `1.5`)
 * `max_level` - highest level of the TLS-hierarchy to include (default `1`)
-* `high_resolution` - high resolution cutoff (default 2)
-* `k_sol` and `b_sol` - bulk solvent parameters (default `0.35` and `50. 0`)
+* `high_resolution` - high resolution cutoff (default `2.0`)
+* `k_sol` and `b_sol` - bulk solvent parameters (default `0.35` and `50.0`)
 * `processes` - number of parallel processes (default `1`, watch memory usage!)
 * `models` - number of models to simulate (default `128`)
 
 ### stimpy
 * `image` - raw image file
 * `polar` - polarization-corrected intermediate background
-* `bin_photons` - bin regions within this range of counts (default `1`)
+* `bin_photons` - bin regions within this range of counts (default `1.0`)
 * `N` - expected number of independent rotations (default `1.0`)
 * `bragg_mask_median_filter` - kernel size of the median filter (default `9`)
 * `bragg_mask_dilation` - kernel size of the mask dilation (default `7`)
@@ -74,7 +74,7 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 
 ### plotmtz
 * `mtz_1` - input mtz-file (can be multiple)
-* `lbl_1` - array of interest (default IDFF)
+* `lbl_1` - array of interest (default `IDFF`)
 * `log` - plot logarithmic distributions (default `True`)
 * `resolution` - set low and high resolution (eg `"3.6 3.4"`)
 
@@ -83,18 +83,18 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 * `mtz_2` - second input mtz-file
 * `lbl_1` - first array of interest (default `IDFF`)
 * `lbl_2` - second array of interest (default `IDFF`)
-* `bins` - number of resolution shells
+* `bins` - number of resolution shells (default `10`)
 * `hlim` and `klim` and `llim` - limit h, k, and l (e.g. `"-20 20"`)
 
 ### rmbragg
 * `mtz_1` - input mtz-file
 * `sc_size` - supercell size (e.g. `"5 5 10"`)
 * `box` - number of voxels to remove around every Bragg position (e.g. `"1 1 1"`)
-* `keep` - invert selection (default `False`) 
+* `keep` - invert selection (default `False`)
 
 ### rmerge
 * `mtz_1` - input mtz-file
-* `lbl_1` - array of interest (default IDFF)
+* `lbl_1` - array of interest (default `IDFF`)
 * `space_group` - new space group (symbol or number, e.g. `96`)
 
 ### mtzstats
@@ -119,7 +119,7 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 
 ### filter_mtz
 * `mtz_1` - input mtz-file
-* `lbl_1` - array of interest (default IDFF)
+* `lbl_1` - array of interest (default `IDFF`)
 * `size` - filter size (default `1`)
 * `filter` - filter type (`gaussian` or `uniform`, default `gaussian`)
 
