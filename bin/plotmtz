@@ -1,3 +1,3 @@
 #!/bin/sh
 
-phenix.python -m src.plotmtz.__init__ "$@"
+cctbx.python -m src.plotmtz.__init__ "$@"
