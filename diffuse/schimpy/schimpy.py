@@ -83,7 +83,10 @@ def main(args, log):
     pool.close()
     pool.join()
 
-  except:
+  except Exception as e:
+    print('Oopsie, something went wrong!')
+    print(''.join(traceback.format_exception(*sys.exc_info())))
+
     pool.terminate()
     pool.join()
 
