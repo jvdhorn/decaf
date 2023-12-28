@@ -13,5 +13,5 @@ setup(  name                = 'diffuse',
                                             exclude = ( )
                                             ),
         include_package_data= True,
-        classifiers         = (  ),
+        classifiers         = [ ],
         )
