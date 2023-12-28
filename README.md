@@ -1,10 +1,10 @@
 A Python package for simulating diffuse scattering of X-rays in protein crystals
 
 # Requirements
-* Phenix/cctbx: runs in cctbx.python (2.7.x / 3.x) and depends on cctbx modules
-* Numpy
-* Scipy
-* Matplotlib
+* cctbx/phenix: runs in cctbx.python (2.7.x / 3.x) and depends on cctbx modules
+* numpy
+* scipy
+* matplotlib
 
 # Usage
 Make sure `cctbx.python` is available.
@@ -29,16 +29,16 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 # Overview of modules
 * `schimpy` - SuperCell Hierarchical Model
 * `stimpy` - Statistical Image-processing
-* `slicemtz` - Viewing utility for mtz-files
-* `submtz` - Subtract mtz-files
+* `slicemtz` - Viewing utility for mtz-file
+* `submtz` - Subtract two mtz-files
 * `plotmtz` - Plot intensity distributions in mtz-files
 * `ccmtz` - Calculate correlation coefficient and R1-values between mtz-files
-* `rmbragg` - Remove supercell voxels around Bragg positions
-* `rmerge` - Calculate R-int
-* `mtzstats` - Show various statistics for mtz-files
-* `stimpy3d` - Apply the stimpy-procedure to resolution bins in mtz-files
+* `rmbragg` - Remove supercell voxels around Bragg positions in mtz-file
+* `rmerge` - Calculate R-int of mtz-file
+* `mtzstats` - Show various statistics for mtz-file
+* `stimpy3d` - Apply the stimpy-procedure to resolution bins in mtz-file
 * `pattsize` - Estimate the size of the Patterson origin-peak
-* `mtz2txt` - Extract raw intensities from mtz-files
+* `mtz2txt` - Extract raw intensities from mtz-file
 * `filter_mtz` - Apply a kernel-filter to an mtz-file
 * `pdbrad` - Estimate the size of a pdb-object
 
