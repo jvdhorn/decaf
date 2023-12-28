@@ -1,6 +1,6 @@
 import sys
 
-import rmerge
+from . import rmerge
 
 
 def main():

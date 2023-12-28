@@ -2,7 +2,7 @@ from __future__ import division, print_function
 from scitbx.array_family import flex
 from iotbx import mtz
 from scipy import ndimage, stats, optimize
-import phil
+from . import phil
 import matplotlib.pyplot as plt
 import numpy as np
 import os

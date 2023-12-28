@@ -1,6 +1,6 @@
 import sys
 
-import rmbragg
+from . import rmbragg
 
 
 def main():

@@ -1,6 +1,6 @@
 import sys
 
-import plotmtz
+from . import plotmtz
 
 
 def main():

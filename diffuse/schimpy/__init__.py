@@ -1,6 +1,6 @@
 import sys
 
-import schimpy
+from . import schimpy
 
 
 def main():

@@ -1,5 +1,5 @@
 from __future__ import division, print_function
-import phil
+from . import phil
 from iotbx import mtz
 from cctbx import crystal
 

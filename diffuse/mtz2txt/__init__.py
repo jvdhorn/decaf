@@ -1,6 +1,6 @@
 import sys
 
-import mtz2txt
+from . import mtz2txt
 
 
 def main():

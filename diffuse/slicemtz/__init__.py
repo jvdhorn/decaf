@@ -1,6 +1,6 @@
 import sys
 
-import slicemtz
+from . import slicemtz
 
 
 def main():

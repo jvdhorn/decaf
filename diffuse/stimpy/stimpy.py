@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt, colors
 import os
 import numpy as np
 import dxtbx
-import phil
+from . import phil
 
 np.random.seed(1337)
 colours  = np.concatenate(( ((1,1,1),), np.random.rand(9999, 3) ))

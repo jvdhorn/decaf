@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 from scitbx.array_family import flex
 from iotbx import mtz
-import phil
+from . import phil
 import matplotlib.pyplot as plt
 
 def run(args):
