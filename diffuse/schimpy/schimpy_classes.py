@@ -193,9 +193,9 @@ def tls_from_json(input_file, max_level, min_level, cache, mult, log=None):
           groups[n] = TLS(t                = modes['T'],
                           l                = modes['L'],
                           s                = modes['S'],
-                          amp              = modes['amplitudes'].values()[0],
+                          amp              = list(modes['amplitudes'].values())[0],
                           mult             = mult,
-                          origin           = group['tls_origins'].values()[0],
+                          origin           = list(group['tls_origins'].values())[0],
                           selection_string = sele_str,
                           selection        = selection,
                           log              = log)
@@ -1459,7 +1459,7 @@ class Environments():
           # Filter by reference vectors
           if min((ref_round - vector).dot()) <= 1.:
             vectors.append((vector,(j_seq, symm_op)))
-      environment = zip(*sorted(vectors))[1]
+      environment = list(zip(*sorted(vectors)))[1]
       self.sorted_environments[i_seq] = environment
 
     environ = [value for key, value in sorted(self.sorted_environments.items())]
@@ -1752,7 +1752,7 @@ class Environments():
     model         = hierarchy.models()[0]
     chains        = model.chains()
     chain_id_iter = chain_id_generator(start=1)
-    i_seq, env    = self.sorted_environments.items()[0]
+    i_seq, env    = list(self.sorted_environments.items())[0]
     chain_ids     = []
     for chain in chains: chain.id = 'A'
     for asu in env:
