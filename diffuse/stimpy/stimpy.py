@@ -246,7 +246,7 @@ def write_image(array, template, filename='image.img', encoding='int16'):
     with open(filename, 'w') as writer:
       writer.write(header)
       writer.write('')
-      writer.write(array.tobytes())
+      writer.write(str(array.tobytes()))
 
 def main(args, log):
 
