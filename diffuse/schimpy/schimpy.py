@@ -21,8 +21,11 @@ def main(args, log):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().schimpy
-  tls_in      = [file_name for expression in p.input.tls_in.split()
+  if p.input.tls_in:
+    tls_in    = [file_name for expression in p.input.tls_in.split()
                            for file_name  in glob.glob(expression)]
+  else:
+    tls_in    = [p.input.pdb_in]
   tls_origin  = list(map(float, p.input.tls_origin))
   multipliers = list(map(float, p.input.tls_multipliers * 3))[:3]
   sc_size     = list(map(int, p.input.sc_size))
