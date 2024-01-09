@@ -24,7 +24,12 @@ Optional: install package with
 cctbx.python -m pip install .
 ```
 
-Command-line parameters can be provided using Phil syntax. Run any of the modules without arguments to get an overview of the available parameters for that module.
+Command-line parameters can be provided using Phil syntax. For example:
+```
+schimpy pdb_in=structure.pdb tls_in=optimised_model.json
+```
+
+Run any of the modules without arguments to get an overview of the available parameters for that module.
 
 # Overview of modules
 * `schimpy` - SuperCell Hierarchical Model
