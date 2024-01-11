@@ -17,10 +17,10 @@ def main(args, log):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().slicemtz
-  print('Reading', p.input.mtz_1)
-  obj     = mtz.object(p.input.mtz_1)
+  print('Reading', p.input.mtz)
+  obj     = mtz.object(p.input.mtz)
   labels  = obj.column_labels()
-  label   = p.input.lbl_1 if p.input.lbl_1 in labels else labels[3]
+  label   = p.input.lbl if p.input.lbl in labels else labels[3]
   arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(
             label).extract_values()).expand_to_p1()
   data    = arr.data().as_numpy_array()
@@ -168,7 +168,7 @@ def main(args, log):
   cnt  = p.params.contours
   dstr = p.params.distribution
   fig  = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 8, False, dstr)
-  fig.savefig(p.input.mtz_1.replace('.mtz', name+'.png'))
+  fig.savefig(p.input.mtz.replace('.mtz', name+'.png'))
 
   if p.params.show:
     fig = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 1, True, dstr)

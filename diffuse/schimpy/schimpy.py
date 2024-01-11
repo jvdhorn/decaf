@@ -145,7 +145,7 @@ def model_worker(n_model):
                       include_shifts=p.correlation.shifts,
                       include_rotvecs=p.correlation.rotvecs,
                       weight_exp=p.correlation.weights,
-                      spring_weights=p.correlation.spring_weights,
+                      spring_weights=p.correlation.force_power,
                       use_contacts=p.correlation.use_contacts,
                       correlate_after=p.correlation.correlate_after,
                       use_com_midpoint=p.correlation.contact_midpoint,
@@ -162,7 +162,7 @@ def model_worker(n_model):
                       protein_only=p.environments.protein_only,
                       heavy_only=p.environments.heavy_only,
                       dist_cutoff=p.environments.cutoff,
-                      stretch=p.environments.contact_stretch,
+                      stretch=p.environments.stretch,
                       regularize=p.regularization.regularize,
                       scope=p.regularization.scope,
                       )
@@ -179,7 +179,7 @@ def model_worker(n_model):
 
       print('Calculating f_model {}'.format(n_model))
       f_model = model.calc_f_model(high_resolution = p.params.high_resolution,
-                                   low_resolution  = p.params.low_resolution or None,
+                                   low_resolution  = p.params.low_resolution,
                                    k_sol           = p.params.k_sol,
                                    b_sol           = p.params.b_sol,
                                    b_cart          = list(map(float,p.params.b_cart)),

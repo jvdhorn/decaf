@@ -15,10 +15,10 @@ def main(args, log):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().filter_mtz
-  print('Reading', p.input.mtz_1)
-  obj     = mtz.object(p.input.mtz_1)
+  print('Reading', p.input.mtz)
+  obj     = mtz.object(p.input.mtz)
   arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(
-            p.input.lbl_1).extract_values()).expand_to_p1()
+            p.input.lbl).extract_values()).expand_to_p1()
   size    = p.params.size if p.params.size[1:] else p.params.size[0]
   filt    = gaussian_filter if p.params.filter == 'gaussian' else uniform_filter
   print('Applying {} filter with size {}'.format(p.params.filter, size))
@@ -37,9 +37,9 @@ def main(args, log):
   bfilt   = filt(bgrid, size)[tuple((ind + offset).T)]
   arr._data = flex.double(afilt/bfilt)
   print('Writing new MTZ')
-  mtzobj  = arr.as_mtz_dataset(column_root_label=p.input.lbl_1, column_types='J')
+  mtzobj  = arr.as_mtz_dataset(column_root_label=p.input.lbl, column_types='J')
   if p.output.mtz_out is None:
-    name = p.input.mtz_1.replace('.mtz','_filt.mtz')
+    name = p.input.mtz.replace('.mtz','_filt.mtz')
   else:
     name = p.output.mtz_out
   mtzobj.mtz_object().write(name)

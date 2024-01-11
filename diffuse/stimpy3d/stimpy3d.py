@@ -44,13 +44,13 @@ def main(args, log):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().stimpy3d
-  pre    = 'stimpy3d_' + p.input.mtz_1.replace('.mtz', '_' + p.input.lbl_1.lower())
+  pre    = 'stimpy3d_' + p.input.mtz.replace('.mtz', '_' + p.input.lbl.lower())
   drc    = (p.input.directory if p.input.directory is not None else pre) + '/'
   os.mkdir(drc)
-  print('Reading', p.input.mtz_1)
-  obj   = mtz.object(p.input.mtz_1)
+  print('Reading', p.input.mtz)
+  obj   = mtz.object(p.input.mtz)
   first = obj.crystals()[0].miller_set(False).array(obj.get_column(
-          p.input.lbl_1).extract_values()).expand_to_p1()
+          p.input.lbl).extract_values()).expand_to_p1()
   first = first.select(first.data() > p.input.cutoff)
   d_min = first.d_spacings().data().min_max_mean().min
   first.setup_binner(d_max=float('inf'), d_min=d_min, n_bins=p.input.bins)
@@ -89,7 +89,7 @@ def main(args, log):
 
     print()
     if p.input.write:
-      name = p.input.mtz_1.replace('.mtz','_region_{}_counts.txt'.format(n))
+      name = p.input.mtz.replace('.mtz','_region_{}_counts.txt'.format(n))
       with open(drc + name, 'w') as txt:
         for val in data_sel: print(val, end='\n', file=txt)
       plt.figure()
@@ -97,7 +97,7 @@ def main(args, log):
       x    = (x[:-1] + x[1:]) / 2
       pdf  = skewnorm.pdf(x)
       plt.plot(x, pdf * mask.sum() * (x[1] - x[0]))
-      name = p.input.mtz_1.replace('.mtz','_region_{}_statistics.png'.format(n))
+      name = p.input.mtz.replace('.mtz','_region_{}_statistics.png'.format(n))
       plt.savefig(drc + name)
       plt.close()
 
@@ -130,7 +130,7 @@ def main(args, log):
   background_array = first.customized_copy(data = flex.double(background[keep]))
   signal_array     = first.customized_copy(data = flex.double(signal[keep]))
 
-  dataset = processed_array.as_mtz_dataset(column_root_label = p.input.lbl_1,
+  dataset = processed_array.as_mtz_dataset(column_root_label = p.input.lbl,
                                            column_types      = 'J')
   dataset.add_miller_array(background_array,
                            column_root_label = 'BACKGROUND',

@@ -12,22 +12,29 @@ def phil_parse(args=None):
       input
         .help = "Input files"
       {
-        mtz_1 = None
+        mtz = None
           .type = path
           .help = 'MTZ input file'
-        lbl_1 = IDFF
+        lbl = IDFF
           .type = str
           .help = 'Desired array label'
         cutoff = -9e99
           .type = float
           .help = 'Only consider intensities larger than this value'
       }
+      params
+        .help = "Running parameters"
+      {
+        sg = None
+          .type = str
+          .help = 'Space group symbol or number'
+      }
     }
     """)
 
   for i, arg in enumerate(args):
     if '=' not in arg:
-      args[i] = 'mtz_1='+arg
+      args[i] = 'mtz='+arg
   interpreter = master_phil.command_line_argument_interpreter()
   arguments = [interpreter.process(arg) for arg in args]
   working_phil = master_phil.fetch(sources = arguments)

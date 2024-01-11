@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 from scitbx.array_family import flex
 from iotbx import mtz
+from cctbx import crystal
 from . import phil
 import numpy as np
 
@@ -14,10 +15,10 @@ def main(args, log):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().mtzstats
-  print('Reading', p.input.mtz_1)
-  obj    = mtz.object(p.input.mtz_1)
+  print('Reading', p.input.mtz)
+  obj    = mtz.object(p.input.mtz)
   first  = obj.crystals()[0].miller_set(False).array(obj.get_column(
-           p.input.lbl_1).extract_values()).expand_to_p1()
+           p.input.lbl).extract_values().as_double()).expand_to_p1()
   npdata = first.data().select(first.data() > p.input.cutoff).as_numpy_array()
   rms    = (npdata - npdata.mean()).std()
   norm   = (npdata - npdata.min()) / (npdata.max() - npdata.min())
@@ -34,3 +35,9 @@ def main(args, log):
   print('   >  normalized:', nrms)
   print('Var[I]/Mean[I]^2:', spcont)
   print('Shannon entropy :', entropy)
+
+  sg     = p.params.sg or str(first.space_group_info())
+  symm   = crystal.symmetry(unit_cell=first.unit_cell(), space_group_symbol=sg)
+  merged = first.customized_copy(crystal_symmetry = symm).merge_equivalents()
+  symbol = symm.space_group_info().symbol_and_number()
+  print('R_merge         :', merged.r_merge(), '(for {})'.format(symbol))

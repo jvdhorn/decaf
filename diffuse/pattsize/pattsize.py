@@ -19,8 +19,8 @@ def main(args, log):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().pattsize
-  print('Reading', p.input.map_1)
-  mmm    = map_manager(p.input.map_1).as_map_model_manager()
+  print('Reading', p.input.map)
+  mmm    = map_manager(p.input.map).as_map_model_manager()
   origin = flex.vec3_double([[0,0,0]])
   cell   = mmm.crystal_symmetry().unit_cell()
   data   = mmm.map_data().as_numpy_array()

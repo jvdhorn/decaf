@@ -193,12 +193,12 @@ def image_region_statistics(array, regions, threshold=None, save_img=True, write
   
   return background, signal, bad
 
-def remove_bragg(array, polar, dilation=7, median_filter_size=9, value=None):
+def remove_bragg(array, radial, dilation=7, median_filter_size=9, value=None):
 
   array          = array.copy()
   if value is None: value = min(array.min(), 0)
   median         = ndimage.median_filter(array, median_filter_size)
-  mask           = array - median > polar
+  mask           = array - median > radial
   dilated        = ndimage.maximum_filter(mask, dilation)
   array[dilated] = value
 
@@ -266,21 +266,21 @@ def main(args, log):
   if not p.output.show:
     plt.switch_backend('agg')
 
-  polar_scale  = p.params.polar_scale
+  radial_scale  = p.params.radial_scale
   image_scale  = p.params.image_scale
-  bin_photons  = p.params.bin_photons
+  bin_counts   = p.params.bin_counts
   
-  # Prepare polar
-  polar        = dxtbx.load(p.input.polar)
-  polar_data   = extract_data(polar, scale=polar_scale)
+  # Prepare radial
+  radial        = dxtbx.load(p.input.radial)
+  radial_data   = extract_data(radial, scale=radial_scale)
   
-  # Bin polar data and plot statistics
-  polar_binned = polar_data // bin_photons
-  region_statistics(polar_binned)
-  plot_regions(polar_binned, show=p.output.show, filename='{}/{}_values.png'.format(path, pref))
+  # Bin radial data and plot statistics
+  radial_binned = radial_data // bin_counts
+  region_statistics(radial_binned)
+  plot_regions(radial_binned, show=p.output.show, filename='{}/{}_values.png'.format(path, pref))
 
-  # Convert polar data into contiguous regions and plot statistics
-  regions      = identify_regions(array          = polar_binned,
+  # Convert radial data into contiguous regions and plot statistics
+  regions      = identify_regions(array          = radial_binned,
                                   diagonal       = p.params.diagonal,
                                   interpolate    = p.params.interpolate_panels,
                                   threshold      = p.params.threshold,
@@ -295,9 +295,9 @@ def main(args, log):
   image        = dxtbx.load(p.input.image)
   image_data   = extract_data(image, scale=image_scale)
   nobragg, bmask, bfill = remove_bragg(image_data,
-                                polar_data,
-                                dilation           = p.params.bragg_mask_dilation,
-                                median_filter_size = p.params.bragg_mask_median_filter)
+                                radial_data,
+                                dilation           = p.params.dilation_size,
+                                median_filter_size = p.params.median_size)
 
   # Determine background
   background, signal, badmask = image_region_statistics(nobragg,
