@@ -61,6 +61,9 @@ def phil_parse(args=None):
         zoom = None
           .type = floats
           .help = 'Zoom around index: "x, y, [number of voxels to pad]"'
+        dotsize = 1
+          .type = int
+          .help = 'Width of the axes and Bragg position indicators (higher = thinner)'
         filter_size = 0
           .type = int
           .help = 'Before plotting, apply Gaussian filter with this sigma'
