@@ -8,10 +8,6 @@ import numpy as np
 import dxtbx
 from . import phil
 
-np.random.seed(1337)
-colours  = np.concatenate(( ((1,1,1),), np.random.rand(9999, 3) ))
-rnd_cmap = colors.LinearSegmentedColormap.from_list('rnd_cmap', colours, N=10000)
-
 def extract_data(frame, scale=None):
 
   data = frame.get_raw_data().as_numpy_array()
@@ -69,9 +65,20 @@ def identify_regions(array, diagonal=True, interpolate=True, threshold=None, min
 
 def plot_regions(array, show=False, filename='regions.png'):
   
-  plt.figure()
-  plt.imshow(array, cmap=rnd_cmap)
-  plt.savefig(filename, dpi=200)
+  ratio = array.shape[1] / array.shape[0]
+  cmap  = colors.ListedColormap(((1,1,1),)+plt.get_cmap('tab10').colors)
+  zero  = array == array.min()
+  array = array % 10 + 1
+  array[zero] = 0
+
+  plt.figure(figsize = (6, ratio * 6))
+  plt.imshow(array, cmap=cmap)
+  plt.gca().set_axis_off()
+  plt.subplots_adjust(top=1,bottom=0,right=1,left=0,hspace=0,wspace=0)
+  plt.margins(0,0)
+  plt.gca().xaxis.set_major_locator(plt.NullLocator())
+  plt.gca().yaxis.set_major_locator(plt.NullLocator())
+  plt.savefig(filename, dpi=200, bbox_inches='tight', pad_inches=0)
 
 def region_statistics(array):
   
