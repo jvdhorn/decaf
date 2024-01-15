@@ -107,7 +107,7 @@ def main(args, log):
   mask  = mask.T
 
   # Increase mask size
-  factor  = p.params.dotsize * 2 + 1
+  factor  = max(0, p.params.dotsize) * 2 + 1
   bigmask = np.full(np.array(mask.shape)*factor, np.nan)
   bigmask[factor//2::factor,factor//2::factor] = mask
   mask    = bigmask
