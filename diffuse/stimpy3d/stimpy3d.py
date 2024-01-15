@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-def chapman_stats(N, mean, var, skew):
+def nw_stats(N, mean, var, skew):
 
   if skew < 0: skew = 0
   Sigma = (N**2 * skew/2.)**(1./3) * var**(1./2)
@@ -77,9 +77,9 @@ def main(args, log):
     m, v, s         = skewnorm.stats(moments='mvs')
     print('Fit stats: mean={:.2f}; var={:.2f}; skew={:.2f}'.format(m, v, s))
     if p.input.use_fit_params: mean, var, skew = m, v, s
-    Sigma, Var, Mu  = chapman_stats(p.input.N, mean, var, skew)
-    print('Chapman stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
-    muzerofunc      = lambda x: chapman_stats(x, mean, var, skew)[-1]**2
+    Sigma, Var, Mu  = nw_stats(p.input.N, mean, var, skew)
+    print('Noisy Wilson stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
+    muzerofunc      = lambda x: nw_stats(x, mean, var, skew)[-1]**2
     muzero          = optimize.minimize_scalar(muzerofunc, bounds=(0,9e9),
                                                method='bounded').x
     print('Mu-zero found at N={}'.format(muzero))

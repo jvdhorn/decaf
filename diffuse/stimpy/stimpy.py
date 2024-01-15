@@ -108,7 +108,7 @@ def filter_sigma(array, sigma=3, repeat=99):
       repeat  = 0
   return array
 
-def chapman_stats(N, mean, var, skew):
+def nw_stats(N, mean, var, skew):
 
   if skew < 0: skew = 0
   Sigma = (N**2 * skew/2.)**(1./3) * var**(1./2)
@@ -116,7 +116,7 @@ def chapman_stats(N, mean, var, skew):
   Mu    = mean - Sigma
   return (Sigma, Var, Mu)
 
-def chapman_stats_discrete(N, mean, var):
+def nw_stats_discrete(N, mean, var):
 
   Sigma = (N * max(var - mean, 0)) ** (1./2)
   Mu    = mean - Sigma
@@ -172,13 +172,13 @@ def image_region_statistics(array, regions, threshold=None, save_img=True, write
       mean, var, skew = fitmean, fitvar, fitskew
    
     if not discrete:
-      Sigma, Var, Mu = chapman_stats(N, mean, var, skew)
-      print('Chapman stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
+      Sigma, Var, Mu = nw_stats(N, mean, var, skew)
+      print('Noisy Wilson stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
       print()
 
     else:
-      Sigma, Mu = chapman_stats_discrete(N, mean, var)
-      print('Chapman stats: Sigma={:.2f}; Mu={:.2f}'.format(Sigma, Mu))
+      Sigma, Mu = nw_stats_discrete(N, mean, var)
+      print('Noisy Wilson stats: Sigma={:.2f}; Mu={:.2f}'.format(Sigma, Mu))
       print()
 
     if save_img and template is not None:
