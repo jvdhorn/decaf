@@ -43,6 +43,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `stimpy3d` - Apply the stimpy-procedure to resolution bins in mtz-file
 * `pattsize` - Estimate the size of the Patterson origin-peak
 * `mtz2txt` - Extract raw intensities from mtz-file
+* `map2mtz` - Convert map-file with experimental intensities to mtz
 * `filter_mtz` - Apply a kernel-filter to an mtz-file
 * `pdbrad` - Estimate the size of a pdb-object
 
@@ -127,6 +128,10 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
 * `resolution` - set low and high resolution (eg `"3.6 3.4"`)
+
+### map2mtz
+* `map` - input map-file
+* `resolution` - set resolution limit (eg `2.0`)
 
 ### filter_mtz
 * `mtz` - input mtz-file
