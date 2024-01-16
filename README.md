@@ -57,7 +57,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `cutoff` - distance cutoff for intermolecular interactions (default `3.0`)
 * `weights` - power for the number of interactions (default `1.5`)
 * `max_level` - highest level of the TLS-hierarchy to include (default `1`)
-* `high_resolution` - resolution cutoff (default `2.0`)
+* `resolution` - resolution limit (default `2.0`)
 * `k_sol` and `b_sol` - bulk solvent parameters (default `0.35` and `50.0`)
 * `processes` - number of parallel simulations (default `1`, watch memory usage!)
 * `interval` - number of seconds between consecutive simulations (default `1.0`)

@@ -154,12 +154,9 @@ def phil_parse(args=None):
       params
         .help = "Control running"
       {
-        high_resolution = 2.0
+        resolution = 2.0
           .type = float
-          .help = 'High resolution limit for structure factor calculation'
-        low_resolution = None
-          .type = float
-          .help = 'Low resolution limit for structure factor calculation'
+          .help = 'Resolution limit for structure factor calculation'
         k_sol = 0.35
           .type = float
           .help = 'Flat bulk solvent parameter k'
