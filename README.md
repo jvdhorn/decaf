@@ -59,6 +59,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `max_level` - highest level of the TLS-hierarchy to include (default `1`)
 * `resolution` - resolution limit (default `2.0`)
 * `k_sol` and `b_sol` - bulk solvent parameters (default `0.35` and `50.0`)
+* `tls_multipliers` - multipliers for all input tls matrices (e.g. `"1.0 0.0 0.0"`)
 * `processes` - number of parallel simulations (default `1`, watch memory usage!)
 * `interval` - number of seconds between consecutive simulations (default `1.0`)
 * `n_models` - number of supercells to simulate (default `128`)

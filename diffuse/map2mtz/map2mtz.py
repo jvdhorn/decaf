@@ -27,8 +27,7 @@ def main(args, log):
   offset  = x//2, y//2, z//2
 
   cell    = list(reader.unit_cell().reciprocal_parameters())
-  grid    = reader.unit_cell_grid
-  cell[:3]= list(map(lambda x,y:x*y, cell[:3], grid))
+  cell[:3]= list(map(lambda x,y:x*y, cell[:3], reader.unit_cell_grd))
   symm    = crystal.symmetry(cell, 'P1')
   mset    = miller.build_set(symm, False, max_index=offset)
   indices = mset.indices().as_vec3_double().as_numpy_array().astype(int) + offset
