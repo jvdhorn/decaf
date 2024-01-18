@@ -32,20 +32,20 @@ schimpy pdb_in=structure.pdb tls_in=optimised_model.json
 Run any of the modules without arguments to get an overview of the available parameters for that module.
 
 # Overview of modules
-* `schimpy` - SuperCell Hierarchical Model
-* `stimpy` - Statistical Image-processing
-* `slicemtz` - Viewing utility for mtz-file
-* `submtz` - Subtract two mtz-files
-* `plotmtz` - Plot intensity distributions in mtz-files
-* `ccmtz` - Calculate correlation coefficient and R1-values between mtz-files
-* `rmbragg` - Remove supercell voxels around Bragg positions in mtz-file
-* `mtzstats` - Show various statistics including R-int for mtz-file
-* `stimpy3d` - Apply the stimpy-procedure to resolution bins in mtz-file
-* `pattsize` - Estimate the size of the Patterson origin-peak
-* `mtz2txt` - Extract raw intensities from mtz-file
-* `map2mtz` - Convert map-file with experimental intensities to mtz
-* `filter_mtz` - Apply a kernel-filter to an mtz-file
-* `pdbrad` - Estimate the size of a pdb-object
+* [`schimpy`](#schimpy) - SuperCell Hierarchical Model
+* [`stimpy`](#stimpy) - Statistical Image-processing
+* [`slicemtz`](#slicemtz) - Viewing utility for mtz-file
+* [`submtz`](#submtz) - Subtract two mtz-files
+* [`plotmtz`](#plotmtz) - Plot intensity distributions in mtz-files
+* [`ccmtz`](#ccmtz) - Calculate correlation coefficient and R1-values between mtz-files
+* [`rmbragg`](#rmbragg) - Remove supercell voxels around Bragg positions in mtz-file
+* [`mtzstats`](#mtzstats) - Show various statistics including R-int for mtz-file
+* [`stimpy3d`](#stimpy3d) - Apply the stimpy-procedure to resolution bins in mtz-file
+* [`pattsize`](#pattsize) - Estimate the size of the Patterson origin-peak
+* [`mtz2txt`](#mtz2txt) - Extract raw intensities from mtz-file
+* [`map2mtz`](#map2mtz) - Convert map-file with experimental intensities to mtz
+* [`filter_mtz`](#filter_mtz) - Apply a kernel-filter to an mtz-file
+* [`pdbrad`](#pdbrad) - Estimate the size of a pdb-object
 
 ## Most important command-line parameters
 ### schimpy
