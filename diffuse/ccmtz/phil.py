@@ -14,7 +14,7 @@ def phil_parse(args=None):
       {
         mtz_1 = None
           .type = path
-          .help = 'First file'
+          .help = 'First file; for R1, this should be the experimental data'
         lbl_1 = IDFF
           .type = str
           .help = 'First array label'
