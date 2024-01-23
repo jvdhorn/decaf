@@ -70,7 +70,7 @@ def phil_parse(args=None):
         median_size = 9
           .type = int
           .help = 'Median filter mask size for identifying peaks'
-        dilation_size = 7
+        dilation_size = 5
           .type = int
           .help = 'Dilation mask size for the removal of Bragg peaks'
       }
