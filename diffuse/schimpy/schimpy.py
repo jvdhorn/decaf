@@ -13,11 +13,6 @@ import traceback
 
 def run(args):
 
-  with open('log.txt', 'w') as log:
-    main(args = args, log = log)
-
-def main(args, log):
-
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().schimpy
@@ -41,15 +36,13 @@ def main(args, log):
                            min_level   = p.input.min_level,
                            sc_size     = sc_size,
                            seed_offset = p.input.seed,
-                           reset_b     = p.input.reset_b,
-                           log         = log)
+                           reset_b     = p.input.reset_b)
 
   miller_set = miller.build_set(crystal_symmetry = manager.sc_symm,
                                 d_min            = p.params.resolution,
                                 anomalous_flag   = False)
 
-  collector  =    tls.Collector(log              = log,
-                                miller_set       = miller_set,
+  collector  =    tls.Collector(miller_set       = miller_set,
                                 base_hierarchy   = manager.base_hierarchy,
                                 cryst_symm       = manager.cryst_symm)
 

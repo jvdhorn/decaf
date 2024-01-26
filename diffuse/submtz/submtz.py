@@ -6,11 +6,6 @@ from . import phil
 
 def run(args):
 
-  with open('log.txt', 'w') as log:
-    main(args = args, log = log)
-
-def main(args, log):
-
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().submtz

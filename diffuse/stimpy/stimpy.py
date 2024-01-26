@@ -255,7 +255,7 @@ def write_image(array, template, filename='image.img', encoding='int16'):
       writer.write('')
       array.tofile(writer)
 
-def main(args, log):
+def run(args):
 
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
@@ -349,8 +349,4 @@ def main(args, log):
               template = image,
               filename = '{}/{}_corrected.cbf'.format(path, pref))
 
-def run(args):
-
-  with open('log.txt', 'w') as log:
-    main(args = args, log = log)
 

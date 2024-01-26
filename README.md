@@ -76,6 +76,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
 * `slice` - desired slice to plot (default `hk0`)
+* `save` - save image as high-res PNG instead of plotting (default `False`)
 * `depth` - additional depth of the slice on both sides (default `0`)
 * `sc_size` - size of the supercell for drawing Bragg positions (e.g. `"5 5 10"`)
 * `log` - plot log10 of the intensities (default `False`)

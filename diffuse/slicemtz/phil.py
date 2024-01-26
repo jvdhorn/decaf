@@ -28,6 +28,12 @@ def phil_parse(args=None):
         depth = 0
           .type = int
           .help = 'Additional thickness on both sides of the slice'
+        multiply = 1.0
+          .type = float
+          .help = 'Multiply all values by this amount'
+        add = 0.0
+          .type = float
+          .help = 'Offset all values by this amount (after multiplying)'
         mode = *sum mean median min max prod std var
           .type = choice
           .help = 'How to treat the accumulation of voxels in the depth-direction'
@@ -76,9 +82,9 @@ def phil_parse(args=None):
         negative_cmap = YlOrRd
           .type = str
           .help = 'Matplotlib colormap for negative values'
-        show = True
+        save = False
           .type = bool
-          .help = 'Show plot'
+          .help = 'Save plot as PNG instead of showing'
       }
     }
     """)
