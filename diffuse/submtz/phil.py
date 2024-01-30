@@ -31,9 +31,9 @@ def phil_parse(args=None):
         cutoff = -9e99
           .type = float
           .help = 'Only consider intensities larger than this value'
-        add = False
-          .type = bool
-          .help = 'Add arrays instead of subtracting'
+        mode = *sub add mul div
+          .type = choice
+          .help = 'Binary operator choice'
         scale = 1
           .type = float
           .help = 'Scale factor for second map (0 = auto scale)'
