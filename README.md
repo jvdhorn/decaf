@@ -1,13 +1,14 @@
 A Python package for simulating diffuse scattering of X-rays in protein crystals
 
 # Requirements
-* cctbx/phenix: runs in cctbx.python (2.7.x / 3.x) and depends on cctbx modules
+* [phenix/cctbx](https://github.com/cctbx/cctbx_project?tab=readme-ov-file#installation): runs in cctbx.python (2.7.x / 3.x) and depends on cctbx modules
+* [dials/dxtbx](https://github.com/dials/dxtbx?tab=readme-ov-file): used for reading images
 * numpy
 * scipy
 * matplotlib
 
 # Usage
-Make sure `cctbx.python` is available, which can be obtained [here](https://github.com/cctbx/cctbx_project?tab=readme-ov-file#installation).
+Make sure `cctbx.python` is available and the `dxtbx` package is installed.
 
 Clone the repository
 ```

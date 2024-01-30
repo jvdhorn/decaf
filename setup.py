@@ -8,10 +8,10 @@ setup(  name                = 'diffuse',
         url                 = '',
         license             = '',
         install_requires    = ( ),
-        package_dir         = {'':'diffuse'},
+        package_dir         = {'':'.'},
         packages            = find_packages(where   ='diffuse-python',
                                             exclude = ( )
                                             ),
         include_package_data= True,
-        classifiers         = [ ],
+        classifiers         = ['Programming Language :: Python :: 3'],
         )
