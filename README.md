@@ -87,7 +87,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz_2` - second input mtz-file
 * `lbl_1` - first array of interest (default `IDFF`)
 * `lbl_2` - second array of interest (default `IDFF`)
-* `add` - add instead of subtract (default `False`)
+* `mode` - use a different operator (`sub`, `add`, `mul` or `div`, default `sub`)
 * `scale` - scale factor for second mtz-file (default `1.0`)
 
 ### plotmtz
