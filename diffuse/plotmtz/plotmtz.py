@@ -61,11 +61,12 @@ def run(args):
     label = file.replace('/','_').replace('.mtz','')
     plt.hist(data, bins=p.input.bins, range=(low, high), histtype='stepfilled',
              alpha=0.5, log=p.params.log, label=label, ec='black')
-  plt.title('Resolution range {:.2f} - {:.2f}'.format(*first.resolution_range()))
+  if p.params.legend:
+    plt.legend()
+    plt.title('Resolution range {:.2f} - {:.2f}'.format(*first.resolution_range()))
   plt.xlabel('Intensity')
   plt.ylabel('Counts')
   plt.tight_layout()
-  if p.params.legend: plt.legend()
   file = files[0].replace('/','_')
   name = 'plotmtz_{}_distribution.png'.format(file.replace('.mtz',''))
   if not p.params.log: name.replace('.png','_lin.png')
