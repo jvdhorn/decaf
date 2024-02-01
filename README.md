@@ -47,6 +47,7 @@ Run any of the modules without arguments to get an overview of the available par
 * [`map2mtz`](#map2mtz) - Convert map-file with experimental intensities to mtz
 * [`filter_mtz`](#filter_mtz) - Apply a kernel-filter to an mtz-file
 * [`pdbrad`](#pdbrad) - Estimate the size of a pdb-object
+* [`btrace`](#btrace) - Plot C-alpha B-factor trace
 
 ## Most important command-line parameters
 ### schimpy
@@ -145,5 +146,9 @@ Run any of the modules without arguments to get an overview of the available par
 
 ### pdbrad
 * `pdb` - input pdb-file
+
+### pdbrad
+* `input` - input pdb or json (can be multiple)
+* `lines` - plot vertical lines at these x-positions (e.g. `"25.5 75.5"`)
 
 # References
