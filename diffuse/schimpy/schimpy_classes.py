@@ -1,16 +1,14 @@
 from __future__ import division, print_function
 from scitbx import matrix
-from cctbx import adptbx, crystal, geometry_restraints, xray
+from cctbx import crystal, geometry_restraints, xray
 from mmtbx.tls import analysis, tools, tls_as_xyz
 from mmtbx.command_line.fmodel import fmodel_from_xray_structure_master_params
 from mmtbx.utils import fmodel_from_xray_structure
 from mmtbx.model import manager as model_manager_base
 from mmtbx import refinement, secondary_structure
-from libtbx.utils import Sorry
 from mmtbx_tls_ext import apply_tls_shifts
 from scitbx.array_family import flex
 from matplotlib import pyplot as plt, gridspec
-from smtbx.utils import connectivity_table
 import scitbx
 import iotbx
 import numpy as np
@@ -456,6 +454,7 @@ class Model():
                   contact_level=-1,
                   allow_bad_frac=0.,
                   disallow_good_frac=0.,
+                  pairs_frac=1.,
                   skip=(),
                   require_both=False,
                   uncorrelate=False,
@@ -549,7 +548,8 @@ class Model():
                                  iso=correlate_insideout, reverse=reverse,
                                  abf=allow_bad_frac, dgf=disallow_good_frac,
                                  require_both=require_both, uncorrelate=uncorrelate,
-                                 percentile=percentile, stretch=stretch, skip=skip)
+                                 percentile=percentile, stretch=stretch, 
+                                 pairs_frac=pairs_frac, skip=skip)
       else:
         self.all_set_random(amp=amp, max_level=correlate_after, reverse=reverse)
         if correlate:
@@ -1058,7 +1058,7 @@ class Model():
 
   def optimize_level(self, n_level, weight_exp=2., spring_weights=2., seq=0, iso=0,
                      allow_bad_frac=0., disallow_good_frac=0., require_both=False,
-                     uncorrelate=False, percentile=0, stretch=1.):
+                     uncorrelate=False, percentile=0, stretch=1., pairs_frac=1.):
 
     contact = np.array(self.environments.get_contact(n_level))
     conshft = np.array(self.environments.get_conshft(n_level))
@@ -1099,6 +1099,7 @@ class Model():
     pairs   = np.fromiter((j for p in zip(*np.triu_indices(len(chains),1))
                            for i in indices for j in (i,)+p), dtype=int).reshape(-1,3)
     np.random.shuffle(pairs)
+    pairs   = pairs[:int(len(pairs) * pairs_frac)]
 
     if seq:
       pairs = pairs[pairs[:,0].argsort(kind='stable')[::seq]]
@@ -1172,13 +1173,14 @@ class Model():
 
   def correlate_level(self, n_level, weight_exp=2., spring_weights=2., seq=0, iso=0,
                       abf=0., dgf=0., require_both=False, uncorrelate=False,
-                      percentile=0, stretch=1.):
+                      percentile=0, stretch=1., pairs_frac=1.):
 
     orders = self.optimize_level(n_level, weight_exp=weight_exp,
                                  spring_weights=spring_weights, seq=seq, iso=iso,
                                  allow_bad_frac=abf, disallow_good_frac=dgf,
                                  require_both=require_both, uncorrelate=uncorrelate,
-                                 percentile=percentile, stretch=stretch)
+                                 percentile=percentile, stretch=stretch,
+                                 pairs_frac=pairs_frac)
 
     for n_group, order in orders.items():
       done = set()
@@ -1191,8 +1193,8 @@ class Model():
 
   def shift_and_correlate(self, amp=1.0, weight_exp=2., spring_weights=2.,
                           seq=0, iso=0, reverse=False, abf=0., dgf=0.,
-                          require_both=False, uncorrelate=False,
-                          percentile=0, stretch=1., skip=()):
+                          require_both=False, uncorrelate=False, percentile=0,
+                          stretch=1., pairs_frac=1., skip=()):
 
     levels = sorted(self.tls_hierarchy.keys())
     levels = [lvl for lvl in levels if lvl <= self.max_level or self.max_level < 0]
@@ -1203,7 +1205,8 @@ class Model():
       if n_level not in skip:
         self.correlate_level(n_level, weight_exp=weight_exp, spring_weights=spring_weights,
                              seq=seq, iso=iso, abf=abf, dgf=dgf, require_both=require_both,
-                             uncorrelate=uncorrelate, percentile=percentile, stretch=stretch)
+                             uncorrelate=uncorrelate, percentile=percentile, stretch=stretch,
+                             pairs_frac=pairs_frac)
 
   def random_analysis(self, amp=1.0):
 
@@ -1273,7 +1276,10 @@ class Model():
     params.fmodel.b_sol    = b_sol
     params.fmodel.b_cart   = b_cart
 
+    f_calc  = xray_structure.structure_factors(d_min = high_resolution).f_calc()
+
     f_model = fmodel_from_xray_structure(xray_structure = xray_structure,
+                                         f_obs          = f_calc,
                                          params         = params,)
     if dump_file is not None:
       f_model.write_to_file(file_name = dump_file)
