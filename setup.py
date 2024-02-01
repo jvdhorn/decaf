@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages, findall
+from setuptools import setup, find_packages
 
 setup(  name                = 'diffuse',
         version             = '0.1',
@@ -6,12 +6,10 @@ setup(  name                = 'diffuse',
         author              = 'J A van der Horn',
         author_email        = 'jitsie@gmail.com',
         url                 = '',
-        license             = '',
+        license             = 'GPLv3',
         install_requires    = ( ),
-        package_dir         = {'':'.'},
-        packages            = find_packages(where   ='diffuse-python',
-                                            exclude = ( )
-                                            ),
+        package_dir         = {'diffuse':'src'},
+        packages            = find_packages(where='diffuse'),
         include_package_data= True,
         classifiers         = ['Programming Language :: Python :: 3'],
         )
