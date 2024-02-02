@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 from iotbx import mtz
 from scitbx.array_family import flex
-from matplotlib import pyplot as plt, colors, transforms as tr
+from matplotlib import pyplot as plt, colors, ticker, transforms as tr
 from scipy import ndimage as ndi
 import numpy as np
 import warnings
@@ -239,7 +239,9 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, d
               origin='lower', extent=ext, interpolation='none')
 
   # Plot colorbar
-  bar = fig.colorbar(im, cax=cax)
+  scf = ticker.ScalarFormatter()
+  scf.set_powerlimits((-3,3))
+  bar = fig.colorbar(im, cax=cax, format=scf)
   bar.ax.tick_params(width=scale, size=4.*scale)
 
   return fig
