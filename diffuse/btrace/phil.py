@@ -29,6 +29,9 @@ def phil_parse(args=None):
         legend = False
           .type = bool
           .help = 'Plot legend'
+        cmap = Set1
+          .type = str
+          .help = 'Colormap used for the color cycler'
       }
       output
         .help = "Output files"

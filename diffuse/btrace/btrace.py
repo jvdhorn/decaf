@@ -47,12 +47,12 @@ def run(args):
   p           = scope.extract().btrace
 
   counter = 0
-  datcols = ColorCycler('Set1', 0)
-  simcols = ColorCycler('tab10', 1)
+  colors  = ColorCycler(p.params.cmap, 0)
   plt.figure(figsize=(6,3))
 
   # Plot all traces
   for arg in p.input.input:
+    if arg == 'skip': colors(); continue
     if '*' in arg:
       arg, mul = arg.split('*')
       mul      = float(mul)
@@ -63,11 +63,11 @@ def run(args):
     if 'ensemble' in label.lower():
       label = 'Simulated'
       ls    = (0,(6,2))
-      color = simcols()
+      color = colors()
       zord  = counter
     else:
       ls    = 'solid'
-      color = datcols()
+      color = colors()
       zord  = -counter
     plt.plot(x, np.array(y)*mul, label=label, ls=ls, color=color, zorder=zord)
     counter += 1
