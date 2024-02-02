@@ -1256,33 +1256,28 @@ class Model():
 
   def calc_f_model(self,
                    high_resolution = 2.,
-                   low_resolution  = None,
                    k_sol           = 0.0,
                    b_sol           = 0.0,
-                   b_cart          = 6 * [0.0],
-                   wavelength      = 1,
-                   dump_file       = None):
+                   b_cart          = 6 * [0.0]):
 
     self.close(keep_hierarchy = True, force = False)
 
-    xray_structure = self.xray_structure()
-    params         = fmodel_from_xray_structure_master_params.extract()
+    xrs        = self.xray_structure()
+    params     = fmodel_from_xray_structure_master_params.extract()
 
     # Set params
     params.high_resolution = high_resolution
-    params.low_resolution  = low_resolution
-    params.wavelength      = wavelength
     params.fmodel.k_sol    = k_sol
     params.fmodel.b_sol    = b_sol
     params.fmodel.b_cart   = b_cart
 
-    f_calc  = xray_structure.structure_factors(d_min = high_resolution).f_calc()
+    miller_set = xrs.build_miller_set(anomalous_flag=False, d_min=high_resolution)
+    f_obs      = miller_set.array(flex.double(miller_set.size()))
 
-    f_model = fmodel_from_xray_structure(xray_structure = xray_structure,
-                                         f_obs          = f_calc,
-                                         params         = params,)
-    if dump_file is not None:
-      f_model.write_to_file(file_name = dump_file)
+    f_model    = fmodel_from_xray_structure(xray_structure = xrs,
+                                            f_obs          = f_obs,
+                                            params         = params,)
+
     return f_model.f_model
 
   def calc_msd(self, slc=slice(None,None)):
