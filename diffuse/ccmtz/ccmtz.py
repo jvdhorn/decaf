@@ -51,18 +51,19 @@ def run(args):
     xind   = [xsel.index(i) for i in range(11)]
     x      = [x[i] for i in xind]
     xticks = [xticks[i] for i in xind]
-   
-  plt.bar(range(len(y)), y, label='Binned')
-  plt.plot(xticks, [ccall] * len(xticks))
-  plt.plot(xticks, [ccall] * len(xticks), label='All')
-  plt.xticks(xticks, x)
-  plt.ylim(0, 1)
-  plt.xlabel('Resolution shell limits ($\AA$)')
-  plt.ylabel('Correlation coefficient')
-  plt.legend()
-  plt.tight_layout()
-  plt.savefig('ccmtz.png', dpi=300)
+  
+  if p.input.plot: 
+    plt.bar(range(len(y)), y, label='Binned')
+    plt.plot(xticks, [ccall] * len(xticks))
+    plt.plot(xticks, [ccall] * len(xticks), label='All')
+    plt.xticks(xticks, x)
+    plt.ylim(0, 1)
+    plt.xlabel('Resolution shell limits ($\AA$)')
+    plt.ylabel('Correlation coefficient')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('ccmtz.png', dpi=300)
 
-  if p.input.show:
-    plt.show()
+    if p.input.show:
+      plt.show()
 
