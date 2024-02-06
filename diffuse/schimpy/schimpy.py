@@ -32,6 +32,7 @@ def run(args):
                            pdb_in      = p.input.pdb_in,
                            tls_origin  = tls_origin,
                            mult        = multipliers,
+                           zero_trace  = p.input.zero_trace,
                            max_level   = max_level,
                            min_level   = p.input.min_level,
                            sc_size     = sc_size,
