@@ -32,6 +32,12 @@ def phil_parse(args=None):
         cmap = Set1
           .type = str
           .help = 'Colormap used for the color cycler'
+        min = None
+          .type = float
+          .help = 'Set min y-value'
+        max = None
+          .type = float
+          .help = 'Set max y-value'
       }
       output
         .help = "Output files"

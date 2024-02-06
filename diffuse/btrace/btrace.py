@@ -78,6 +78,7 @@ def run(args):
 
   plt.xlabel('Residue number')
   plt.ylabel('C$_{\\alpha}$ B-factor ($\mathrm{\AA}^{2}$)')
+  plt.ylim((p.params.min, p.params.max))
   plt.tight_layout()
   if p.params.legend:
     plt.legend()
