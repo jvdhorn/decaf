@@ -1,3 +1,5 @@
+# DECaF - Diffuse: Extract & Calculate F<sup>2</sup>
+
 A Python package for extracting and simulating diffuse scattering of X-rays in protein crystals
 
 # Requirements
