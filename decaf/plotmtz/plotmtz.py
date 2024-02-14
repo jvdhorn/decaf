@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 from scitbx.array_family import flex
 from iotbx import mtz
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, ticker
 import numpy as np
 from . import phil
 
@@ -44,6 +44,10 @@ def run(args):
 
   # Plot distribution
   plt.close()
+  scf = ticker.ScalarFormatter()
+  scf.set_powerlimits((-2,2))
+  scf.set_useMathText(True)
+  plt.gca().xaxis.set_major_formatter(scf)
   low = high = None
   lores = max(p.params.resolution)
   hires = min(p.params.resolution)
@@ -61,11 +65,11 @@ def run(args):
     label = file.replace('/','_').replace('.mtz','')
     plt.hist(data, bins=p.input.bins, range=(low, high), histtype='stepfilled',
              alpha=0.5, log=p.params.log, label=label, ec='black')
+  plt.xlabel('Intensity')
+  plt.ylabel('Counts')
   if p.params.legend:
     plt.legend()
     plt.title('Resolution range {:.2f} - {:.2f}'.format(*first.resolution_range()))
-  plt.xlabel('Intensity')
-  plt.ylabel('Counts')
   plt.tight_layout()
   file = files[0].replace('/','_')
   name = 'plotmtz_{}_distribution.png'.format(file.replace('.mtz',''))
