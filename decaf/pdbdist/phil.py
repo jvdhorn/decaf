@@ -25,9 +25,9 @@ def phil_parse(args=None):
         cmap = inferno
           .type = str
           .help = 'Colormap'
-        limit_ca = None
-          .type = int
-          .help = 'C-alpha cutoff'
+        residue_range = None
+          .type = ints
+          .help = 'Min and max residue'
         chain = 0
           .type = int
           .help = 'Select chain to plot'
@@ -37,6 +37,9 @@ def phil_parse(args=None):
         max = None
           .type = float
           .help = 'Max value to plot'
+        mode = *std var mean
+          .type = choice
+          .help = 'Ensemble treatment'
       }
       output
         .help = "Output files"
