@@ -21,20 +21,23 @@ class ColorCycler():
     return color
 
 
-def extract_b(file):
+def extract_b(file, chain=0):
 
   if file.endswith('.json'):
     with open(file, 'r') as inp:
       data  = json.load(inp)
-      x     = data['x']
+      x     = [float(i) for i in data['x']]
       y     = [float(i) for i in data['y']]
+      split = [0]+[n+1 for n,(i,j) in enumerate(zip(x,x[1:])) if j<i]+[len(x)]
+      x     = x[split[chain]:split[chain+1]]
+      y     = y[split[chain]:split[chain+1]]
       label = data['label']
     return x, y, label
 
   elif file.endswith('.pdb'):
     hier = pdb.input(file).construct_hierarchy()
     sel  = hier.atom_selection_cache().selection('name CA')
-    calp = hier.select(sel).atoms()
+    calp = hier.select(sel).models()[0].chains()[chain].atoms()
     x, y = zip(*[(a.parent().parent().resseq_as_int(), a.b) for a in calp])
     x, y = zip(*[(n, y[i]) for i, n in enumerate(x) if x.index(n)==i])
     return x, y, 'PDB'
@@ -50,8 +53,12 @@ def run(args):
   colors  = ColorCycler(p.params.cmap, 0)
   plt.figure(figsize=(6,3))
 
+  nlines  = max(map(len, (p.input.input, p.params.chain)))
+  chains  = (p.params.chain * len(p.input.input))[:nlines]
+  files   = (p.input.input * len(p.params.chain))[:nlines]
+
   # Plot all traces
-  for arg in p.input.input:
+  for chain, arg in zip(chains, files):
     if arg == 'skip': colors(); continue
     if '*' in arg:
       arg, mul = arg.split('*')
@@ -59,7 +66,7 @@ def run(args):
     else:
       mul      = 1.
 
-    x, y, label = extract_b(arg)
+    x, y, label = extract_b(arg, chain)
     if 'ensemble' in label.lower():
       label = 'Simulated'
       ls    = (0,(6,2))

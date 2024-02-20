@@ -17,14 +17,15 @@ def run(args):
   hier = pdb.input(p.input.pdb).construct_hierarchy()
   sel  = hier.atom_selection_cache().selection('name CA')
   calp = hier.select(sel)
-  resi = [atom.parent().parent().resseq_as_int() for atom in calp.models()[0].atoms()]
+  resi = [atom.parent().parent().resseq_as_int() for atom in
+          calp.models()[p.params.chain].chains()[p.params.chain].atoms()]
   lim  = p.params.limit_ca or max(resi)
   sel  = flex.size_t([resi.index(n) for n in sorted(set(resi)) if n <= lim])
   resi = [resi[i] for i in sel]
   grid = []
 
   for model in calp.models():
-    xyz  = model.atoms().extract_xyz().select(sel)
+    xyz  = model.chains()[p.params.chain].atoms().extract_xyz().select(sel)
     dmat = [(xyz - coord).dot()**0.5 for coord in xyz]
     grid.append(dmat)
 
