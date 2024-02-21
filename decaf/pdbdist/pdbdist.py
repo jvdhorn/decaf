@@ -17,7 +17,7 @@ def extract_grid(file, mode, chain, resrng, states):
   sel  = hier.atom_selection_cache().selection('name CA')
   calp = hier.select(sel)
   resi = [atom.parent().parent().resseq_as_int() for atom in
-          calp.models()[chain].chains()[chain].atoms()]
+          calp.models()[0].chains()[chain].atoms()]
   rrng = resrng or [min(resi), max(resi)]
   mrng = states or [0, len(calp.models())-1]
   lo,hi= min(rrng), max(rrng)
