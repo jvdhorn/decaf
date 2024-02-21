@@ -15,6 +15,7 @@ def phil_parse(args=None):
         pdb = None
           .type = path
           .help = 'PDB input file'
+          .multiple = True
       }
       params
         .help = "Parameters"
@@ -28,6 +29,9 @@ def phil_parse(args=None):
         residue_range = None
           .type = ints
           .help = 'Min and max residue'
+        model_range = None
+          .type = ints
+          .help = 'Min and max model'
         chain = 0
           .type = int
           .help = 'Select chain to plot'
@@ -37,9 +41,12 @@ def phil_parse(args=None):
         max = None
           .type = float
           .help = 'Max value to plot'
-        mode = *std var mean
+        ensemble = *std var mean
           .type = choice
           .help = 'Ensemble treatment'
+        mode = *combine sub div add mul mean
+          .type = choice
+          .help = 'Multiple input treatment'
       }
       output
         .help = "Output files"
