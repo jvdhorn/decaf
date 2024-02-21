@@ -10,7 +10,7 @@ funcs = {'std':np.std, 'var':np.var, 'mean':np.mean, 'add':np.add,
 modes = {'std':'standard deviation', 'var':'variance', 'mean':'mean',
          'add':'sum', 'sub':'difference', 'div':'ratio', 'mul':'product'}
 
-def extract_grid(file, mode, chain, resrng, modrng):
+def extract_grid(file, mode, chain, resrng, states):
 
   print('Reading', file)
   hier = pdb.input(file).construct_hierarchy()
@@ -19,7 +19,7 @@ def extract_grid(file, mode, chain, resrng, modrng):
   resi = [atom.parent().parent().resseq_as_int() for atom in
           calp.models()[chain].chains()[chain].atoms()]
   rrng = resrng or [min(resi), max(resi)]
-  mrng = modrng or [0, len(calp.models())-1]
+  mrng = states or [0, len(calp.models())-1]
   lo,hi= min(rrng), max(rrng)
   sel  = flex.size_t([resi.index(n) for n in sorted(set(resi)) if lo <= n <= hi])
   resi = [resi[i] for i in sel]
@@ -63,7 +63,7 @@ def run(args):
 
   # Extract and align grids
   grids = [extract_grid(file, p.params.ensemble, p.params.chain,
-                        p.params.residue_range, p.params.model_range)
+                        p.params.residue_range, p.params.states)
            for file in p.input.pdb[:4]]
   grids, (lo, hi) = align_grids(grids)
 
