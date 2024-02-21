@@ -1,5 +1,5 @@
 from __future__ import division, print_function
-from iotbx import mtz
+from iotbx import mtz, ccp4_map
 from scitbx.array_family import flex
 from matplotlib import pyplot as plt, colors, ticker, transforms as tr
 from scipy import ndimage as ndi
@@ -13,20 +13,32 @@ def run(args):
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().slicemtz
   print('Reading', p.input.mtz)
-  obj     = mtz.object(p.input.mtz)
-  labels  = obj.column_labels()
-  label   = p.input.lbl if p.input.lbl in labels else labels[3]
-  hi, lo  = (sorted(p.params.resolution) + [float('inf')])[:2]
-  arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(label
-            ).extract_values()).expand_to_p1().resolution_filter(lo, hi)
-  data    = arr.data().as_numpy_array()
-  ind     = arr.indices().as_vec3_double().as_numpy_array().astype(int)
-  offset  = abs(ind).max(axis=0)
-  shape   = 2 * offset + 1
-  grid    = np.zeros(shape=shape)
-  grid[:] = np.nan
-  grid[tuple((-ind + offset).T)] = data
-  grid[tuple(( ind + offset).T)] = data
+  if p.input.mtz.endswith('.mtz'):
+    obj     = mtz.object(p.input.mtz)
+    labels  = obj.column_labels()
+    label   = p.input.lbl if p.input.lbl in labels else labels[3]
+    hi, lo  = (sorted(p.params.resolution) + [float('inf')])[:2]
+    arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(label
+              ).extract_values()).expand_to_p1().resolution_filter(lo, hi)
+    data    = arr.data().as_numpy_array()
+    ind     = arr.indices().as_vec3_double().as_numpy_array().astype(int)
+    offset  = abs(ind).max(axis=0)
+    shape   = 2 * offset + 1
+    grid    = np.zeros(shape=shape)
+    grid[:] = np.nan
+    grid[tuple((-ind + offset).T)] = data
+    grid[tuple(( ind + offset).T)] = data
+    cell    = arr.unit_cell().reciprocal_parameters()
+  elif p.input.mtz.endswith('.map'):
+    reader  = ccp4_map.map_reader(p.input.mtz)
+    grid    = reader.map_data().as_numpy_array()
+    cutoff  = grid.min() if p.input.cutoff is None else p.input.cutoff
+    grid[grid<=cutoff] = np.nan
+    x, y, z = grid.shape
+    offset  = x//2, y//2, z//2
+    cell    = list(reader.unit_cell().parameters())
+    cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
+  else: return
   level   = p.params.slice.strip('hkl')
   dim     = p.params.slice.find(level)
   level   = int(level) + offset[dim]
@@ -157,7 +169,6 @@ def run(args):
     cmap  = negcmap
 
   # Extract transformations
-  cell = arr.unit_cell().reciprocal_parameters()
   lens = list(cell[:3])
   lens.pop(dim)
   ang  = np.radians(90 - cell[3 + dim])

@@ -14,10 +14,13 @@ def phil_parse(args=None):
       {
         mtz = None
           .type = path
-          .help = 'Mtz input file'
+          .help = 'Mtz or map input file'
         lbl = IDFF
           .type = str
           .help = 'Array label'
+        cutoff = None
+          .type = float
+          .help = 'If input is map, only include values higher than this one'
       }
       params
         .help = "Control running"
