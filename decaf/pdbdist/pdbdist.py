@@ -19,7 +19,7 @@ def extract_grid(file, mode, chain, resrng, modrng):
   resi = [atom.parent().parent().resseq_as_int() for atom in
           calp.models()[chain].chains()[chain].atoms()]
   rrng = resrng or [min(resi), max(resi)]
-  mrng = modrng or [None]
+  mrng = modrng or [0, len(calp.models())-1]
   lo,hi= min(rrng), max(rrng)
   sel  = flex.size_t([resi.index(n) for n in sorted(set(resi)) if lo <= n <= hi])
   resi = [resi[i] for i in sel]
