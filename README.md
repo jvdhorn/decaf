@@ -44,7 +44,7 @@ Run any of the modules without arguments to get an overview of the available par
 * [`rmbragg`](#rmbragg) - Remove supercell voxels around Bragg positions in mtz-file
 * [`mtzstats`](#mtzstats) - Show various statistics including R-int for mtz-file
 * [`stimpy3d`](#stimpy3d) - Apply the stimpy-procedure to resolution bins in mtz-file
-* [`patterson`](#patterson) - Calculate Patterson map for mtz-file
+* [`patterson`](#patterson) - Calculate Patterson map from mtz-file
 * [`pattsize`](#pattsize) - Estimate the size of the Patterson origin-peak
 * [`mtz2txt`](#mtz2txt) - Extract raw intensities from mtz-file
 * [`mtz2map`](#mtz2map) - Convert mtz to ccp4 map-file
@@ -139,7 +139,7 @@ Run any of the modules without arguments to get an overview of the available par
 ### patterson
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
-* `bins` - divide into this many shells and subtract the mean in each one (default `0`)
+* `bins` - divide into this many shells and subtract the mean from each one (default `0`)
 * `sample` - sampling of the grid in 1/Angstrom, higher is finer (default `3.0`)
 
 ### pattsize

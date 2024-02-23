@@ -18,6 +18,9 @@ def phil_parse(args=None):
         lbl = IDFF
           .type = str
           .help = 'Desired array label'
+        resolution = 0
+          .type = floats
+          .help = 'Resolution limit (or range if 2 values are provided)'
       }
       params
         .help = "Input files"
