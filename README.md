@@ -141,6 +141,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `lbl` - array of interest (default `IDFF`)
 * `bins` - divide into this many shells and subtract the mean from each one (default `0`)
 * `sample` - sampling of the grid in 1/Angstrom, higher is finer (default `3.0`)
+* `resolution` - low and high resolution (e.g. `"3.6 3.4"`)
 
 ### pattsize
 * `map` - input patterson map
