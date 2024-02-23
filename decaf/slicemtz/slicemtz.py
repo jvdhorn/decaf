@@ -39,9 +39,11 @@ def run(args):
     cell    = list(reader.unit_cell().parameters())
     cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
   else: return
+  if p.params.center:
+    grid    = np.roll(grid, offset, axis=(0,1,2))
   level   = p.params.slice.strip('hkl')
   dim     = p.params.slice.find(level)
-  level   = int(level) + offset[dim]
+  level   = int(level) + int(offset[dim])
   sel     = [slice(None)] * 3
   sel[dim]= slice(level-p.params.depth, level+1+p.params.depth)
   slab    = grid[tuple(sel)]
@@ -112,21 +114,26 @@ def run(args):
     mask[tuple(b_ind.T)]  = 1.
     mask[np.isnan(layer)] = np.nan
 
-  # Transpose layer and mask
-  layer = layer.T
-  mask  = mask.T
-
-  # Increase mask size
-  factor  = max(0, p.params.dotsize) * 2 + 1
-  bigmask = np.full(np.array(mask.shape)*factor, np.nan)
-  bigmask[factor//2::factor,factor//2::factor] = mask
-  mask    = bigmask
-
   # Overlay axes
   if p.params.axes:
     x, y  = mask.shape
     mask[x//2,:] = 1.
     mask[:,y//2] = 1.
+
+  # Increase mask size
+  factor  = max(0, p.params.dotsize) * 2 + 1
+  bigmask = np.zeros(np.array(mask.shape)*factor)
+  bigmask[factor//2::factor,factor//2::factor] = mask
+  kernel  = np.zeros((factor*2-1,)*2)
+  kernel[factor-1,:] += 1.
+  kernel[:,factor-1] += 1.
+  bigmask = ndi.convolve(bigmask, kernel, mode='constant') // 2
+  bigmask[bigmask==0] = np.nan
+  mask    = bigmask
+
+  # Transpose layer and mask
+  layer = layer.T
+  mask  = mask.T
 
   # Trim edges
   i, j = off2d
@@ -240,7 +247,7 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, d
   # Plot contour
   if cnt and vmin <= 0 <= vmax:
     ax.contour(layer, colors='black', levels=[0], transform=trans,
-               aspect=asp, origin='lower', extent=ext, linewidths=0.2)
+               origin='lower', extent=ext, linewidths=0.2)
 
   # Plot axes and Bragg positions
   ax.imshow(mask, cmap='binary_r', transform=trans, aspect=asp,
