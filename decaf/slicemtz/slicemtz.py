@@ -185,16 +185,19 @@ def run(args):
   cnt  = p.params.contours
   dstr = p.params.distribution
 
+  if cnt > 0:
+    name += '_cnt%d'%cnt
+
   if p.params.save:
-    fig  = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 8, False, dstr)
+    fig  = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 8, dstr)
     fig.savefig(p.input.mtz.replace('.mtz', name+'.png'))
 
   else:
-    fig = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 1, True, dstr)
+    fig = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 1, dstr)
     plt.show()
 
 
-def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, dstr):
+def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr):
 
   plt.close()
   plt.rc('font', size=scale*11.)
@@ -207,7 +210,7 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, d
   pad.set_axis_off()
 
   # Plot distribution
-  if dstr != 'False':
+  if dstr.lower not in 'false0':
     bins = 256
     log  = (dstr == 'Log')
     vals = layer[~np.isnan(layer)]
@@ -224,11 +227,11 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, d
     pos = dx.get_position()
     dx.set_position([pos.x0, pos.y0-.025, pos.width, pos.height])
 
-  # Plot image
+  # Dummy plot
   j,i = np.array(layer.shape) // 2
   ext = [-i-0.5, i+0.5, -j-0.5, j+0.5]
-  im  = ax.imshow(layer, cmap=cmap, vmin=vmin, vmax=vmax, aspect=asp,
-                  origin='lower', extent=ext, interpolation='none')
+  im  = ax.imshow(layer, cmap=cmap, alpha=0, vmin=vmin, vmax=vmax, aspect=asp,
+                  origin='lower', extent=ext, interpolation='none', zorder=2)
 
   # Apply transformations
   trans  = ax.transData + tr.Affine2D().skew(ang,0)
@@ -244,19 +247,24 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, d
   ax.set_xlim((clip[0], clip[1]))
   ax.set_ylim((clip[2], clip[3]))
 
-  # Plot contour
-  if cnt and vmin <= 0 <= vmax:
-    ax.contour(layer, colors='black', levels=[0], transform=trans,
-               origin='lower', extent=ext, linewidths=0.2)
+  # Actual plot
+  if cnt > 0:
+    with np.errstate(divide='ignore', invalid='ignore'):
+      copy = layer.copy()
+      copy[copy<vmin]=vmin
+      copy[copy>vmax]=vmax
+    cr = ax.contour(copy, cmap=cmap, transform=trans, vmin=vmin, vmax=vmax,
+                   origin='lower', extent=ext, levels=cnt, linewidths=0.2, zorder=0)
+    im = plt.cm.ScalarMappable(norm=colors.Normalize(vmin=vmin, vmax=vmax), cmap=cmap)
+    im.set_array([])
+  else:
+    im = ax.imshow(layer, cmap=cmap, transform=trans, vmin=vmin, vmax=vmax,
+                   aspect=asp, origin='lower', extent=ext, interpolation='none',
+                   zorder=0)
 
   # Plot axes and Bragg positions
   ax.imshow(mask, cmap='binary_r', transform=trans, aspect=asp,
-            origin='lower', extent=ext, interpolation='none')
-
-  # Enforce shown values
-  for _ in range(100 * rep):
-    ax.imshow(layer, cmap=cmap, alpha=0, transform=trans, aspect=asp,
-              origin='lower', extent=ext, interpolation='none')
+            origin='lower', extent=ext, interpolation='none', zorder=1)
 
   # Plot colorbar
   scf = ticker.ScalarFormatter()
