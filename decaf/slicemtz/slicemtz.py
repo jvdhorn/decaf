@@ -210,7 +210,7 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr):
   pad.set_axis_off()
 
   # Plot distribution
-  if dstr.lower not in 'false0':
+  if dstr.lower() not in 'false0':
     bins = 256
     log  = (dstr == 'Log')
     vals = layer[~np.isnan(layer)]
