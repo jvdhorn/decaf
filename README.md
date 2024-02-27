@@ -2,6 +2,10 @@
 
 A Python package for extracting and simulating diffuse scattering of X-rays in protein crystals
 
+## How to cite
+If you use this software, please cite the following paper:
+TBC
+
 # Requirements
 * [phenix/cctbx](https://github.com/cctbx/cctbx_project?tab=readme-ov-file#installation): runs in cctbx.python (2.7.x / 3.x) and depends on cctbx modules
 * [dials/dxtbx](https://github.com/dials/dxtbx?tab=readme-ov-file#diffraction-experiment-toolbox): used for reading crystallographic image files
@@ -59,7 +63,7 @@ Run any of the modules without arguments to get an overview of the available par
 ### schimpy
 * `pdb_in` - refined structure file (pdb)
 * `tls_in` - result of the [ECHT](https://pandda.bitbucket.io/pandemic/echt.html) B-factor distribution (json)
-  - if not provided, refined TLS-matrices are extracted from `pdb_in` (if available)
+  - if not provided, TLS-matrices are extracted from `pdb_in` (if available)
 * `sc_size` - size of the supercell (e.g. `"5 5 10"`)
 * `correlate` - enable or disable correlation of TLS-groups (default `True`)
 * `stretch` - stretch parameter for the anchor points (default `0.25`)
@@ -187,4 +191,9 @@ Run any of the modules without arguments to get an overview of the available par
 * `input` - input pdb or json (can be multiple)
 * `lines` - plot vertical lines at these x-positions (e.g. `"25.5 75.5"`)
 
+
 # References
+This software relies on methods described in the following papers:
+1. Chapman, Henry N., et al. "[Continuous diffraction of molecules and disordered molecular crystals.](https://doi.org/10.1107/S160057671700749X)" Journal of applied crystallography 50.4 (2017): 1084-1103.
+2. Pearce, Nicholas M., and Piet Gros. "[A method for intuitively extracting macromolecular dynamics from structural disorder.](https://doi.org/10.1038/s41467-021-25814-x)" Nature communications 12.1 (2021): 5493.
+3. Urzhumtsev, Alexandre, et al. "[From deep TLS validation to ensembles of atomic models built from elemental motions. Addenda and corrigendum.](https://doi.org/10.1107/S2059798316013048)" Acta Crystallographica Section D: Structural Biology 72.9 (2016): 1073-1075.
