@@ -4,7 +4,6 @@ from scitbx.array_family import flex
 from matplotlib import pyplot as plt, colors, ticker, transforms as tr
 from scipy import ndimage as ndi, stats
 import numpy as np
-import warnings
 from . import phil
 
 def run(args):
@@ -52,8 +51,7 @@ def run(args):
   name   += '_d%d'%p.params.depth
   if p.params.mode != 'sum':
     name += p.params.mode
-  with warnings.catch_warnings():
-    warnings.simplefilter('ignore', category=RuntimeWarning)
+  with np.errstate(all='ignore'):
     func  = getattr(np, 'nan' + p.params.mode)
     layer = func(slab, axis=dim)
     nans  = np.isnan(slab).all(axis=dim)
@@ -61,6 +59,7 @@ def run(args):
 
   # Multiply and offset
   layer   = (layer * p.params.multiply) + p.params.add
+  off2d   = np.array(layer.shape) // 2
 
   # Apply filter
   if p.params.filter_size > 0:
@@ -84,28 +83,29 @@ def run(args):
       name += p.params.fmode
   
   # Redefine min and max
-  high    = p.params.max
-  low     = p.params.min
-  if high is not None:
+  if p.params.max is not None:
+    high  = p.params.max
     name += '_max%d'%high
-  if low is not None:
+  else:
+    high  = np.nanmax(layer)
+  if p.params.min is not None:
+    low   = p.params.min
     name += '_min%d'%low
+  else:
+    low   = np.nanmin(layer)
 
   # Apply log scaling
-  if p.params.log_intensities:
+  if p.params.log:
     with warnings.catch_warnings():
       warnings.simplefilter('ignore', category=RuntimeWarning)
       layer[(layer < 1) & (layer > -1)] = 0
       layer[layer >=  1] =  np.log10( layer[layer >=  1])
       layer[layer <= -1] = -np.log10(-layer[layer <= -1])
-      if high is not None:
-        high = np.log10(high) if high >= 1 else -np.log10(-high) if high <= -1 else 0
-      if low is not None:
-        low = np.log10(low) if low >= 1 else -np.log10(-low) if low <= -1 else 0
+      high = np.log10(high) if high >= 1 else -np.log10(-high) if high <= -1 else 0
+      low = np.log10(low) if low >= 1 else -np.log10(-low) if low <= -1 else 0
     name += '_log'
 
   # Identify Bragg positions
-  off2d   = np.array(layer.shape) // 2
   mask    = np.full(layer.shape, np.nan)
   sc_size = p.params.sc_size
   if -1 not in sc_size:
@@ -157,14 +157,23 @@ def run(args):
   else:
     name += '_full'
 
+  # Autoscale
+  if p.params.autoscale:
+    mean    = np.nanmean(layer)
+    std     = np.nanstd(layer)
+    skew    = stats.skew(layer, axis=None, nan_policy='omit').data
+    sigma   = np.exp((2**0.5) + 1./abs(skew))
+    if skew > 0:
+      high = min(high, mean + sigma * std)
+    elif skew < 0:
+      low  = max(low, mean - sigma * std)
+
   # Create custom colormap
   cmaps   = plt.colormaps()
   pos     = next(m for m in cmaps if m.lower()==p.params.positive_cmap.lower())
   poscmap = plt.get_cmap(pos)
   neg     = next(m for m in cmaps if m.lower()==p.params.negative_cmap.lower())
   negcmap = plt.get_cmap(neg)
-  high    = high if high is not None else np.nanmax(layer)
-  low     = low if low is not None else np.nanmin(layer)
   frac    = high / (high - low)
   if p.params.normalize_cmap:
     pfrac =    frac  / max(frac, 1-frac)
