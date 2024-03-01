@@ -105,6 +105,18 @@ def run(args):
       low = np.log10(low) if low >= 1 else -np.log10(-low) if low <= -1 else 0
     name += '_log'
 
+  # Autoscale
+  if p.params.autoscale:
+    values   = layer[~np.isnan(layer)]
+    while True:
+      mean   = np.mean(values)
+      lim    = p.params.clip * np.std(values)
+      mask   = (values > mean - lim) & (values < mean + lim)
+      if mask.all(): break
+      else: values = values[mask]
+    high = min(high, mean + lim)
+    low  = max(low, mean - lim)
+
   # Identify Bragg positions
   mask    = np.full(layer.shape, np.nan)
   sc_size = p.params.sc_size
@@ -156,17 +168,6 @@ def run(args):
 
   else:
     name += '_full'
-
-  # Autoscale
-  if p.params.autoscale:
-    mean    = np.nanmean(layer)
-    std     = np.nanstd(layer)
-    skew    = stats.skew(layer, axis=None, nan_policy='omit').data
-    sigma   = np.exp((2**0.5) + 1./abs(skew))
-    if skew > 0:
-      high = min(high, mean + sigma * std)
-    elif skew < 0:
-      low  = max(low, mean - sigma * std)
 
   # Create custom colormap
   cmaps   = plt.colormaps()
