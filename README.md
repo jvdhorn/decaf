@@ -179,7 +179,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
 * `sc_size` - supercell size (e.g. `"5 5 10"`)
-* `strong` - consider only this number of strongest reflections (e.g. `100`)
+* `strong` - consider only this number of strongest reflections (default `100`)
 
 ### pdbrad
 * `pdb` - input pdb-file
