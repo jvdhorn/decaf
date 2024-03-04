@@ -169,6 +169,13 @@ def run(args):
   else:
     name += '_full'
 
+  # Create inset
+  if p.params.inset is not None:
+    x,y,z = (p.params.inset+[15])[:3]
+    inset = [x-z, x+z, y-z, y+z]
+  else:
+    inset = None
+
   # Create custom colormap
   cmaps   = plt.colormaps()
   pos     = next(m for m in cmaps if m.lower()==p.params.positive_cmap.lower())
@@ -205,43 +212,16 @@ def run(args):
     name += '_cnt%d'%cnt
 
   if p.params.save:
-    fig  = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 8, dstr)
-    fig.savefig(p.input.mtz.replace('.mtz', name+'.png'))
+    fig  = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 8, dstr, inset)
+    name = p.output.png_out or p.input.mtz.replace('.mtz', name+'.png')
+    fig.savefig(name)
 
   else:
-    fig = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 1, dstr)
+    fig = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 1, dstr, inset)
     plt.show()
 
 
-def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr):
-
-  plt.close()
-  plt.rc('font', size=scale*11.)
-  figsize = 8 * scale, 6 * scale
-  fig, (ax, dx, cax, pad) = plt.subplots(1,4,figsize=figsize,
-    gridspec_kw={'width_ratios':[0.85, 0.04, 0.02, 0.09], 'wspace':0, 'hspace':0})
-  fig.tight_layout()
-  ax.set_axis_off()
-  dx.set_axis_off()
-  pad.set_axis_off()
-
-  # Plot distribution
-  if dstr.lower() not in 'false0':
-    bins = 256
-    log  = (dstr == 'Log')
-    vals = layer[~np.isnan(layer)]
-    vals[vals<vmin] = vmin
-    vals[vals>vmax] = vmax
-    y, x, patches = dx.hist(vals, bins=bins, orientation='horizontal',
-                            range=(vmin, vmax), log=log)
-    dx.hist(vals, bins=bins, orientation='horizontal', histtype='step',
-            range=(vmin, vmax), ec='black', lw=.5, log=log)
-    clrs = cmap(np.linspace(0, 1, bins))
-    for p, c in zip(patches, clrs): p.set_facecolor(c)
-    dx.margins(x=0, y=.001)
-    dx.invert_xaxis()
-    pos = dx.get_position()
-    dx.set_position([pos.x0, pos.y0-.025, pos.width, pos.height])
+def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip):
 
   # Dummy plot
   j,i = np.array(layer.shape) // 2
@@ -285,6 +265,51 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr):
   # Plot axes and Bragg positions
   ax.imshow(mask, cmap='binary_r', transform=trans, aspect=asp,
             origin='lower', extent=ext, interpolation='none', zorder=1)
+
+  return im
+
+
+def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr, inset):
+
+  plt.close()
+  plt.rc('font', size=scale*11.)
+  figsize = 8 * scale, 6 * scale
+  fig, (ax, dx, cax, pad) = plt.subplots(1,4,figsize=figsize,
+    gridspec_kw={'width_ratios':[0.85, 0.04, 0.02, 0.09], 'wspace':0, 'hspace':0})
+  fig.tight_layout()
+  ax.set_axis_off()
+  dx.set_axis_off()
+  pad.set_axis_off()
+
+  # Plot distribution
+  if dstr.lower() not in 'false0':
+    bins = 256
+    log  = (dstr == 'Log')
+    vals = layer[~np.isnan(layer)]
+    vals[vals<vmin] = vmin
+    vals[vals>vmax] = vmax
+    y, x, patches = dx.hist(vals, bins=bins, orientation='horizontal',
+                            range=(vmin, vmax), log=log)
+    dx.hist(vals, bins=bins, orientation='horizontal', histtype='step',
+            range=(vmin, vmax), ec='black', lw=.5, log=log)
+    clrs = cmap(np.linspace(0, 1, bins))
+    for p, c in zip(patches, clrs): p.set_facecolor(c)
+    dx.margins(x=0, y=.001)
+    dx.invert_xaxis()
+    pos = dx.get_position()
+    dx.set_position([pos.x0, pos.y0-.025, pos.width, pos.height])
+
+  # Plot data
+  im = plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip)
+
+  # Plot inset
+  if inset is not None:
+    x, y = fig.transFigure.inverted().transform(ax.transAxes.transform((0.5,0.5)))
+    i, j = fig.transFigure.inverted().transform(ax.transAxes.transform((0,0)))
+    ins = fig.add_axes([i, j, x-i, y-j])
+    ins.tick_params(left=False,right=False,top=False,bottom=False,labelleft=False,
+                    labelright=False,labeltop=False,labelbottom=False)
+    plot_section(ins, layer, mask, vmin, vmax, asp, cmap, cnt, ang, inset)
 
   # Plot colorbar
   scf = ticker.ScalarFormatter()

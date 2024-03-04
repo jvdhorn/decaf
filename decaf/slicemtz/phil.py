@@ -79,6 +79,9 @@ def phil_parse(args=None):
         zoom = None
           .type = floats
           .help = 'Zoom around index: "x, y, [number of voxels to pad]"'
+        inset = None
+          .type = floats
+          .help = 'Create inset with zoom around index, using zoom syntax'
         dotsize = 1
           .type = int
           .help = 'Width of the axes and Bragg position indicators (higher = thinner)'
@@ -100,6 +103,13 @@ def phil_parse(args=None):
         save = False
           .type = bool
           .help = 'Save plot as PNG instead of showing'
+      }
+      output
+        .help = "Output files"
+      {
+        png_out = None
+          .type = path
+          .help = 'PNG output file'
       }
     }
     """)
