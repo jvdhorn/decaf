@@ -225,6 +225,11 @@ def run(args):
     plt.show()
 
 
+def axes_to_data(ax, xy):
+
+    return ax.transData.inverted().transform(ax.transAxes.transform(xy))
+
+
 def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip):
 
   # Dummy plot
@@ -270,7 +275,7 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip):
   # Set plot limits
   x,y,z = clip
   if z <= 1:
-    x,y = ax.transData.inverted().transform(ax.transAxes.transform((x,y)))
+    x,y = axes_to_data(ax, (x,y))
     z  *= max(i, j) * 2
 
   w,h = min(z,z*asp), min(z,z/asp)
@@ -319,10 +324,13 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr, 
     i, j = ax.transAxes.transform((0,0))
     w, h = fig.transFigure.inverted().transform([min(x-i, y-j)] * 2)
     x, y = fig.transFigure.inverted().transform((x,y))
-    ins = fig.add_axes([x-w, y-h, w, h])
+    ins  = fig.add_axes([x-w, y-h, w, h])
     ins.tick_params(left=False,right=False,top=False,bottom=False,labelleft=False,
                     labelright=False,labeltop=False,labelbottom=False)
     plot_section(ins, layer, mask, vmin, vmax, asp, cmap, cnt, ang, inset)
+    # Draw rectangle
+    corners = [axes_to_data(ins, xy) for xy in [(0,0),(0,1),(1,1),(1,0),(0,0)]]
+    ax.plot(*zip(*corners), color='black', lw=0.5)
 
   # Plot colorbar
   scf = ticker.ScalarFormatter()
