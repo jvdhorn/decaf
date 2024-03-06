@@ -41,9 +41,9 @@ def run(args):
     cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
   if p.params.center:
     grid    = np.roll(grid, offset, axis=(0,1,2))
-  level   = p.params.slice.strip('hkl')
-  dim     = p.params.slice.find(level)
-  level   = min(grid.shape[dim]-1, max(0, int(level) + int(offset[dim])))
+  slevel   = p.params.slice.lower().strip('hkl')
+  dim     = p.params.slice.find(slevel)
+  level   = min(grid.shape[dim]-1, max(0, int(slevel) + int(offset[dim])))
   sel     = [slice(None)] * 3
   sel[dim]= slice(level-p.params.depth, level+1+p.params.depth)
   slab    = grid[tuple(sel)]
@@ -109,7 +109,7 @@ def run(args):
     values   = layer[~np.isnan(layer)]
     while True:
       mean   = np.mean(values)
-      lim    = p.params.clip * np.std(values)
+      lim    = p.params.sigma * np.std(values)
       mask   = (values > mean - lim) & (values < mean + lim)
       if mask.all(): break
       else: values = values[mask]
@@ -157,22 +157,12 @@ def run(args):
                      int(nwext[0]-ext[0]):int(nwext[1]-ext[1]) or None]
     ext      = nwext
 
-  # Extract transformations
-  lens = list(cell[:3])
-  lens.pop(dim)
-  ang  = np.radians(90 - cell[3 + dim])
-  asp  = lens[1]/lens[0] * np.cos(ang)
-
-  # Set clip
-  x        = ext[0] + (ext[1] - ext[0]) / 2.
-  y        = ext[2] + (ext[3] - ext[2]) / 2.
-  z        = max((ext[1] - ext[0]) * asp, ext[3] - ext[2]) / 2.
-  clip     = [x,y,z]
-
   # Prepare zoom
   if p.params.zoom is not None:
     clip  = (p.params.zoom+[15])[:3]
     name += '_zoom'
+  else:
+    clip  = None
 
   # Prepare inset
   if p.params.inset is not None:
@@ -191,6 +181,12 @@ def run(args):
   bigmask = ndi.convolve(bigmask, kernel, mode='constant') // 2
   bigmask[bigmask==0] = np.nan
   mask    = bigmask
+
+  # Extract transformations
+  lens = list(cell[:3])
+  lens.pop(dim)
+  ang  = np.radians(90 - cell[3 + dim])
+  asp  = lens[1]/lens[0] * np.cos(ang)
 
   # Create custom colormap
   cmaps   = plt.colormaps()
@@ -220,18 +216,25 @@ def run(args):
   loc  = p.params.position
   fs   = p.output.figscale
 
+  if p.params.label:
+    label = p.params.slice.lower()
+    if p.params.depth > 0:
+      label = label.replace(slevel, 'n')
+  else:
+    label = ''
+
   if cnt:
     name += '_cnt%d'%cnt
 
   if p.params.save:
     fig  = plot_layer(layer, mask, low, high, cmap, ang, asp,
-                      clip, cnt, fs, dstr, inset, ext, loc)
+                      clip, cnt, fs, dstr, inset, ext, loc, label)
     name = p.output.png_out or p.input.mtz.replace('.mtz', name+'.png')
     fig.savefig(name)
 
   else:
     fig = plot_layer(layer, mask, low, high, cmap, ang, asp,
-                     clip, cnt, 1, dstr, inset, ext, loc)
+                     clip, cnt, 1, dstr, inset, ext, loc, label)
     plt.show()
 
 
@@ -281,30 +284,36 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
             origin='lower', extent=ext, interpolation='none', zorder=1)
 
   # Set plot limits
-  x,y,z = clip
-  if z <= 1:
-    x,y = axes_to_data(ax, (x,y))
-    z  *= max(ext[1]-ext[0], ext[3]-ext[2])
-
-  w,h = min(z,z*asp), min(z,z/asp)
-  ax.set_xlim((x-w, x+w))
-  ax.set_ylim((y-h, y+h))
+  if clip is not None:
+    x,y,z = clip
+    if z <= 1:
+      x,y = axes_to_data(ax, (x,y))
+      z  *= max(ext[1]-ext[0], ext[3]-ext[2])
+    w,h = min(z,z*asp), min(z,z/asp)
+    ax.set_xlim((x-w, x+w))
+    ax.set_ylim((y-h, y+h))
 
   return im
 
 
 def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
-               clip, cnt, scale, dstr, inset, ext, loc):
+               clip, cnt, scale, dstr, inset, ext, loc, label):
 
   plt.close()
-  plt.rc('font', size=scale*11.)
+  plt.rc('font', size=5. * scale)
   figsize = 8 * scale, 6 * scale
   fig, (ax, dx, cax, pad) = plt.subplots(1,4,figsize=figsize,
     gridspec_kw={'width_ratios':[0.85, 0.04, 0.02, 0.09], 'wspace':0, 'hspace':0})
-  fig.tight_layout()
   ax.set_axis_off()
   dx.set_axis_off()
   pad.set_axis_off()
+  for Axes in fig.axes:
+    Axes.tick_params(left=False,right=False,top=False,bottom=False,labelleft=False,
+                    labelright=False,labeltop=False,labelbottom=False)
+  fig.tight_layout()
+  for Axes in (dx, cax):
+    pos = Axes.get_position()
+    Axes.set_position([pos.x0, pos.y0, pos.width, pos.height*0.95])
 
   # Plot distribution
   if dstr.lower() not in 'false0':
@@ -321,8 +330,6 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
     for p, c in zip(patches, clrs): p.set_facecolor(c)
     dx.margins(x=0, y=.001)
     dx.invert_xaxis()
-    pos = dx.get_position()
-    dx.set_position([pos.x0, pos.y0-.025, pos.width, pos.height])
 
   # Plot data
   im = plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext)
@@ -343,6 +350,12 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
     corners = [axes_to_data(ins, xy) for xy in [(0,0),(0,1),(1,1),(1,0),(0,0)]]
     ax.plot(*zip(*corners), color='black', lw=0.5 * scale)
 
+  # Plot label
+  if label:
+    lbl = fig.add_axes([0.7,0.025,0,0])
+    lbl.set_axis_off()
+    lbl.text(0,1,label,fontsize=22. * scale)
+
   # Plot colorbar
   scf = ticker.ScalarFormatter()
   scf.set_powerlimits((-2,2))
@@ -351,7 +364,5 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
   bar.ax.tick_params(width=2. * scale, size=8. * scale, labelsize=22. * scale)
   bar.ax.yaxis.get_offset_text().set(size=22. * scale)
   bar.ax.yaxis.get_offset_text().set_position((0, 0))
-  pos = bar.ax.get_position()
-  bar.ax.set_position([pos.x0, pos.y0-.025, pos.width, pos.height])
 
   return fig
