@@ -96,8 +96,7 @@ def run(args):
 
   # Apply log scaling
   if p.params.log:
-    with warnings.catch_warnings():
-      warnings.simplefilter('ignore', category=RuntimeWarning)
+    with np.errstate(all='ignore'):
       layer[(layer < 1) & (layer > -1)] = 0
       layer[layer >=  1] =  np.log10( layer[layer >=  1])
       layer[layer <= -1] = -np.log10(-layer[layer <= -1])
@@ -129,9 +128,58 @@ def run(args):
 
   # Overlay axes
   if p.params.axes:
-    x, y  = mask.shape
-    mask[x//2,:] = 1.
-    mask[:,y//2] = 1.
+    x, y   = mask.shape
+    xwhere = np.argwhere(~np.isnan(layer[:,y//2]))
+    ywhere = np.argwhere(~np.isnan(layer[x//2,:]))
+    mask[x//2,ywhere.min():ywhere.max()] = 1.
+    mask[xwhere.min():xwhere.max(),y//2] = 1.
+
+  # Transpose layer and mask
+  layer = layer.T
+  mask  = mask.T
+
+  # Trim
+  i, j = off2d
+  ext  = [-i-0.5, i+0.5, -j-0.5, j+0.5]
+
+  if p.params.trim:
+    notnans  = ~np.isnan(layer)
+    xwhere   = np.argwhere(notnans.any(axis=0))
+    ywhere   = np.argwhere(notnans.any(axis=1))
+    nwext    = ext[:]
+    nwext[0] = ext[0] + xwhere.min()
+    nwext[1] = ext[1] - (layer.shape[1] - xwhere.max() - 1)
+    nwext[2] = ext[2] + ywhere.min()
+    nwext[3] = ext[3] - (layer.shape[0] - ywhere.max() - 1)
+    layer    = layer[int(nwext[2]-ext[2]):int(nwext[3]-ext[3]) or None,
+                     int(nwext[0]-ext[0]):int(nwext[1]-ext[1]) or None]
+    mask     = mask [int(nwext[2]-ext[2]):int(nwext[3]-ext[3]) or None,
+                     int(nwext[0]-ext[0]):int(nwext[1]-ext[1]) or None]
+    ext      = nwext
+
+  # Extract transformations
+  lens = list(cell[:3])
+  lens.pop(dim)
+  ang  = np.radians(90 - cell[3 + dim])
+  asp  = lens[1]/lens[0] * np.cos(ang)
+
+  # Set clip
+  x        = ext[0] + (ext[1] - ext[0]) / 2.
+  y        = ext[2] + (ext[3] - ext[2]) / 2.
+  z        = max((ext[1] - ext[0]) * asp, ext[3] - ext[2]) / 2.
+  clip     = [x,y,z]
+
+  # Prepare zoom
+  if p.params.zoom is not None:
+    clip  = (p.params.zoom+[15])[:3]
+    name += '_zoom'
+
+  # Prepare inset
+  if p.params.inset is not None:
+    inset = (p.params.inset+[15])[:3]
+    name += '_inset'
+  else:
+    inset = None
 
   # Increase mask size
   factor  = max(0, p.params.dotsize) * 2 + 1
@@ -143,48 +191,6 @@ def run(args):
   bigmask = ndi.convolve(bigmask, kernel, mode='constant') // 2
   bigmask[bigmask==0] = np.nan
   mask    = bigmask
-
-  # Transpose layer and mask
-  layer = layer.T
-  mask  = mask.T
-
-  # Extract transformations
-  lens = list(cell[:3])
-  lens.pop(dim)
-  ang  = np.radians(90 - cell[3 + dim])
-  asp  = lens[1]/lens[0] * np.cos(ang)
-
-  # Zoom or trim
-  i, j = off2d
-  edge = [-i-0.5, i+0.5, -j-0.5, j+0.5]
-
-  if p.params.zoom is not None:
-    clip  = (p.params.zoom+[15])[:3]
-    name += '_zoom'
-
-  else:
-    if p.params.trim:
-      notnans  = ~np.isnan(layer)
-      xwhere   = np.argwhere(notnans.any(axis=0))
-      ywhere   = np.argwhere(notnans.any(axis=1))
-      edge[0] += xwhere.min()
-      edge[1] -= layer.shape[1] - xwhere.max() - 1
-      edge[2] += ywhere.min()
-      edge[3] -= layer.shape[0] - ywhere.max() - 1
-    else:
-      name += '_full'
-
-    x        = edge[0] + (edge[1] - edge[0]) / 2.
-    y        = edge[2] + (edge[3] - edge[2]) / 2.
-    z        = max(edge[1] - edge[0], edge[3] - edge[2]) / 2.
-    clip     = [x,y,z]
-
-  # Prepare inset
-  if p.params.inset is not None:
-    inset = (p.params.inset+[15])[:3]
-    name += '_inset'
-  else:
-    inset = None
 
   # Create custom colormap
   cmaps   = plt.colormaps()
@@ -211,17 +217,21 @@ def run(args):
   # Make plot
   cnt  = p.params.contours
   dstr = p.params.distribution
+  loc  = p.params.position
+  fs   = p.output.figscale
 
   if cnt:
     name += '_cnt%d'%cnt
 
   if p.params.save:
-    fig  = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 8, dstr, inset)
+    fig  = plot_layer(layer, mask, low, high, cmap, ang, asp,
+                      clip, cnt, fs, dstr, inset, ext, loc)
     name = p.output.png_out or p.input.mtz.replace('.mtz', name+'.png')
     fig.savefig(name)
 
   else:
-    fig = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 1, dstr, inset)
+    fig = plot_layer(layer, mask, low, high, cmap, ang, asp,
+                     clip, cnt, 1, dstr, inset, ext, loc)
     plt.show()
 
 
@@ -230,11 +240,9 @@ def axes_to_data(ax, xy):
     return ax.transData.inverted().transform(ax.transAxes.transform(xy))
 
 
-def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip):
+def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
 
   # Dummy plot
-  j,i = np.array(layer.shape) // 2
-  ext = [-i-0.5, i+0.5, -j-0.5, j+0.5]
   im  = ax.imshow(layer, cmap=cmap, alpha=0, vmin=vmin, vmax=vmax, aspect=asp,
                   origin='lower', extent=ext, interpolation='none', zorder=2)
 
@@ -276,7 +284,7 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip):
   x,y,z = clip
   if z <= 1:
     x,y = axes_to_data(ax, (x,y))
-    z  *= max(i, j) * 2
+    z  *= max(ext[1]-ext[0], ext[3]-ext[2])
 
   w,h = min(z,z*asp), min(z,z/asp)
   ax.set_xlim((x-w, x+w))
@@ -285,7 +293,8 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip):
   return im
 
 
-def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr, inset):
+def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
+               clip, cnt, scale, dstr, inset, ext, loc):
 
   plt.close()
   plt.rc('font', size=scale*11.)
@@ -316,28 +325,30 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr, 
     dx.set_position([pos.x0, pos.y0-.025, pos.width, pos.height])
 
   # Plot data
-  im = plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip)
+  im = plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext)
 
   # Plot inset
   if inset is not None:
-    x, y = ax.transAxes.transform((0.5,0.5))
-    i, j = ax.transAxes.transform((0,0))
-    w, h = fig.transFigure.inverted().transform([min(x-i, y-j)] * 2)
-    x, y = fig.transFigure.inverted().transform((x,y))
-    ins  = fig.add_axes([x-w, y-h, w, h])
+    x1, y1 = ax.transAxes.transform((0.5,0.5))
+    x0, y0 = ax.transAxes.transform((0,0))
+    w, h   = fig.transFigure.inverted().transform([min(x1-x0, y1-y0)] * 2)
+    x1, y1 = fig.transFigure.inverted().transform((x1,y1))
+    x      = {'l':x1-w,'r':x1}.get(loc[1])
+    y      = {'b':y1-h,'t':y1}.get(loc[0])
+    ins    = fig.add_axes([x, y, w, h])
     ins.tick_params(left=False,right=False,top=False,bottom=False,labelleft=False,
                     labelright=False,labeltop=False,labelbottom=False)
-    plot_section(ins, layer, mask, vmin, vmax, asp, cmap, cnt, ang, inset)
+    plot_section(ins, layer, mask, vmin, vmax, asp, cmap, cnt, ang, inset, ext)
     # Draw rectangle
     corners = [axes_to_data(ins, xy) for xy in [(0,0),(0,1),(1,1),(1,0),(0,0)]]
-    ax.plot(*zip(*corners), color='black', lw=0.5)
+    ax.plot(*zip(*corners), color='black', lw=0.5 * scale)
 
   # Plot colorbar
   scf = ticker.ScalarFormatter()
   scf.set_powerlimits((-2,2))
   scf.set_useMathText(True)
   bar = fig.colorbar(im, cax=cax, format=scf)
-  bar.ax.tick_params(width=2*scale, size=8.*scale, labelsize=22. * scale)
+  bar.ax.tick_params(width=2. * scale, size=8. * scale, labelsize=22. * scale)
   bar.ax.yaxis.get_offset_text().set(size=22. * scale)
   bar.ax.yaxis.get_offset_text().set_position((0, 0))
   pos = bar.ax.get_position()
