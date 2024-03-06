@@ -44,10 +44,11 @@ def run(args):
   slevel   = p.params.slice.lower().strip('hkl')
   dim     = p.params.slice.find(slevel)
   level   = min(grid.shape[dim]-1, max(0, int(slevel) + int(offset[dim])))
+  label   = p.params.slice.lower().replace(slevel, str(int(level-offset[dim])))
   sel     = [slice(None)] * 3
   sel[dim]= slice(level-p.params.depth, level+1+p.params.depth)
   slab    = grid[tuple(sel)]
-  name    = '_'+p.params.slice
+  name    = '_'+label
   name   += '_d%d'%p.params.depth
   if p.params.mode != 'sum':
     name += p.params.mode
@@ -62,7 +63,7 @@ def run(args):
   off2d   = np.array(layer.shape) // 2
 
   # Apply filter
-  if p.params.filter_size > 0:
+  if p.params.filter > 0:
     filt          = {'gaussian' : ndi.gaussian_filter,
                      'gausslap' : ndi.gaussian_laplace,
                      'uniform'  : ndi.uniform_filter,
@@ -71,14 +72,14 @@ def run(args):
                      'median'   : ndi.median_filter}[p.params.fmode]
     nans          = np.isnan(layer)
     layer[nans]   = 0.
-    layer         = filt(layer, p.params.filter_size, mode='constant')
+    layer         = filt(layer, p.params.filter, mode='constant')
     layer[nans]   = np.nan
     if p.params.fmode == 'gaussian':
       norm          = np.ones(layer.shape)
       norm[nans]    = 0.
-      norm          = filt(norm, p.params.filter_size, mode='constant')
+      norm          = filt(norm, p.params.filter, mode='constant')
       layer[~nans] /= norm[~nans]
-    name         += '_filt%d'%p.params.filter_size
+    name         += '_filt%d'%p.params.filter
     if p.params.fmode != 'gaussian':
       name += p.params.fmode
   
@@ -126,17 +127,17 @@ def run(args):
     mask[tuple(b_ind.T)]  = 1.
     mask[np.isnan(layer)] = np.nan
 
+  # Transpose layer and mask
+  layer = layer.T
+  mask  = mask.T
+
   # Overlay axes
   if p.params.axes:
     x, y   = mask.shape
     xwhere = np.argwhere(~np.isnan(layer[:,y//2]))
     ywhere = np.argwhere(~np.isnan(layer[x//2,:]))
-    mask[x//2,ywhere.min():ywhere.max()] = 1.
-    mask[xwhere.min():xwhere.max(),y//2] = 1.
-
-  # Transpose layer and mask
-  layer = layer.T
-  mask  = mask.T
+    if xwhere.size: mask[xwhere.min():xwhere.max(),y//2] = 1.
+    if ywhere.size: mask[x//2,ywhere.min():ywhere.max()] = 1.
 
   # Trim
   i, j = off2d
@@ -216,12 +217,10 @@ def run(args):
   loc  = p.params.position
   fs   = p.output.figscale
 
-  if p.params.label:
-    label = p.params.slice.lower()
-    if p.params.depth > 0:
-      label = label.replace(slevel, 'n')
-  else:
+  if not p.params.label:
     label = ''
+  elif p.params.depth > 0:
+    label = label.replace(label.strip('hkl'), 'n')
 
   if cnt:
     name += '_cnt%d'%cnt
@@ -309,7 +308,7 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
   pad.set_axis_off()
   for Axes in fig.axes:
     Axes.tick_params(left=False,right=False,top=False,bottom=False,labelleft=False,
-                    labelright=False,labeltop=False,labelbottom=False)
+                     labelright=False,labeltop=False,labelbottom=False)
   fig.tight_layout()
   for Axes in (dx, cax):
     pos = Axes.get_position()
@@ -361,7 +360,7 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
   scf.set_powerlimits((-2,2))
   scf.set_useMathText(True)
   bar = fig.colorbar(im, cax=cax, format=scf)
-  bar.ax.tick_params(width=2. * scale, size=8. * scale, labelsize=22. * scale)
+  bar.ax.tick_params(width=2. * scale, size=6. * scale, labelsize=22. * scale)
   bar.ax.yaxis.get_offset_text().set(size=22. * scale)
   bar.ax.yaxis.get_offset_text().set_position((0, 0))
 
