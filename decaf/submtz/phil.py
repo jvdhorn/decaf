@@ -15,12 +15,13 @@ def phil_parse(args=None):
         mtz_1 = None
           .type = path
           .help = 'First file'
+        mtz_2 = None
+          .type = path
+          .help = 'Second file (can be multiple)'
+          .multiple = True
         lbl_1 = IDFF
           .type = str
           .help = 'First array label'
-        mtz_2 = None
-          .type = path
-          .help = 'Second file'
         lbl_2 = IDFF
           .type = str
           .help = 'First array label'
@@ -38,12 +39,20 @@ def phil_parse(args=None):
           .type = float
           .help = 'Scale factor for second map (0 = auto scale)'
       }
+      output
+        .help = "Output files"
+      {
+        mtz_out = None
+          .type = path
+          .help = 'Output MTZ file'
+      }
     }
     """)
 
   defaults = ['mtz_1','mtz_2']
   for i, arg in enumerate(args):
     if '=' not in arg:
+      defaults.append(defaults[-1])
       args[i] = defaults.pop(0)+'='+arg
   interpreter = master_phil.command_line_argument_interpreter()
   arguments = [interpreter.process(arg) for arg in args]

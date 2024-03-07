@@ -14,33 +14,36 @@ def run(args):
   first   = obj.crystals()[0].miller_set().array(obj.get_column(
             p.input.lbl_1).extract_values().as_double())
   first  = first.select(first.data() > p.params.cutoff)
-  print('Reading', p.input.mtz_2)
-  obj     = mtz.object(p.input.mtz_2)
-  second  = obj.crystals()[0].miller_set().array(obj.get_column(
-            p.input.lbl_2).extract_values().as_double())
-  second = second.select(second.data() > p.params.cutoff)
-  first, second = first.common_sets(second)
-  if p.params.scale == 0:
-    print('Scaling arrays')
-    scale = flex.sum(first.data()**2)**.5 / flex.sum(second.data() ** 2)**.5
-  else:
-    scale = p.params.scale
-  print('Using scale factor', scale)
-  second._data *= scale
-  if p.params.mode == 'sub':
-    print('Subtracting arrays')
-    first._data -= second.data()
-  elif p.params.mode == 'add':
-    print('Adding arrays')
-    first._data += second.data()
-  elif p.params.mode == 'mul':
-    print('Multiplying arrays')
-    first._data *= second.data()
-  elif p.params.mode == 'div':
-    print('Dividing arrays')
-    first._data /= second.data()
-  join = '_' + p.params.mode + '_'
+  join   = '_' + p.params.mode
+  name   = p.input.mtz_1.replace('.mtz', join)
+  fscale = flex.sum(first.data()**2)**.5
+  for file in p.input.mtz_2:
+    name+= '_' + file.replace('.mtz', '')
+    print('Reading', file)
+    obj     = mtz.object(file)
+    second  = obj.crystals()[0].miller_set().array(obj.get_column(
+              p.input.lbl_2).extract_values().as_double())
+    second = second.select(second.data() > p.params.cutoff)
+    first, second = first.common_sets(second)
+    if p.params.scale == 0:
+      scale = fscale / flex.sum(second.data() ** 2)**.5
+      print('Using scale factor', scale)
+    else:
+      scale = p.params.scale
+    second._data *= scale
+    if p.params.mode == 'sub':
+      first._data -= second.data()
+    elif p.params.mode == 'add':
+      first._data += second.data()
+    elif p.params.mode == 'mul':
+      first._data *= second.data()
+    elif p.params.mode == 'div':
+      first._data /= second.data()
+
   print('Writing new MTZ')
+  if p.output.mtz_out is not None:
+    name = p.output.mtz_out
+  else:
+    name = name.replace('/','_')+'.mtz'
   mtzobj = first.as_mtz_dataset(column_root_label=p.input.lbl_1, column_types='J')
-  name   = (p.input.mtz_1.replace('.mtz', join) + p.input.mtz_2).replace('/','_')
   mtzobj.mtz_object().write(name)
