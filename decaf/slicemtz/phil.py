@@ -116,7 +116,7 @@ def phil_parse(args=None):
         png_out = None
           .type = path
           .help = 'PNG output file'
-        figscale = 4.0
+        figscale = 6.0
           .type = float
           .help = 'Scalar for the output image file'
       }
