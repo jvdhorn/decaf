@@ -10,19 +10,43 @@ def run(args):
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().rmbragg
   print('Reading', p.input.mtz)
-  keep          = p.params.keep
-  sc_size       = list(map(int, p.params.sc_size))
-  lower         = [int(i)//2 for i in p.params.box]
-  upper         = [i-j for i,j in zip(sc_size, lower)]
-  mtz_object    = mtz.object(p.input.mtz)
+  obj         = mtz.object(p.input.mtz)
+
+  indices     = obj.extract_miller_indices().as_vec3_double().as_numpy_array()
+  mask        = np.ones(indices.shape[0]).astype(bool)
+
+  # Remove Bragg
+  if p.params.sc_size is not None:
+    ind_reduced = indices % p.params.sc_size
+    lower       = [i//2 for i in p.params.box]
+    upper       = [i-j for i,j in zip(p.params.sc_size, lower)]
+    mask[((ind_reduced >= upper)|(ind_reduced <= lower)).all(axis=1)] = False
+
+  # Select within limits
+  h,k,l  = indices.T
+  hlim   = list(map(float, p.params.hlim.split()))
+  klim   = list(map(float, p.params.klim.split()))
+  llim   = list(map(float, p.params.llim.split()))
+  hpos   = ( h >= min(hlim)) & ( h <= max(hlim))
+  kpos   = ( k >= min(klim)) & ( k <= max(klim))
+  lpos   = ( l >= min(llim)) & ( l <= max(llim))
+  hneg   = (-h >= min(hlim)) & (-h <= max(hlim))
+  kneg   = (-k >= min(klim)) & (-k <= max(klim))
+  lneg   = (-l >= min(llim)) & (-l <= max(llim))
+  mask  &= (hpos & kpos & lpos) | (hneg & kneg & lneg)
+
+  # Select intensity fraction
+  data   = obj.get_column(p.input.lbl).extract_values().as_numpy_array()
+  perc   = abs(p.params.fraction) * 100
+  if p.params.fraction > 0:
+    mask&= data < np.percentile(data[mask], perc)
+  else:
+    mask&= data > np.percentile(data[mask], 100 - perc)
 
   print('Removing voxels')
-  indices       = mtz_object.extract_miller_indices()
-  ind_reduced   = np.array(indices) % sc_size
-  mask = ((ind_reduced >= upper)|(ind_reduced <= lower)).all(axis=1)
-  if keep: mask = ~mask
-  remove = flex.size_t(np.where(mask)[0])
-  mtz_object.delete_reflections(remove)
+  if p.params.keep: mask = ~mask
+  remove = flex.size_t(np.where(~mask)[0])
+  obj.delete_reflections(remove)
 
   if p.output.mtz_out:
     label = p.output.mtz_out.replace('.mtz','')
@@ -30,4 +54,4 @@ def run(args):
     label = '{}_reduced'.format(p.input.mtz.replace('.mtz',''))
 
   print('Writing new MTZ')
-  mtz_object.write(label+'.mtz')
+  obj.write(label+'.mtz')

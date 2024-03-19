@@ -124,6 +124,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `lbl_2` - second array of interest (default `IDFF`)
 * `bins` - number of resolution shells (default `10`)
 * `hlim` and `klim` and `llim` - limit h, k, and l (e.g. `"-20 20"`)
+* `fraction` - consider only this fraction of lowest intensities (default `1.0`)
 
 ### rmbragg
 * `mtz` - input mtz-file
@@ -175,6 +176,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `lbl` - array of interest (default `IDFF`)
 * `size` - filter size (default `1`)
 * `filter` - filter type (`gaussian` or `uniform`, default `gaussian`)
+* `interpolate` - fill missing values with filtered intensities (default `False`)
 
 ### qdep
 * `mtz` - input mtz-file
