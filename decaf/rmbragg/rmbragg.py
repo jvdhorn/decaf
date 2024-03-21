@@ -6,21 +6,52 @@ from . import phil
 
 def run(args):
 
-  scope       = phil.phil_parse(args = args)
+  scope  = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
-  p           = scope.extract().rmbragg
+  p      = scope.extract().rmbragg
   print('Reading', p.input.mtz)
-  obj         = mtz.object(p.input.mtz)
+  obj     = mtz.object(p.input.mtz)
+  arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(p.input.lbl
+            ).extract_values()).expand_to_p1()
+  indices = arr.indices().as_vec3_double().as_numpy_array().astype(int)
+  mask    = np.ones(indices.shape[0]).astype(bool)
+  frac    = p.params.fraction and (1-p.params.fraction) * 100
+  data    = arr.data().as_numpy_array()
 
-  indices     = obj.extract_miller_indices().as_vec3_double().as_numpy_array()
-  mask        = np.ones(indices.shape[0]).astype(bool)
-
-  # Remove Bragg
+  # Remove all around Bragg positions
   if p.params.sc_size is not None:
-    ind_reduced = indices % p.params.sc_size
-    lower       = [i//2 for i in p.params.box]
-    upper       = [i-j for i,j in zip(p.params.sc_size, lower)]
-    mask[((ind_reduced >= upper)|(ind_reduced <= lower)).all(axis=1)] = False
+    half   = np.array(p.params.box) // 2
+    box    = half * 2 + 1
+
+    offset = abs(indices).max(axis=0) + half
+    shape  = 2 * offset + 1
+    grid   = np.full(shape, np.nan)
+    grid[tuple((-indices + offset).T)] = data
+    grid[tuple(( indices + offset).T)] = data
+    shadow = grid.copy()
+
+    bragg  = arr.miller_set(arr.indices(), False).complete_set().indices(
+             ).as_vec3_double().as_numpy_array().astype(int)
+    bragg  = bragg[(bragg % p.params.sc_size == 0).all(axis=1)] + offset - half
+
+    with np.errstate(all='ignore'):
+      for ind in bragg:
+        sel = tuple(map(slice,ind,ind+box))
+        if frac is None:
+          shadow[sel] = np.nan
+        else:
+          val = grid[sel]
+          val[val >= np.nanpercentile(val,frac)] = np.nan
+          shadow[sel] = val
+
+    mask &= ~(np.isnan(shadow[tuple(( indices + offset).T)])
+             |np.isnan(shadow[tuple((-indices + offset).T)]))
+
+  # Remove fraction
+  elif frac is not None:
+    with np.errstate(all='ignore'):
+      mask &= (data < np.nanpercentile(data,frac))
+
 
   # Select within limits
   h,k,l  = indices.T
@@ -34,14 +65,6 @@ def run(args):
   kneg   = (-k >= min(klim)) & (-k <= max(klim))
   lneg   = (-l >= min(llim)) & (-l <= max(llim))
   mask  &= (hpos & kpos & lpos) | (hneg & kneg & lneg)
-
-  # Select intensity fraction
-  data   = obj.get_column(p.input.lbl).extract_values().as_numpy_array()
-  perc   = abs(p.params.fraction) * 100
-  if p.params.fraction > 0:
-    mask&= data < np.percentile(data[mask], perc)
-  else:
-    mask&= data > np.percentile(data[mask], 100 - perc)
 
   print('Removing voxels')
   if p.params.keep: mask = ~mask
