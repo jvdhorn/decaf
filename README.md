@@ -124,12 +124,12 @@ Run any of the modules without arguments to get an overview of the available par
 * `lbl_2` - second array of interest (default `IDFF`)
 * `bins` - number of resolution shells (default `10`)
 * `hlim` and `klim` and `llim` - limit h, k, and l (e.g. `"-20 20"`)
-* `fraction` - consider only this fraction of lowest intensities (default `1.0`)
 
 ### rmbragg
 * `mtz` - input mtz-file
 * `sc_size` - supercell size (e.g. `"5 5 10"`)
-* `box` - number of voxels to remove around every Bragg position (e.g. `"1 1 1"`)
+* `box` - number of voxels to remove around every Bragg position (default `"1 1 1"`)
+* `fraction` - remove this fraction of highest intensities in every box (e.g. `0.05`)
 * `keep` - invert selection (default `False`)
 
 ### mtzstats
