@@ -1106,6 +1106,8 @@ class Model():
     pairs   = np.fromiter((j for p in zip(*np.triu_indices(len(chains),1))
                            for i in indices for j in (i,)+p), dtype=int).reshape(-1,3)
     np.random.shuffle(pairs)
+    if pairs_frac < 0:
+      pairs_frac = np.random.random() * abs(pairs_frac)
     pairs   = pairs[:int(len(pairs) * pairs_frac)]
 
     if seq:
