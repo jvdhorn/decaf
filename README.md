@@ -76,6 +76,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `skip` - skip correlation (but not displacements!) for these levels (e.g. `"2 3 4"`)
 * `reverse` - start procedure at highest level of the hierarchy (default `True`)
 * `swap_frac` - end correlation prematurely after this fraction of swaps (default `1.0`)
+* `energy_percentile` - only allow swaps for which local energy exceeds this percentile (default `0.0`)
 * `processes` - number of parallel simulations (default `1`, watch memory usage!)
 * `interval` - number of seconds between consecutive simulations (default `1.0`)
 * `n_models` - number of supercells to simulate (default `128`)
