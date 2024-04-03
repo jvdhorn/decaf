@@ -454,6 +454,7 @@ class Model():
                   rigid_only=False,
                   protein_only=True,
                   heavy_only=False,
+                  hbond_only=False,
                   dist_cutoff=3.,
                   stretch=1.,
                   use_com_midpoint=False,
@@ -536,6 +537,7 @@ class Model():
                              rigid_only=rigid_only,
                              protein_only=protein_only,
                              heavy_only=heavy_only,
+                             hbond_only=hbond_only,
                              use_com_midpoint=use_com_midpoint,
                              inherit_contacts=inherit_contacts,
                              need_restraints=regularize,
@@ -1085,7 +1087,7 @@ class Model():
     chains  = self.working_chains
 
     if override is not None:
-      weights = {i: np.array((override+[0]*len(w))[:len(w)])[...,None]
+      weights = {i: np.array((override+[1]*len(w))[:len(w)])[...,None] * w
                  for i,w in weights.items()}
 
     for chain in chains:
@@ -1336,7 +1338,7 @@ class Model():
         )
 
   def init_environments(self, dist_cutoff=3., rigid_only=False,
-                        protein_only=True, heavy_only=False,
+                        protein_only=True, heavy_only=False, hbond_only=False,
                         use_com_midpoint=False, inherit_contacts=True,
                         contact_level=-1, need_restraints=False):
 
@@ -1349,6 +1351,7 @@ class Model():
                                      rigid_only        = rigid_only,
                                      protein_only      = protein_only,
                                      heavy_only        = heavy_only,
+                                     hbond_only        = hbond_only,
                                      use_com_midpoint  = use_com_midpoint,
                                      inherit_contacts  = inherit_contacts,
                                      contact_level     = contact_level,
@@ -1384,6 +1387,7 @@ class Environments():
                protein_only      = True,
                rigid_only        = False,
                heavy_only        = False,
+               hbond_only        = False,
                use_com_midpoint  = False,
                inherit_contacts  = True,
                contact_level     = -1,
@@ -1425,16 +1429,18 @@ class Environments():
                      )
 
     # Get reference coordination vectors from original crystal symmetry
+    selection      = flex.bool(self.base_hierarchy.atoms().size(), True)
+    if protein_only:
+      selection   &= base_hierarchy.atom_selection_cache().sel_protein()
     if rigid_only:
       ss           = secondary_structure.manager(self.base_hierarchy,
                                                    log = open(os.devnull,'w'))
-      selection    = ss.helix_selection() | ss.beta_selection()
-    else:
-      selection    = flex.bool(self.base_hierarchy.atoms().size(), True)
-    if protein_only:
-      selection   &= base_hierarchy.atom_selection_cache().sel_protein()
+      selection   &= ss.helix_selection() | ss.beta_selection()
     if heavy_only:
       selection   &= flex.bool(not atom.element_is_hydrogen()
+                               for atom in self.base_hierarchy.atoms())
+    if hbond_only:
+      selection   &= flex.bool(atom.element.strip() in {'N', 'O', 'F'}
                                for atom in self.base_hierarchy.atoms())
     actual_ids     = [i for i, b in enumerate(selection) if b]
     base_xrs       = self.base_hierarchy.extract_xray_structure(

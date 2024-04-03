@@ -153,6 +153,7 @@ def model_worker(n_model):
                       rigid_only=p.environments.rigid_only,
                       protein_only=p.environments.protein_only,
                       heavy_only=p.environments.heavy_only,
+                      hbond_only=p.environments.hbond_only,
                       dist_cutoff=p.environments.cutoff,
                       stretch=p.environments.stretch,
                       regularize=p.regularization.regularize,
