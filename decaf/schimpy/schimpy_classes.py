@@ -1086,7 +1086,7 @@ class Model():
     exp     = spring_weights / 2.
     chains  = self.working_chains
 
-    if override is not None:
+    if override is not None and n_level == 1:
       weights = {i: np.array((override+[1]*len(w))[:len(w)])[...,None] * w
                  for i,w in weights.items()}
 
