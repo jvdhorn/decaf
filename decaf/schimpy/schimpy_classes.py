@@ -509,6 +509,7 @@ class Model():
                   skip=(),
                   override=None,
                   pick_extremes=None,
+                  extremes_from_level=1,
                   require_both=False,
                   uncorrelate=False,
                   percentile=0,
@@ -584,19 +585,23 @@ class Model():
                              need_restraints=regularize,
                              contact_level=contact_level)
 
-    # Set seed
-    if self.seed_offset != -1:
-      self.seed(self.n_model + self.seed_offset)
-    else:
+    # Replace starting models by some extremes
+    if pick_extremes:
+      self.seed(self.seed_offset)
+      for chain in self.working_chains:
+        chain.set_random(n_level_select=extremes_from_level, amp=amp)
       self.seed()
+      self.replace_by_extremes(n=pick_extremes)
 
     # Randomize starting models
-    for chain in self.working_chains:
-      coords = avail_coords[np.random.randint(len(avail_coords))]
-      chain.set_coordinates(chain.apply_operations(coords))
+    else:
+      self.seed()
+      for chain in self.working_chains:
+        coords = avail_coords[np.random.randint(len(avail_coords))]
+        chain.set_coordinates(chain.apply_operations(coords))
 
     # Introduce shifts
-    if method == None or len(self.tls_hierarchy) == 0:
+    if method == None or len(self.tls_hierarchy) == 0 or self.max_level == 0:
       pass
     elif method == 'analysis':
       self.init_proxies()
@@ -611,8 +616,7 @@ class Model():
                                  abf=allow_bad_frac, dgf=disallow_good_frac,
                                  require_both=require_both, uncorrelate=uncorrelate,
                                  percentile=percentile, stretch=stretch, 
-                                 pairs_frac=pairs_frac, skip=skip, override=override,
-                                 pick_extremes=pick_extremes)
+                                 pairs_frac=pairs_frac, skip=skip, override=override)
       else:
         self.all_set_random(amp=amp, max_level=correlate_after, reverse=reverse)
         if correlate:
@@ -914,6 +918,9 @@ class Model():
 
   def seed(self, seed=None):
 
+    if seed is None and self.seed_offset != 1:
+      seed = self.n_model + self.seed_offset
+      
     np.random.seed(seed)
     random.seed(seed)
 
@@ -943,7 +950,7 @@ class Model():
    
     levels = levels or sorted(self.tls_hierarchy.keys(), reverse=reverse)
     levels = [lvl for lvl in levels if lvl <= self.max_level or self.max_level < 0]
-    if max_level < 0: max_level = max(levels)
+    if max_level < 0: max_level = max(levels or [0])
     for n_level in levels:
       if min_level <= n_level <= max_level:
         for chain in self.working_chains:
@@ -1266,8 +1273,7 @@ class Model():
   def shift_and_correlate(self, amp=1.0, weight_exp=2., spring_weights=2.,
                           seq=0, iso=0, reverse=False, abf=0., dgf=0.,
                           require_both=False, uncorrelate=False, percentile=0,
-                          stretch=1., pairs_frac=1., skip=(), override=None,
-                          pick_extremes=None):
+                          stretch=1., pairs_frac=1., skip=(), override=None):
 
     levels = sorted(self.tls_hierarchy.keys())
     levels = [lvl for lvl in levels if lvl <= self.max_level or self.max_level < 0]
@@ -1275,8 +1281,6 @@ class Model():
     for n_level in levels:
       for chain in self.working_chains:
         chain.set_random(n_level_select=n_level, amp=amp)
-      if pick_extremes and n_level == levels[0]:
-        self.replace_by_extremes(pick_extremes)
       if n_level not in skip:
         self.correlate_level(n_level, weight_exp=weight_exp, spring_weights=spring_weights,
                              seq=seq, iso=iso, abf=abf, dgf=dgf, require_both=require_both,
