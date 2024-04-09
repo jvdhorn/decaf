@@ -7,6 +7,7 @@ from mmtbx.utils import fmodel_from_xray_structure
 from mmtbx.model import manager as model_manager_base
 from mmtbx import refinement, secondary_structure
 from mmtbx_tls_ext import apply_tls_shifts
+from iotbx.pdb.hierarchy import af_shared_atom, atom as atom_type
 from scitbx.array_family import flex
 from matplotlib import pyplot as plt, gridspec
 import scitbx
@@ -145,8 +146,8 @@ def tls_from_csv(input_files, max_level, min_level, origin, cache, mult, zero_tr
 def tls_from_pdb(input_files, max_level, min_level, cache, mult, zero_trace, log=None):
 
   tls_hierarchy = {}
-  for i, file_name in enumerate(input_files):
-    n_layer = i + 1
+  n_layer = 1
+  for file_name in input_files:
     if n_layer >= min_level and (n_layer <= max_level or max_level == -1):
       groups = TLS_Level()
       pdb_inp = iotbx.pdb.input(file_name = file_name)
@@ -171,7 +172,9 @@ def tls_from_pdb(input_files, max_level, min_level, cache, mult, zero_trace, log
                  '\nUsing previous group as substitute.')
                  .format(n, n_layer, group.selection_string, e))
           groups[n] = groups[n-1]
-      tls_hierarchy[n_layer] = groups
+      if groups:
+        tls_hierarchy[n_layer] = groups
+        n_layer               += 1
   return tls_hierarchy
 
 def tls_from_json(input_file, max_level, min_level, cache, mult, zero_trace, log=None):
@@ -222,6 +225,24 @@ def write_b_factors_to_json(sequence, b_factors, file_name='ensemble_b.json'):
            'ylabel' : 'B-factor ($\AA^{2}$)'}
   with open(file_name, 'w') as f:
     json.dump(dump, f)
+
+
+def reduce_models_common(hier):
+
+  common = set()
+  for model in hier.models():
+    id_strs = {atom.pdb_label_columns() for atom in model.atoms()}
+    if not common:
+      common  = id_strs
+    else:
+      common &= id_strs
+
+  hier = hier.select(
+           flex.bool(atom.pdb_label_columns() in common for atom in hier.atoms())
+         )
+
+  return hier
+
 
 class Manager():
 
@@ -285,6 +306,16 @@ class Manager():
     cache               = pdb_hierarchy.atom_selection_cache()
     non_water_sel       = cache.selection(selection_string)
     self.base_hierarchy = pdb_hierarchy.select(non_water_sel)
+
+    # Reduce to single model
+    self.base_hierarchy = reduce_models_common(self.base_hierarchy)
+    self.avail_coords   = [model.atoms().extract_xyz()
+                           for model in self.base_hierarchy.models()]
+    for model in self.base_hierarchy.models()[1:]:
+      self.base_hierarchy.remove_model(model)
+    self.base_hierarchy.models()[0].atoms().set_xyz(
+      sum(self.avail_coords[1:], self.avail_coords[0]) * (1./len(self.avail_coords))
+    )
 
     # Erase temperature data
     if self.reset_b:
@@ -423,7 +454,6 @@ class Model():
     self.tls_hierarchy     = tls_hierarchy
     self.working_chains    = []
     self.base_hierarchy    = base_hierarchy
-    self.working_hierarchy = base_hierarchy.deep_copy()
     self.seed_offset       = seed_offset
     self.n_model           = n_model
     self.n_chains          = 0
@@ -435,9 +465,10 @@ class Model():
 
     self.orthomat = sc_symm.unit_cell().orthogonalization_matrix()
     self.fractmat = sc_symm.unit_cell().fractionalization_matrix()
-    
+
   def build_model(self,
                   method='random',
+                  avail_coords=[],
                   amp=1.0,
                   reverse=False,
                   residues={-1},
@@ -474,6 +505,7 @@ class Model():
 
     # Setup global paramters
     self.max_level         = max_level
+    self.working_hierarchy = self.base_hierarchy.deep_copy()
     working_model          = self.working_hierarchy.models()[0]
     working_chains         = list(working_model.chains())
     self.n_atoms_in_chain  = working_model.atoms().size()
@@ -484,6 +516,7 @@ class Model():
     translations           = ((h,k,l) for h in range(size_h)
                                       for k in range(size_k)
                                       for l in range(size_l))
+
     try:
       restraints_manager     = model_manager(
                                  model_input      = None,
@@ -495,7 +528,6 @@ class Model():
       restraints_manager = None
 
     # Build chains based on symmetry
-    af_shared_atom = type(working_model.atoms())
     for translation in translations:
       for symm_op in symm_ops:
         atoms = af_shared_atom()
@@ -519,10 +551,6 @@ class Model():
     # Clean up
     for chain in working_chains: working_model.remove_chain(chain)
     self.working_hierarchy.atoms().reset_serial()
-    if self.seed_offset != -1:
-      self.seed(self.n_model + self.seed_offset)
-    else:
-      self.seed()
 
     # Fill supercell with chains
     self.all_move_in_position()
@@ -542,6 +570,17 @@ class Model():
                              inherit_contacts=inherit_contacts,
                              need_restraints=regularize,
                              contact_level=contact_level)
+
+    # Set seed
+    if self.seed_offset != -1:
+      self.seed(self.n_model + self.seed_offset)
+    else:
+      self.seed()
+
+    # Randomize starting models
+    for chain in self.working_chains:
+      coords = avail_coords[np.random.randint(len(avail_coords))]
+      chain.set_coordinates(chain.apply_operations(coords))
 
     # Introduce shifts
     if method == None or len(self.tls_hierarchy) == 0:
@@ -644,6 +683,8 @@ class Model():
                                  crystal_symmetry=self.cryst_symm)
 
   def write_com_displacements(self):
+
+    if not self.tls_hierarchy: return
 
     orig          = self.base_hierarchy.atoms().extract_xyz()
     hier          = type(self.working_hierarchy)()
@@ -1480,7 +1521,7 @@ class Environments():
           # Filter by reference vectors
           if min((ref_round - vector).dot()) <= 1.:
             vectors.append((vector,(j_seq, symm_op)))
-      environment = list(zip(*sorted(vectors)))[1]
+      environment = list(zip(*sorted(vectors)))[1] if vectors else tuple()
       self.sorted_environments[i_seq] = environment
 
     environ = [value for key, value in sorted(self.sorted_environments.items())]
@@ -1578,9 +1619,12 @@ class Environments():
       for n_group, vec in sorted(contacts.items()):
         last = sum(map(len, lvl_select[n_level].values()))
         lvl_select[n_level][n_group] = flex.size_t_range(last, last+vec.size())
-      contacts = flex.vec3_double(
-                   sum(map(tuple,list(zip(*sorted(contacts.items())))[1]),())
-                 )
+      if contacts:
+        contacts = flex.vec3_double(
+                     sum(map(tuple,list(zip(*sorted(contacts.items())))[1]),())
+                   )
+      else:
+        contacts = flex.vec3_double()
       for n_level, level in sorted(mod_hierarchy.items(), reverse=True):
         if n_level not in lvl_select:
           lvl_select[n_level] = dict()
@@ -1593,10 +1637,8 @@ class Environments():
           unique = flex.bool(sum((vectors-vec).dot()<1)==1 for vec in vectors)
           lvl_unique[n_level][n_group] = unique
  
-      asa = type(modifier.working_atoms())
-      atm = type(atom)
       for chain in self.chains:
-        atoms = asa(atm() for _ in contacts)
+        atoms = af_shared_atom(atom_type() for _ in contacts)
         atoms.set_xyz(chain.apply_operations(contacts))
         for n_level, groups in lvl_select.items():
           for n_group, sel in groups.items():
@@ -1604,10 +1646,13 @@ class Environments():
             unq = lvl_unique[n_level][n_group]
             for atom, is_contact in zip(atoms.select(sel), unq):
               mod.add_atom(atom, contact = is_contact)
- 
-      contacting_groups = sum(map(tuple, 
-                            list(zip(*sorted(contacting_groups.items())))[1]
-                          ),())
+
+      if contacting_groups:
+        contacting_groups = sum(map(tuple, 
+                              list(zip(*sorted(contacting_groups.items())))[1]
+                            ),())
+      else:
+        contacting_groups = tuple()
  
       for n_level, level in mod_hierarchy.items():
         self.lvl_conlens[n_level] = dict()
@@ -1729,11 +1774,9 @@ class Environments():
                         + sym.t().as_double()
                         ) - contacts[i][n]
             inverse[i].append((j_inverse.dot() < 1.).iselection()[0])
-        asa = type(modifier.working_atoms())
-        atm = type(atom)
         for chain in self.chains:
           for i, entry in contacts.items():
-            atoms        = asa(atm() for _ in entry)
+            atoms        = af_shared_atom(atom_type() for _ in entry)
             atoms.set_xyz(chain.apply_operations(entry))
             for sup in group_supers[(n_level, i)]:
               is_contacts = (n_level, i) == sup

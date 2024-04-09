@@ -125,6 +125,7 @@ def model_worker(n_model):
     print('Building model {}'.format(n_model))
     model = manager.new_model(n_model)
     model.build_model(method=p.input.strategy,
+                      avail_coords=manager.avail_coords,
                       amp=p.input.amplitude,
                       reverse=p.input.reverse_levels,
                       residues=p.input.residues,
