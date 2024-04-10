@@ -517,6 +517,22 @@ class Model():
                   regularize=False,
                   scope=1):
 
+    # Store correlation parameters
+    self.weight_exp     = weight_exp
+    self.spring_weights = spring_weights
+    self.seq            = correlate_sequential
+    self.iso            = correlate_insideout
+    self.reverse        = reverse
+    self.abf            = allow_bad_frac
+    self.dgf            = disallow_good_frac
+    self.require_both   = require_both
+    self.uncorrelate    = uncorrelate
+    self.percentile     = percentile
+    self.stretch        = stretch
+    self.pairs_frac     = pairs_frac
+    self.skip           = skip
+    self.override       = override
+
     # Setup global paramters
     self.max_level         = max_level
     self.working_hierarchy = self.base_hierarchy.deep_copy()
@@ -592,8 +608,9 @@ class Model():
         chain.set_random(n_level_select=extremes_from_level, amp=amp)
       self.seed()
       self.replace_by_extremes(n=pick_extremes)
+      if correlate: self.correlate_level(extremes_from_level)
 
-    # Randomize starting models
+    # Randomize starting models from multistate input
     else:
       self.seed()
       for chain in self.working_chains:
@@ -610,13 +627,7 @@ class Model():
       self.all_set_random(amp=amp, regularize_each_level=True, environments=True, reverse=True)
     else:
       if correlate and correlate_fancy:
-        self.shift_and_correlate(amp=amp, weight_exp=weight_exp,
-                                 spring_weights=spring_weights, seq=correlate_sequential,
-                                 iso=correlate_insideout, reverse=reverse,
-                                 abf=allow_bad_frac, dgf=disallow_good_frac,
-                                 require_both=require_both, uncorrelate=uncorrelate,
-                                 percentile=percentile, stretch=stretch, 
-                                 pairs_frac=pairs_frac, skip=skip, override=override)
+        self.shift_and_correlate(amp=amp)
       else:
         self.all_set_random(amp=amp, max_level=correlate_after, reverse=reverse)
         if correlate:
@@ -628,56 +639,6 @@ class Model():
       if regularize:
         special = 'nonbonded' if method == 'nb' else None
         self.regularize(environments=scope, special=special)
-
-  def get_distances(self, which='asu', cutoff=0, ref=True):
-
-    symm_ops = len(self.cryst_symm.space_group()) if which == 'cell' else 1
-    zero     = flex.vec3_double((self.working_chains[0].init_coordinates.mean(),))
-    means    = list()
-    dists    = list()
-
-    for n in range(self.n_chains // symm_ops):
-      if not ref:
-        zero = flex.vec3_double((self.working_chains[n].base_coordinates().mean(),))
-      start        = n * symm_ops
-      mean         = self.working_chains[start].apply_operations(zero)[0]
-      means.append(mean)
-
-    xrs  = xray.structure(crystal_symmetry = self.sc_symm)
-    ort  = xrs.unit_cell().orthogonalize
-    diag = max(((flex.vec3_double((ort(corner),)) - ort((.5,.5,.5))).dot() ** .5)[0]
-               for corner in ((0,0,0),(0,0,1),(0,1,0),(0,1,1)))
-
-    for mean in means:
-      xrs.add_scatterer(
-        xray.scatterer(
-          label     = 'DUM',
-          occupancy = 0,
-          site      = xrs.unit_cell().fractionalize(mean)
-        )
-      )
-
-    pair_sym_table = xrs.pair_asu_table(
-                       distance_cutoff = cutoff or diag
-                     ).extract_pair_sym_table(
-                       skip_j_seq_less_than_i_seq       = False,
-                       all_interactions_from_inside_asu = True
-                     )
-
-    for first, others in enumerate(pair_sym_table):
-      first_cart = xrs.sites_cart()[first]
-      dists.append(dict())
-      dists[first][first] = 0
-      for second, symms in others.items():
-        second_frac = xrs.sites_frac()[second:second+1]
-        best        = float('inf')
-        for symm in symms:
-          moved = symm.r().as_double() * second_frac + symm.t().as_double()
-          dist  = (ort(moved) - first_cart).dot()[0]
-          best  = min(best, dist)
-        dists[first][second] = best ** 0.5
-
-    return dists
 
   def write_all_environments(self):
 
@@ -700,11 +661,9 @@ class Model():
       master_hier.write_pdb_file('all_environments.pdb',
                                  crystal_symmetry=self.cryst_symm)
 
-  def write_com_displacements(self):
+  def write_com_displacements(self, scale=25.):
 
-    if not self.tls_hierarchy: return
-
-    orig          = self.base_hierarchy.atoms().extract_xyz()
+    orig          = flex.vec3_double([self.base_hierarchy.atoms().extract_xyz().mean()])
     hier          = type(self.working_hierarchy)()
     model         = type(self.working_hierarchy.models()[0])()
     atom          = type(self.working_hierarchy.atoms()[0])
@@ -714,40 +673,34 @@ class Model():
 
     hier.append_model(model)
 
-    for n_level, level in sorted(self.tls_hierarchy.items()):
-      chain    = type(next(self.working_hierarchy.chains()))()
-      chain.id = next(chain_id_iter)
-      res_iter = chain_id_generator()
-      model.append_chain(chain)
-      for n_group, group in sorted(level.items()):
-        sel           = orig.select(group.selection)
-        resgr         = type(next(self.working_hierarchy.residue_groups()))()
-        atmgr         = type(next(self.working_hierarchy.atom_groups()))()
-        atmgr.resname = next(res_iter)
-        chain.append_residue_group(resgr)
-        resgr.append_atom_group(atmgr)
-        for chn in self.working_chains:
-          if (n_level in chn.mod_hierarchy and n_group in chn.mod_hierarchy[n_level]
-              and (n_level <= self.max_level or self.max_level < 0)):
-            old_mean    = chn.apply_operations(sel).mean()
-            new_mean    = chn.mod_hierarchy[n_level][n_group].get_com()
-#            if chn.n_chain < len(diffs):
-#              new_mean  = tuple(n-d for d, n in zip(diffs[chn.n_chain], new_mean))
-            amp_mean    = tuple((n-o) * 25 + o for o, n in zip(old_mean, new_mean))
-            old         = atom()
-            old.xyz     = old_mean
-            old.name    = 'OLD'
-            old.element = 'X'
-            old.serial  = '{:5d}'.format(serial)[-5:]
-            atmgr.append_atom(old)
-            new         = atom()
-            new.xyz     = amp_mean
-            new.name    = 'NEW'
-            new.element = 'X'
-            new.serial  = '{:5d}'.format(serial)[-5:]
-            atmgr.append_atom(new)
-            serial     += 1
-            diffs.append(tuple(n-o for o, n in zip(old_mean, new_mean)))
+    chain    = type(next(self.working_hierarchy.chains()))()
+    chain.id = next(chain_id_iter)
+    res_iter = chain_id_generator()
+    model.append_chain(chain)
+    resgr         = type(next(self.working_hierarchy.residue_groups()))()
+    atmgr         = type(next(self.working_hierarchy.atom_groups()))()
+    atmgr.resname = next(res_iter)
+    chain.append_residue_group(resgr)
+    resgr.append_atom_group(atmgr)
+
+    for chn in self.working_chains:
+      old_mean    = chn.apply_operations(orig)[0]
+      new_mean    = chn.coordinates().mean()
+      amp_mean    = tuple((n-o) * scale + o for o, n in zip(old_mean, new_mean))
+      old         = atom()
+      old.xyz     = old_mean
+      old.name    = 'OLD'
+      old.element = 'X'
+      old.serial  = '{:5d}'.format(serial)[-5:]
+      atmgr.append_atom(old)
+      new         = atom()
+      new.xyz     = amp_mean
+      new.name    = 'NEW'
+      new.element = 'X'
+      new.serial  = '{:5d}'.format(serial)[-5:]
+      atmgr.append_atom(new)
+      serial     += 1
+      diffs.append(tuple(n-o for o, n in zip(old_mean, new_mean)))
 
     hier.write_pdb_file('com_displacements.pdb', crystal_symmetry = self.sc_symm)
 
@@ -758,14 +711,14 @@ class Model():
     col_vecs[col_vecs > 255] = 255
 
     ort  = self.sc_symm.unit_cell().orthogonalize
-    diag = max(((flex.vec3_double((ort(corner),)) - ort((.5,.5,.5))).dot() ** .5)[0]
-               for corner in ((0,0,0),(0,0,1),(0,1,0),(0,1,1)))
+    dist = min(((flex.vec3_double((ort(corner),)) - ort((.5,.5,.5))).dot() ** .5)[0]
+               for corner in ((0,0,0),(0,0,1),(0,1,0),(0,1,1))) * 2 * 0.95
 
     with open('col_displacements.pml','w') as out:
       for n, (a, b, c) in enumerate(col_vecs):
         col = '0x{:02x}{:02x}{:02x}'.format(a, b, c)
         out.write(('dist _d{:d}, v. and id {:d}, v. and id {:d}, {:.2f}\n'
-                  ).format(n+1,n+1,n+1, diag))
+                  ).format(n+1,n+1,n+1, dist))
         out.write('color {}, visible and id {:d}\n'.format(col, n+1))
         out.write('color {}, _d{:d}\n'.format(col, n+1))
 
@@ -1250,16 +1203,14 @@ class Model():
     mod_a.set_shifts(shifts_b)
     mod_b.set_shifts(shifts_a)
 
-  def correlate_level(self, n_level, weight_exp=2., spring_weights=2., seq=0, iso=0,
-                      abf=0., dgf=0., require_both=False, uncorrelate=False,
-                      percentile=0, stretch=1., pairs_frac=1., override=None):
+  def correlate_level(self, n_level):
 
-    orders = self.optimize_level(n_level, weight_exp=weight_exp,
-                                 spring_weights=spring_weights, seq=seq, iso=iso,
-                                 allow_bad_frac=abf, disallow_good_frac=dgf,
-                                 require_both=require_both, uncorrelate=uncorrelate,
-                                 percentile=percentile, stretch=stretch,
-                                 pairs_frac=pairs_frac, override=override)
+    orders = self.optimize_level(n_level, weight_exp=self.weight_exp,
+                                 spring_weights=self.spring_weights, seq=self.seq, iso=self.iso,
+                                 allow_bad_frac=self.abf, disallow_good_frac=self.dgf,
+                                 require_both=self.require_both, uncorrelate=self.uncorrelate,
+                                 percentile=self.percentile, stretch=self.stretch,
+                                 pairs_frac=self.pairs_frac, override=self.override)
 
     for n_group, order in orders.items():
       done = set()
@@ -1270,34 +1221,31 @@ class Model():
         if y in done: x = (set(order) - done or {-1}).pop()
         else: self.swap_shifts(n_level, n_group, x, y); x=y
 
-  def shift_and_correlate(self, amp=1.0, weight_exp=2., spring_weights=2.,
-                          seq=0, iso=0, reverse=False, abf=0., dgf=0.,
-                          require_both=False, uncorrelate=False, percentile=0,
-                          stretch=1., pairs_frac=1., skip=(), override=None):
+  def shift_and_correlate(self, amp=1.0):
 
     levels = sorted(self.tls_hierarchy.keys())
     levels = [lvl for lvl in levels if lvl <= self.max_level or self.max_level < 0]
-    if reverse: levels = levels[::-1]
+    if self.reverse: levels = levels[::-1]
     for n_level in levels:
       for chain in self.working_chains:
         chain.set_random(n_level_select=n_level, amp=amp)
-      if n_level not in skip:
-        self.correlate_level(n_level, weight_exp=weight_exp, spring_weights=spring_weights,
-                             seq=seq, iso=iso, abf=abf, dgf=dgf, require_both=require_both,
-                             uncorrelate=uncorrelate, percentile=percentile, stretch=stretch,
-                             pairs_frac=pairs_frac, override=override)
+      if n_level not in self.skip:
+        self.correlate_level(n_level)
 
   def replace_by_extremes(self, n=2):
 
-    extremes     = self.find_extremes(n)
-    avail_coords = [chain.base_coordinates() for chain in extremes]
+    extremes   = tuple(self.find_extremes(n))
+    if n < 2:
+      extremes = extremes + (None,)
+    others     = sorted(set(self.working_chains) - set(extremes))
 
-    if len(avail_coords) == 1:
-      avail_coords.append(extremes[0].init_coordinates)
+    for chain in others:
+      other = extremes[np.random.randint(len(extremes))]
+      chain.adopt_from(other)
 
-    for chain in self.working_chains:
-      coords = avail_coords[np.random.randint(len(avail_coords))]
-      chain.set_coordinates(chain.apply_operations(coords))
+    for chain in sorted(set(extremes) - {None}):
+      other = others[np.random.randint(len(others))]
+      chain.adopt_from(other)
 
   def find_extremes(self, n=2):
 
@@ -1308,14 +1256,27 @@ class Model():
         cache[chain.n_chain] = result
       return result
 
+    def get_rmsd(a, b, cache=dict()):
+      result = cache.get((a.n_chain,b.n_chain))
+      if result is None:
+        result = flex.sum((get_coords(a) - get_coords(b)).dot()) ** 0.5
+        cache[a.n_chain,b.n_chain] = result
+      return result
+
+    def key(chain):
+      return flex.sum((get_coords(chain)-chain.init_coordinates).dot()) ** 0.5
+
+    candidates = sorted(self.working_chains, key=key)[::-1][:10*n]
+
+    if n == 1:
+      return candidates[:1]
+
     best_score = -1
     best_combo = ()
-    for combo in pick_from(self.working_chains, n):
+    for combo in pick_from(candidates, n):
       score = 0
       for a, b in pick_from(combo, 2):
-        score += flex.sum((get_coords(a) - get_coords(b)).dot()) ** 0.5
-      else:
-        score = flex.sum((get_coords(combo[0])-combo[0].init_coordinates).dot()) ** 0.5
+        score += get_rmsd(a, b)
       if score > best_score:
         best_score = score
         best_combo = combo
@@ -2077,6 +2038,22 @@ class Chain():
   def get_modifier(self, n_layer, n_group):
 
     return self.mod_hierarchy[n_layer][n_group]
+
+  def clear_shifts(self):
+
+    for n_level, level in self.mod_hierarchy.items():
+      for n_group, modifier in level.items():
+        if hasattr(modifier, 'shifts'):
+          modifier.shifts *= 0.
+
+  def adopt_from(self, other):
+
+    for n_level, level in self.mod_hierarchy.items():
+      for n_group, modifier in level.items():
+        if other is None:
+          modifier.set_shifts(modifier.get_shifts() * 0.)
+        else:
+          modifier.set_shifts(other.get_modifier(n_level, n_group).get_shifts())
 
   def reverted_coordinates(self):
 
