@@ -1126,8 +1126,10 @@ class Model():
     percentiles = {g: np.percentile(group_energies(g), percentile) for g in indices}
 
     order   = {i: np.arange(len(chains)) for i in indices}
+
+    active  = [i for i in indices if chains[0].get_modifier(n_level,i).is_active]
     pairs   = np.fromiter((j for p in zip(*np.triu_indices(len(chains),1))
-                           for i in indices for j in (i,)+p), dtype=int).reshape(-1,3)
+                           for i in active for j in (i,)+p), dtype=int).reshape(-1,3)
     np.random.shuffle(pairs)
     if pairs_frac < 0:
       pairs_frac = np.random.random() * abs(pairs_frac)
@@ -2034,6 +2036,8 @@ class Chain():
                              tls_obj         = tls_obj,
                              parent          = self)
         self.mod_hierarchy[n_level][n_group] = modifier
+        modifier.is_active = (-1 in self.residues or 
+                              bool(self.residues.intersection(modifier.residues)))
 
   def get_modifier(self, n_layer, n_group):
 
@@ -2125,7 +2129,7 @@ class Chain():
     for n_level, level in self.mod_hierarchy.items():
       if n_level_select in (-1, n_level):
         for modifier in level.values():
-          if -1 in self.residues or self.residues.intersection(modifier.residues):
+          if modifier.is_active:
             modifier.set_random(amp=amp)
 
   def apply_operations(self, coordinates):
@@ -2238,6 +2242,7 @@ class Modifier():
     self.size   = working_atoms.size()
     self.residues = set(atom.fetch_labels().resseq_as_int() for atom in self.atoms)
     self.contacts = flex.size_t()
+    self.is_active = True
 
   def set_random(self, amp=1.):
 
