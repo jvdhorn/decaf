@@ -510,6 +510,7 @@ class Model():
                   override=None,
                   pick_extremes=None,
                   extremes_from_level=1,
+                  precorrelate_level=1,
                   require_both=False,
                   uncorrelate=False,
                   percentile=0,
@@ -608,7 +609,10 @@ class Model():
         chain.set_random(n_level_select=extremes_from_level, amp=amp)
       self.seed()
       self.replace_by_extremes(n=pick_extremes)
-      if correlate: self.correlate_level(extremes_from_level)
+      if precorrelate_level:
+        self.correlate_level(precorrelate_level, swap_shifts=False)
+      for chain in self.working_chains:
+        chain.clear_shifts()
 
     # Randomize starting models from multistate input
     else:
@@ -721,6 +725,8 @@ class Model():
                   ).format(n+1,n+1,n+1, dist))
         out.write('color {}, visible and id {:d}\n'.format(col, n+1))
         out.write('color {}, _d{:d}\n'.format(col, n+1))
+        out.write('group d, _d*')
+        out.write('hide labels')
 
     # Calculate displacement dot products
     nchains = list(range(self.n_chains))
@@ -1084,7 +1090,7 @@ class Model():
   def optimize_level(self, n_level, weight_exp=2., spring_weights=2., seq=0, iso=0,
                      allow_bad_frac=0., disallow_good_frac=0., require_both=False,
                      uncorrelate=False, percentile=0, stretch=1., pairs_frac=1., 
-                     override=None):
+                     override=None, swap_shifts=False):
 
     contact = np.array(self.environments.get_contact(n_level))
     conshft = np.array(self.environments.get_conshft(n_level))
@@ -1154,10 +1160,18 @@ class Model():
       old_i = contact[g,i,:clen]
       old_j = contact[g,j,:clen]
 
-      shift = flex.vec3_double(conshft[g,j,:clen] - conshft[g,i,:clen])
-      new_i = old_i + (chains[i].symm_rot_double *        shift )
-      new_j = old_j + (chains[j].symm_rot_double * (-1. * shift))
-      
+      if swap_shifts:
+        shift = flex.vec3_double(conshft[g,j,:clen] - conshft[g,i,:clen])
+        new_i = old_i + (chains[i].symm_rot_double *        shift )
+        new_j = old_j + (chains[j].symm_rot_double * (-1. * shift))
+      else:
+        new_i = chains[i].apply_operations(
+                  chains[j].apply_reverse_operations(flex.vec3_double(old_j))
+                ).as_numpy_array()
+        new_j = chains[j].apply_operations(
+                  chains[i].apply_reverse_operations(flex.vec3_double(old_i))
+                ).as_numpy_array()
+
       if exp == 1.:
         old_i_energy = (np.square(ref_i - old_i) * wght).sum()
         new_i_energy = (np.square(ref_i - new_i) * wght).sum()
@@ -1205,9 +1219,18 @@ class Model():
     mod_a.set_shifts(shifts_b)
     mod_b.set_shifts(shifts_a)
 
-  def correlate_level(self, n_level):
+  def swap_positions(self, n_level, n_group, first, second):
 
-    orders = self.optimize_level(n_level, weight_exp=self.weight_exp,
+    mod_a    = self.working_chains[first].get_modifier(n_level, n_group)
+    mod_b    = self.working_chains[second].get_modifier(n_level, n_group)
+    coords_a = mod_a.base_coordinates()
+    coords_b = mod_b.base_coordinates()
+    mod_a.set_coordinates(coords_b)
+    mod_b.set_coordinates(coords_a)
+
+  def correlate_level(self, n_level, swap_shifts=True):
+
+    orders = self.optimize_level(n_level, swap_shifts=swap_shifts, weight_exp=self.weight_exp,
                                  spring_weights=self.spring_weights, seq=self.seq, iso=self.iso,
                                  allow_bad_frac=self.abf, disallow_good_frac=self.dgf,
                                  require_both=self.require_both, uncorrelate=self.uncorrelate,
@@ -1221,7 +1244,10 @@ class Model():
         done.add(x)
         y = order[x]
         if y in done: x = (set(order) - done or {-1}).pop()
-        else: self.swap_shifts(n_level, n_group, x, y); x=y
+        else:
+          if swap_shifts: self.swap_shifts(n_level, n_group, x, y)
+          else: self.swap_positions(n_level, n_group, x, y)
+          x=y
 
   def shift_and_correlate(self, amp=1.0):
 

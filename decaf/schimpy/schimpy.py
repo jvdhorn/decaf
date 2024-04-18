@@ -152,6 +152,7 @@ def model_worker(n_model):
                       override=p.correlation.override_weights,
                       pick_extremes=p.input.pick_extremes,
                       extremes_from_level=p.input.extremes_from_level,
+                      precorrelate_level=p.input.precorrelate_level,
                       max_level=p.input.max_level,
                       rigid_only=p.environments.rigid_only,
                       protein_only=p.environments.protein_only,
