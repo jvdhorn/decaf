@@ -22,6 +22,17 @@ def run(args):
   lores = max(p.params.resolution)
   hires = min(p.params.resolution)
   if lores == hires: lores = 9e99
+  if p.params.opacity:
+    params = dict(
+      histtype = 'stepfilled',
+      alpha    = p.params.opacity,
+      ec       = 'black',
+    )
+  else:
+    params = dict(
+      histtype = 'step',
+      alpha    = 1.0,
+    )
   files = list(p.input.mtz)
   for file in files:
     print('Reading', file)
@@ -35,8 +46,8 @@ def run(args):
       low  = data.min()
       high = data.max()
     label = file.replace('/','_').replace('.mtz','')
-    plt.hist(data, bins=p.input.bins, range=(low, high), histtype='stepfilled',
-             alpha=0.5, log=p.params.log, label=label, ec='black')
+    plt.hist(data, bins=p.input.bins, range=(low, high), log=p.params.log,
+             label=label, **params)
   plt.xlabel('Intensity')
   plt.ylabel('Counts')
   if p.params.legend:
