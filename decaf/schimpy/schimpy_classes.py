@@ -608,7 +608,7 @@ class Model():
       for chain in self.working_chains:
         chain.set_random(n_level_select=extremes_from_level, amp=amp)
       self.seed()
-      self.replace_by_extremes(n=pick_extremes)
+      self.replace_with_extremes(n=pick_extremes)
       if precorrelate_level:
         swap_shifts = (extremes_from_level == precorrelate_level)
         self.correlate_level(precorrelate_level, swap_shifts=swap_shifts)
@@ -1261,19 +1261,30 @@ class Model():
       if n_level not in self.skip:
         self.correlate_level(n_level)
 
-  def replace_by_extremes(self, n=2):
+  def replace_with_extremes(self, n=()):
 
-    extremes   = tuple(self.find_extremes(n))
-    if n < 2:
+    if len(n) == 1 and n[0]%1 == 0:
+      pick  = int(n[0])
+      odds  = np.ones(max(2,pick))
+      odds /= odds.sum()
+    else:
+      pick  = len(n)
+      odds  = np.array((list(n) + [1.-n[0]])[:max(2,pick)])
+      odds /= odds.sum()
+
+    if pick in (0, self.n_chains): return
+
+    extremes   = tuple(self.find_extremes(pick))
+    if pick < 2:
       extremes = extremes + (None,)
     others     = sorted(set(self.working_chains) - set(extremes))
 
     for chain in others:
-      other = extremes[np.random.randint(len(extremes))]
+      other = extremes[np.random.choice(len(extremes), p=odds)]
       chain.adopt_from(other)
 
     for chain in sorted(set(extremes) - {None}):
-      other = others[np.random.randint(len(others))]
+      other = others[np.random.choice(len(others))]
       chain.adopt_from(other)
 
   def find_extremes(self, n=2):
