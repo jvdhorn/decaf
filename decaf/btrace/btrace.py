@@ -43,6 +43,30 @@ def extract_b(file, chain=0):
     return x, y, 'PDB'
 
 
+def interpret_reduce(arg, chain):
+
+  queue       = arg.split()
+  x, y, label = extract_b(queue[0], chain)
+  ops         = {'+':np.add, '-':np.subtract, '*':np.multiply, '/':np.divide}
+ 
+  for op, other in zip(*2*[iter(queue[1:])]):
+
+    op = ops.get(op)
+    if not op: pass
+
+    try:
+      other = float(other)
+      y     = op(y, other)
+    except ValueError:
+      nx, ny, _ = extract_b(other, chain)
+      x         = [i for i in x if i in nx]
+      y         = [op(y[x.index(i)], ny[nx.index(i)]) for i in x]
+    except:
+      pass
+
+  return x, y, label
+
+
 def run(args):
 
   scope       = phil.phil_parse(args = args)
@@ -60,13 +84,9 @@ def run(args):
   # Plot all traces
   for chain, arg in zip(chains, files):
     if arg == 'skip': colors(); continue
-    if '*' in arg:
-      arg, mul = arg.split('*')
-      mul      = float(mul)
-    else:
-      mul      = 1.
 
-    x, y, label = extract_b(arg, chain)
+    x, y, label = interpret_reduce(arg, chain)
+
     if 'ensemble' in label.lower():
       label = 'Simulated'
       ls    = (0,(6,2))
@@ -76,7 +96,7 @@ def run(args):
       ls    = 'solid'
       color = colors()
       zord  = -counter
-    plt.plot(x, np.array(y)*mul, label=label, ls=ls, color=color, zorder=zord)
+    plt.plot(x, np.array(y), label=label, ls=ls, color=color, zorder=zord)
     counter += 1
 
   # Plot vertical lines
