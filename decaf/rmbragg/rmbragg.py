@@ -84,7 +84,7 @@ def run(args):
     func = {'min': np.min, 'mean': np.mean}[p.params.subtract]
     for n in bins.range_all():
       selection = bins.array_indices(n).as_numpy_array()
-      if selection.size: data[selection] -= func(data[mask][selection])
+      if selection.size: data[selection] -= func(data[selection][mask[selection]])
     obj.get_column(p.input.lbl).set_values(flex.float(data))
 
   # Apply
