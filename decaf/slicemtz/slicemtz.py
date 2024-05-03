@@ -49,6 +49,8 @@ def run(args):
     grid[tuple((-ind + offset).T)] = data
     grid[tuple(( ind + offset).T)] = data
     cell    = arr.unit_cell().reciprocal_parameters()
+    frac    = arr.unit_cell().reciprocal().fractionalize
+    orth    = arr.unit_cell().reciprocal().orthogonalize
   else:
     reader  = ccp4_map.map_reader(p.input.mtz)
     grid    = reader.map_data().as_numpy_array()
@@ -60,6 +62,8 @@ def run(args):
     offset  = x//2, y//2, z//2
     cell    = list(reader.unit_cell().parameters())
     cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
+    frac    = reader.unit_cell().fractionalize
+    orth    = reader.unit_cell().orthogonalize
   if p.params.center:
     grid    = np.roll(grid, offset, axis=(0,1,2))
   slevel  = p.params.slice.lower().strip('hkl')
@@ -78,6 +82,23 @@ def run(args):
     layer = func(slab, axis=dim).T
     nans  = np.isnan(slab).all(axis=dim).T
     layer[nans] = np.nan
+
+  # Construct Gall-Peters projection
+  if p.params.projection:
+    radius = min(1./p.params.projection, *orth(offset))
+    v_samp = int(offset[-1] * 2 + 1)
+    h_samp = int(v_samp * np.pi // 4 * 2 + 1)
+    layer  = []
+    for phi in 1j ** np.linspace(-2, 2, h_samp):
+      row = []
+      for z in np.linspace(-radius, radius, v_samp):
+        a     = (radius**2 - z**2) ** 0.5 * phi
+        h,k,l = (int(i) + j for i,j in zip(frac((a.real,a.imag,z)), offset))
+        row.append(grid[h,k,l])
+      layer.append(row)
+    layer = np.array(layer).T
+    nans  = np.isnan(layer)
+    cell  = (1,1,1,90,90,90)
 
   # Multiply and offset
   layer   = (layer * p.params.multiply) + p.params.add
