@@ -83,7 +83,7 @@ def run(args):
     nans  = np.isnan(slab).all(axis=dim).T
     layer[nans] = np.nan
 
-  # Construct Gall-Peters projection
+  # Construct projection
   if p.params.projection:
     width  = 721
     if p.params.projection == 'gp':
@@ -97,6 +97,12 @@ def run(args):
     z      = np.sin(phi)
     xyz    = np.hstack((np.outer((1-z*z)**0.5, xy).view(float).reshape(-1,2),
                         z.repeat(xy.size)[...,None])) * radius
+    if 'hk' in p.params.slice:
+      pass
+    elif 'kl' in p.params.slice:
+      xyz = xyz[:,(1,2,0)]
+    else:
+      xyz = xyz[:,(2,0,1)]
     hkl    = frac(flex.vec3_double(xyz)).as_numpy_array().astype(int) + offset
     layer  = grid[tuple(hkl.T)].reshape(z.size, -1)
     nans   = np.isnan(layer)
