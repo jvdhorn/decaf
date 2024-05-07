@@ -40,8 +40,6 @@ def run(args):
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().stimpy3d
   pre    = 'stimpy3d_' + p.input.mtz.replace('.mtz', '_' + p.input.lbl.lower())
-  drc    = (p.input.directory if p.input.directory is not None else pre) + '/'
-  os.mkdir(drc)
   print('Reading', p.input.mtz)
   obj   = mtz.object(p.input.mtz)
   first = obj.crystals()[0].miller_set(False).array(obj.get_column(
@@ -52,6 +50,10 @@ def run(args):
   bins  = first.binner()
   data  = first.data().as_numpy_array()
   ind   = bins.bin_indices().as_numpy_array() - 1
+  
+  if p.input.write:
+    drc = (p.input.directory if p.input.directory is not None else pre) + '/'
+    os.mkdir(drc)
 
   mu    = np.zeros(p.input.bins)
   sigma = np.zeros(p.input.bins)
@@ -122,9 +124,9 @@ def run(args):
 
   keep             = ~np.isnan(data)
   first            = first.select(flex.bool(keep))
-  processed_array  = first.customized_copy(data = flex.double(processed[keep]))
-  background_array = first.customized_copy(data = flex.double(background[keep]))
-  signal_array     = first.customized_copy(data = flex.double(signal[keep]))
+  processed_array  = first.customized_copy(data = flex.float(processed[keep]).as_double())
+  background_array = first.customized_copy(data = flex.float(background[keep]).as_double())
+  signal_array     = first.customized_copy(data = flex.float(signal[keep]).as_double())
 
   dataset = processed_array.as_mtz_dataset(column_root_label = p.input.lbl,
                                            column_types      = 'J')
@@ -135,4 +137,4 @@ def run(args):
                            column_root_label = 'SIGNAL',
                            column_types      = 'J')
 
-  dataset.mtz_object().write(drc + mtz_out)
+  dataset.mtz_object().write(mtz_out)
