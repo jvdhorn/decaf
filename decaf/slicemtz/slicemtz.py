@@ -9,10 +9,11 @@ from . import phil
 
 def log10(value):
 
-  value = np.array(value)
-  value[(-1 < value) & (value < 1)] = 0
-  value[value >=  1] =  np.log10( value[value >=  1])
-  value[value <= -1] = -np.log10(-value[value <= -1])
+  with np.errstate(all='ignore'):
+    value = np.array(value)
+    value[(-1 < value) & (value < 1)] = 0
+    value[value >=  1] =  np.log10( value[value >=  1])
+    value[value <= -1] = -np.log10(-value[value <= -1])
 
   return value
 
@@ -32,6 +33,21 @@ def get_first(a, axis=0):
 
   sel = np.argmax(~np.isnan(a),axis)[(slice(None),)*axis+(None,)]
   return np.take_along_axis(a, sel, axis).squeeze(axis)
+
+
+def sigma_cutoff(a, sigma):
+
+  a      = np.array(a)[~np.isnan(a)].ravel()
+  values = a.copy()
+  while values.size:
+    mean = np.mean(values)
+    lim  = sigma * np.std(values)
+    mask = (values > mean - lim) & (values < mean + lim)
+    if mask.all(): break
+    else         : values = values[mask]
+  else:
+    values = a
+  return values
 
 
 def run(args):
@@ -103,7 +119,7 @@ def run(args):
     firsts = np.argmax(~np.isnan(grid),2)
     outer  = np.stack(np.where(firsts)+(firsts[firsts>0],)).T - offset
     outxyz = reci.orthogonalize(flex.vec3_double(outer)).as_numpy_array()
-    radius = np.mean((outxyz**2).sum(axis=1)**0.5)
+    radius = sigma_cutoff((outxyz**2).sum(axis=1)**0.5, 2).mean()
 
     xy     = 1j ** np.linspace(-2, 2, width)
     z      = np.sin(phi)
@@ -149,24 +165,16 @@ def run(args):
   
   # Apply log scaling
   if p.params.log:
-    with np.errstate(all='ignore'):
-      layer = log10(layer)
+    layer = log10(layer)
     name += '_log'
 
   # Autoscale
   high = np.nanmax(layer)
   low  = np.nanmin(layer)
   if p.params.autoscale:
-    values = layer[~nans]
-    while values.size:
-      mean = np.mean(values)
-      lim  = p.params.sigma * np.std(values)
-      mask = (values > mean - lim) & (values < mean + lim)
-      if mask.all(): break
-      else         : values = values[mask]
-    else:
-      mean = np.nanmean(layer)
-      lim  = p.params.sigma * np.nanstd(layer)
+    values = sigma_cutoff(layer, p.params.sigma)
+    mean   = np.mean(values)
+    lim    = p.params.sigma * np.std(values)
     high = min(high, mean + lim)
     low  = max(low, mean - lim)
 
