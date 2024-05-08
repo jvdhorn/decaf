@@ -53,7 +53,8 @@ def run(args):
   
   if p.input.write:
     drc = (p.input.directory if p.input.directory is not None else pre) + '/'
-    os.mkdir(drc)
+    try: os.mkdir(drc)
+    except OSError: pass
 
   mu    = np.zeros(p.input.bins)
   sigma = np.zeros(p.input.bins)
