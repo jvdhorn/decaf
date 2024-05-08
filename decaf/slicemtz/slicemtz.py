@@ -28,6 +28,12 @@ class Hull(spatial.ConvexHull):
     return mask
 
 
+def get_first(a, axis=0):
+
+  sel = np.argmax(~np.isnan(a),axis)[(slice(None),)*axis+(None,)]
+  return np.take_along_axis(a, sel, axis).squeeze(axis)
+
+
 def run(args):
 
   scope       = phil.phil_parse(args = args)
@@ -48,9 +54,8 @@ def run(args):
     grid    = np.full(shape, np.nan)
     grid[tuple((-ind + offset).T)] = data
     grid[tuple(( ind + offset).T)] = data
-    cell    = arr.unit_cell().reciprocal_parameters()
-    frac    = arr.unit_cell().reciprocal().fractionalize
-    orth    = arr.unit_cell().reciprocal().orthogonalize
+    reci    = arr.unit_cell().reciprocal()
+    cell    = reci.parameters()
   else:
     reader  = ccp4_map.map_reader(p.input.mtz)
     grid    = reader.map_data().as_numpy_array()
@@ -62,8 +67,7 @@ def run(args):
     offset  = x//2, y//2, z//2
     cell    = list(reader.unit_cell().parameters())
     cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
-    frac    = reader.unit_cell().fractionalize
-    orth    = reader.unit_cell().orthogonalize
+    reci    = type(reader.unit_cell)(cell)
   if p.params.center:
     grid    = np.roll(grid, offset, axis=(0,1,2))
   slevel  = p.params.slice.lower().strip('hkl')
@@ -79,9 +83,7 @@ def run(args):
     name += p.params.mode
   with np.errstate(all='ignore'):
     if p.params.mode == 'solid':
-      def func(a, axis):
-        sel = np.argmax(~np.isnan(slab),axis)[(slice(None),)*axis+(None,)]
-        return np.take_along_axis(slab, sel, axis).squeeze(axis)
+      func = get_first
     else:
       func = getattr(np, 'nan' + p.params.mode)
     layer = func(slab, axis=dim).T
@@ -97,7 +99,12 @@ def run(args):
       phi  = np.linspace(-1, 1, width // 2 + 1) * np.pi/2.
     elif p.params.projection == 'mercator':
       phi  = 2 * np.arctan(np.exp(np.linspace(-1, 1, width) * np.pi)) - np.pi/2.
-    radius = min(orth(offset))
+
+    firsts = np.argmax(~np.isnan(grid),2)
+    outer  = np.stack(np.where(firsts)+(firsts[firsts>0],)).T - offset
+    outxyz = reci.orthogonalize(flex.vec3_double(outer)).as_numpy_array()
+    radius = np.mean((outxyz**2).sum(axis=1)**0.5)
+
     xy     = 1j ** np.linspace(-2, 2, width)
     z      = np.sin(phi)
     xyz    = np.hstack((np.outer((1-z*z)**0.5, xy).view(float).reshape(-1,2),
@@ -106,11 +113,15 @@ def run(args):
       xyz = xyz[:,(2,0,1)]
     elif dim == 1:
       xyz = xyz[:,(1,2,0)]
-    hkl    = frac(flex.vec3_double(xyz)).as_numpy_array().astype(int) + offset
-    layer  = grid[tuple(hkl.T)].reshape(z.size, -1)
+    hkl    = reci.fractionalize(flex.vec3_double(xyz)
+             ).as_numpy_array().astype(int) + offset
+    valid  = (((0,0,0) <= hkl) & (hkl < grid.shape)).all(axis=1)
+    layer  = np.full(hkl.shape[0], np.nan)
+    layer[valid] = grid[tuple(hkl[valid].T)]
+    layer  = layer.reshape(z.size, -1)
     nans   = np.isnan(layer)
     cell   = (1,1,1,90,90,90)
-    del xyz, hkl
+    del firsts, outer, outxyz, xyz, hkl, valid
 
   # Multiply and offset
   layer   = (layer * p.params.multiply) + p.params.add
