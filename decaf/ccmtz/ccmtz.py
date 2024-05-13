@@ -10,16 +10,17 @@ def run(args):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().ccmtz
+  hi, lo = (sorted(p.input.resolution) + [float('inf')])[:2]
   print('Reading', p.input.mtz_1)
   obj    = mtz.object(p.input.mtz_1)
   first  = obj.crystals()[0].miller_set(False).array(obj.get_column(
-           p.input.lbl_1).extract_values().as_double())
+           p.input.lbl_1).extract_values().as_double()).resolution_filter(lo,hi)
   first = first.select(first.data() > p.input.cutoff)
   print('Reading', p.input.mtz_2)
   obj    = mtz.object(p.input.mtz_2)
   second = obj.crystals()[0].miller_set(False).array(obj.get_column(
            p.input.lbl_2).extract_values().as_double())
-  second = second.select(second.data() > p.input.cutoff)
+  second = second.select(second.data() > p.input.cutoff).resolution_filter(lo,hi)
   # Select within limits
   h,k,l  = first.indices().as_vec3_double().as_numpy_array().T
   hlim   = list(map(float, p.input.hlim.split()))
