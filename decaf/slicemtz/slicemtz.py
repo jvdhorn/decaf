@@ -55,12 +55,12 @@ def run(args):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().slicemtz
+  hi, lo  = (sorted(p.params.resolution) + [float('inf')])[:2]
   print('Reading', p.input.mtz)
   if p.input.mtz.endswith('.mtz'):
     obj     = mtz.object(p.input.mtz)
     labels  = obj.column_labels()
     label   = p.input.lbl if p.input.lbl in labels else labels[3]
-    hi, lo  = (sorted(p.params.resolution) + [float('inf')])[:2]
     arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(label
               ).extract_values()).expand_to_p1().resolution_filter(lo, hi)
     data    = arr.data().as_numpy_array()
@@ -72,20 +72,31 @@ def run(args):
     grid[tuple(( ind + offset).T)] = data
     reci    = arr.unit_cell().reciprocal()
     cell    = reci.parameters()
+    _, res  = arr.resolution_range()
+    del obj, arr, data, ind
   else:
     reader  = ccp4_map.map_reader(p.input.mtz)
     grid    = reader.map_data().as_numpy_array()
     mode    = stats.mode(grid,axis=None)
     cutoff  = (p.input.cutoff if p.input.cutoff is not None else mode.mode if
-               mode.count/grid.size > (0.95 - np.pi/6) else grid.min() - 1)
+               mode.count/grid.size > 0.4 else grid.min() - 1)
     grid[grid<=cutoff] = np.nan
     x, y, z = grid.shape
     offset  = x//2, y//2, z//2
+    if p.params.center:
+      grid  = np.roll(grid, offset, axis=(0,1,2))
     cell    = list(reader.unit_cell().parameters())
     cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
     reci    = type(reader.unit_cell())(cell)
-  if p.params.center:
-    grid    = np.roll(grid, offset, axis=(0,1,2))
+    ind     = (np.mgrid[tuple(map(slice, grid.shape))].reshape(3,-1).T - offset
+              ).reshape(grid.shape+(-1,))
+    with np.errstate(all='ignore'):
+      resos = 1. / ((reci.orthogonalize(
+                flex.vec3_double(flex.double(ind.astype(float).ravel()))
+              ).as_numpy_array() ** 2).sum(axis=1) ** 0.5).reshape(grid.shape)
+    grid[(resos < hi) | (resos > lo)] = np.nan
+    res     = resos[~np.isnan(grid)].min()
+    del reader, ind, resos
   slevel  = p.params.slice.lower().strip('hkl')
   dim     = p.params.slice.find(slevel)
   level   = min(grid.shape[dim]-1, max(0, int(slevel) + int(offset[dim])))
@@ -110,21 +121,17 @@ def run(args):
   if p.params.projection:
     width  = p.params.width // 4 * 4 + 1
     if p.params.projection == 'gp':
-      phi  = np.arcsin(np.linspace(-1, 1, int(width // np.pi * 2 + 1)))
+      asp  = width * 2 / np.pi
+      hght = int((asp-1) // 2 * 2 + 1) # Round down to nearest odd
+      phi  = np.arcsin(np.linspace(-hght/asp, hght/asp, hght))
     elif p.params.projection == 'eq':
-      phi  = np.linspace(-1, 1, width // 2 + 1) * np.pi/2.
+      phi  = np.linspace(-np.pi/2., np.pi/2., width // 2 + 1)
     elif p.params.projection == 'mercator':
-      phi  = 2 * np.arctan(np.exp(np.linspace(-1, 1, width) * np.pi)) - np.pi/2.
-
-    firsts = np.argmax(~np.isnan(grid),2)
-    outer  = np.stack(np.where(firsts)+(firsts[firsts>0],)).T - offset
-    outxyz = reci.orthogonalize(flex.vec3_double(outer)).as_numpy_array()
-    radius = sigma_cutoff((outxyz**2).sum(axis=1)**0.5, 2).mean()
-
-    xy     = 1j ** np.linspace(-2, 2, width)
+      phi  = 2 * np.arctan(np.exp(np.linspace(-np.pi, np.pi, width))) - np.pi/2.
+    xy     = np.exp(1j * np.linspace(-np.pi, np.pi, width))
     z      = np.sin(phi)
     xyz    = np.hstack((np.outer((1-z*z)**0.5, xy).view(float).reshape(-1,2),
-                        z.repeat(xy.size)[...,None])) * radius
+                        z.repeat(xy.size)[...,None])) * (1. / res)
     if   dim == 0:
       xyz = xyz[:,(2,0,1)]
     elif dim == 1:
@@ -137,7 +144,13 @@ def run(args):
     layer  = layer.reshape(z.size, -1)
     nans   = np.isnan(layer)
     cell   = (1,1,1,90,90,90)
-    del firsts, outer, outxyz, xyz, hkl, valid
+    del xyz, hkl, valid
+
+  # Clean up
+  del grid, slab
+  if (~nans).sum() <= 2:
+    print('Empty slice')
+    return
 
   # Multiply and offset
   layer   = (layer * p.params.multiply) + p.params.add
