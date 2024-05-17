@@ -50,7 +50,7 @@ def sigma_cutoff(a, sigma):
   return values
 
 
-def softexpand(a):
+def inflate(a):
 
   with np.errstate(all='ignore'):
     a      = a.copy()
@@ -116,24 +116,28 @@ def run(args):
   dim     = p.params.slice.find(slevel)
   level   = min(grid.shape[dim]-1, max(0, int(slevel) + int(offset[dim])))
   label   = p.params.slice.lower().replace(slevel, str(int(level-offset[dim])))
-  sel     = [slice(None)] * 3
-  sel[dim]= slice(level-p.params.depth, level+1+p.params.depth)
-  slab    = grid[tuple(sel)]
   name    = '_'+label
-  name   += '_d%d'%p.params.depth
-  if p.params.mode != 'sum':
-    name += p.params.mode
-  with np.errstate(all='ignore'):
-    if p.params.mode == 'solid':
-      func = get_first
-    else:
-      func = getattr(np, 'nan' + p.params.mode)
-    layer = func(slab, axis=dim).T
-    nans  = np.isnan(slab).all(axis=dim).T
-    layer[nans] = np.nan
+
+  # Construct slice
+  if not p.params.projection:
+    sel     = [slice(None)] * 3
+    sel[dim]= slice(level-p.params.depth, level+1+p.params.depth)
+    slab    = grid[tuple(sel)]
+    if p.params.mode != 'sum':
+      name += p.params.mode
+    with np.errstate(all='ignore'):
+      if p.params.mode == 'solid':
+        func = get_first
+      else:
+        func = getattr(np, 'nan' + p.params.mode)
+      layer = func(slab, axis=dim).T
+      nans  = np.isnan(slab).all(axis=dim).T
+      layer[nans] = np.nan
+    del slab
+    name   += '_d%d'%p.params.depth
 
   # Construct projection
-  if p.params.projection:
+  else:
     width  = p.params.width // 4 * 4 + 1
     if p.params.projection == 'gp':
       asp  = width * 2 / np.pi
@@ -155,7 +159,7 @@ def run(args):
              ).as_numpy_array().astype(int) + offset
     valid  = (((0,0,0) <= hkl) & (hkl < grid.shape)).all(axis=1)
     layer  = np.full(hkl.shape[0], np.nan)
-    layer[valid] = softexpand(grid)[tuple(hkl[valid].T)]
+    layer[valid] = inflate(grid)[tuple(hkl[valid].T)]
     layer  = layer.reshape(z.size, -1)
     nans   = np.isnan(layer)
     cell   = (1,1,1,90,90,90)
@@ -163,7 +167,7 @@ def run(args):
     name  += '_%s'%p.params.projection
 
   # Clean up
-  del grid, slab
+  del grid
   if (~nans).sum() <= 2:
     print('Empty slice')
     return
@@ -384,8 +388,9 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
                    zorder=0)
 
   # Plot axes and Bragg positions
-  ax.imshow(mask, cmap='binary_r', transform=trans, aspect=asp,
-            origin='lower', extent=ext, interpolation='none', zorder=1)
+  if not np.isnan(mask).all():
+    ax.imshow(mask, cmap='binary_r', transform=trans, aspect=asp,
+              origin='lower', extent=ext, interpolation='none', zorder=1)
 
   # Set plot limits
   if clip:
