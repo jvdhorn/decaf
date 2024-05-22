@@ -21,6 +21,9 @@ def phil_parse(args=None):
         resolution = 0
           .type = floats
           .help = 'Resolution limit (or range if 2 values are provided)'
+        fill = 0
+          .type = float
+          .help = 'Fill value for missing intensities'
       }
       params
         .help = "Input files"
@@ -31,6 +34,12 @@ def phil_parse(args=None):
         sample = 3.0
           .type = float
           .help = 'Sampling rate in 1/A - higher is finer'
+        center = True
+          .type = bool
+          .help = 'Place origin in center of the map'
+        limit = None
+          .type = float
+          .help = 'Limit dimensions in Angstroms'
       }
       output
         .help = "Input files"
