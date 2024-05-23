@@ -28,12 +28,15 @@ def phil_parse(args=None):
       params
         .help = "Input files"
       {
-        bins = 0
+        bins = None
           .type = int
           .help = 'If provided, subtract mean value in this many intensity bins'
         sample = 3.0
           .type = float
           .help = 'Sampling rate in 1/A - higher is finer'
+        use_intensities = False
+          .type = bool
+          .help = 'Patterson from intensities rather than F'
         center = True
           .type = bool
           .help = 'Place origin in center of the map'
