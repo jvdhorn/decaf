@@ -27,20 +27,26 @@ def extract_grid(file, mode, chain, resrng, states, ref=None):
 
   for model in calp.models()[min(mrng):max(mrng)+1]:
     xyz  = model.chains()[chain].atoms().extract_xyz().select(sel)
-    dmat = [(xyz - coord).dot()**0.5 for coord in xyz]
+    dmat = [((xyz - coord).dot()**0.5).as_numpy_array() for coord in xyz]
     grid.append(dmat)
+
+  grid = np.array(grid)
 
   if ref is not None and ref[1:] == (lo, hi):
     grid -= ref[0]
 
   mode = funcs[mode]
-  grid = mode(np.array(grid), axis=0)
+  res  = mode(grid)
+  grid = mode(grid, axis=0)
   grid[np.triu_indices(grid.shape[0],1)] = np.nan
 
   for n in range(lo, hi):
     if n not in resi:
       grid = np.insert(grid, n-lo, np.nan, axis=0)
       grid = np.insert(grid, n-lo, np.nan, axis=1)
+
+  print('All distances considered:', res)
+  print('Mean matrix value       :', np.nanmean(grid))
 
   return grid, lo, hi
 
