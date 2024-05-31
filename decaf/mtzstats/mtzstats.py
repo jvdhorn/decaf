@@ -39,6 +39,7 @@ def run(args):
   entropy= -sum(distr * np.log(distr))
 
   # Output
+  strf = '%f' if p.params.floats else '%e'
   print('Space group     :', first.space_group_info().symbol_and_number())
   print('Resolution range:', *map('{:.5f}'.format,first.resolution_range()))
   print('Min max indices :', *first.min_max_indices())
@@ -47,12 +48,12 @@ def run(args):
   print('Number of refl. :', npdata.size)
   print('Fraction neg.   :', (npdata < 0).sum() / npdata.size)
   print('No. local maxima:', maxima)
-  print('Minimum         :', npdata.min())
-  print('Maximum         :', npdata.max())
-  print('Mean            :', npdata.mean())
-  print('Median          :', np.median(npdata))
-  print('Std. deviation  :', npdata.std())
-  print('Variance        :', npdata.var())
+  print('Minimum         :', strf%npdata.min())
+  print('Maximum         :', strf%npdata.max())
+  print('Mean            :', strf%npdata.mean())
+  print('Median          :', strf%np.median(npdata))
+  print('Std. deviation  :', strf%npdata.std())
+  print('Variance        :', strf%npdata.var())
   print('Skewness        :', float(stats.skew(npdata)))
   print('RMS contrast    :', rmsc)
   print('Var[I]/Mean[I]^2:', spcont)
