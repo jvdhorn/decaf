@@ -10,7 +10,7 @@ funcs = {'std':np.std, 'var':np.var, 'mean':np.mean, 'add':np.add,
 modes = {'std':'standard deviation', 'var':'variance', 'mean':'mean',
          'add':'sum', 'sub':'difference', 'div':'ratio', 'mul':'product'}
 
-def extract_grid(file, mode, chain, resrng, states):
+def extract_grid(file, mode, chain, resrng, states, ref=None):
 
   print('Reading', file)
   hier = pdb.input(file).construct_hierarchy()
@@ -29,6 +29,9 @@ def extract_grid(file, mode, chain, resrng, states):
     xyz  = model.chains()[chain].atoms().extract_xyz().select(sel)
     dmat = [(xyz - coord).dot()**0.5 for coord in xyz]
     grid.append(dmat)
+
+  if ref is not None and ref[1:] == (lo, hi):
+    grid -= ref[0]
 
   mode = funcs[mode]
   grid = mode(np.array(grid), axis=0)
@@ -66,9 +69,16 @@ def run(args):
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().pdbdist
 
+  if p.params.subtract:
+    ref = extract_grid(p.params.subtract, 'mean', p.params.chain,
+                       p.params.residue_range, p.params.states)
+  else:
+    ref = None
+
   # Extract and align grids
   grids = [extract_grid(file, p.params.ensemble, p.params.chain,
-                        p.params.residue_range, p.params.states)
+                        p.params.residue_range, p.params.states,
+                        ref)
            for file in p.input.pdb[:4]]
   grids, (lo, hi) = align_grids(grids)
 

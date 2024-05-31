@@ -50,6 +50,9 @@ def phil_parse(args=None):
         mode = *combine sub div add mul
           .type = choice
           .help = 'Multiple input treatment'
+        subtract = None
+          .type = path
+          .help = 'Subtract intramolecular distances from this file'
       }
       output
         .help = "Output files"
