@@ -53,6 +53,12 @@ def phil_parse(args=None):
         subtract = None
           .type = path
           .help = 'Subtract intramolecular distances from this file'
+        lines = None
+          .type = floats
+          .help = 'Draw horizontal and vertical lines at these positions'
+        lc = cyan
+          .type = str
+          .help = 'Line colors'
       }
       output
         .help = "Output files"
