@@ -99,13 +99,14 @@ def run(args):
     plt.plot(x, np.array(y), label=label, ls=ls, color=color, zorder=zord)
     counter += 1
 
+  plt.xlabel('Residue number')
+  plt.ylabel('C$_{\\alpha}$ B-factor ($\mathrm{\AA}^{2}$)')
+  plt.ylim((p.params.min, p.params.max))
+
   # Plot vertical lines
   lo, hi = plt.ylim()
   plt.vlines(p.params.lines, lo, hi, linewidth=0.5, linestyles='dotted')
 
-  plt.xlabel('Residue number')
-  plt.ylabel('C$_{\\alpha}$ B-factor ($\mathrm{\AA}^{2}$)')
-  plt.ylim((p.params.min, p.params.max))
   plt.tight_layout()
   if p.params.legend:
     plt.legend()
