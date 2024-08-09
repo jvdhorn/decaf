@@ -53,6 +53,7 @@ def run(args):
   corr.show()
   ccall  = first.correlation(second, assert_is_similar_symmetry=False).coefficient()
   print('CC all:  ', ccall)
+  second = second.customized_copy(crystal_symmetry=first.crystal_symmetry())
   r1     = first.f_sq_as_f().r1_factor(first.scale(second).f_sq_as_f())
   print('R-factor:', r1)
 
