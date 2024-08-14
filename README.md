@@ -75,6 +75,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `tls_multipliers` - multipliers for all input tls matrices (e.g. `"1.0 0.0 0.0"`)
 * `skip` - skip correlation (but not displacements!) for these levels (e.g. `"2 3 4"`)
 * `reverse` - start procedure at highest level of the hierarchy (default `True`)
+* `remove_waters` - remove all water molecules from the input (default `True`)
 * `swap_frac` - end correlation prematurely after this fraction of swaps (default `1.0`)
 * `energy_percentile` - only allow swaps for which local energy exceeds this percentile (default `0.0`)
 * `processes` - number of parallel simulations (default `1`, watch memory usage!)

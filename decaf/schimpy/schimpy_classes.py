@@ -247,7 +247,8 @@ def reduce_models_common(hier):
 class Manager():
 
   def __init__(self, tls_in, pdb_in, tls_origin, mult, max_level, min_level,
-               sc_size, zero_trace, seed_offset=0, reset_b=False):
+               sc_size, zero_trace, seed_offset=0, reset_b=False,
+               remove_waters=True):
 
     self.input_files    = tls_in
     self.pdb_in         = pdb_in
@@ -259,6 +260,7 @@ class Manager():
     self.sc_size        = sc_size
     self.seed_offset    = seed_offset
     self.reset_b        = reset_b
+    self.remove_waters  = remove_waters
     self.working_models = []
 
     self.process_pdb_in()
@@ -302,10 +304,10 @@ class Manager():
     pdb_hierarchy       = pdb_inp.construct_hierarchy()
 
     # Filter out water
-    selection_string    = 'not resname HOH'
+    selection_string    = 'not resname HOH' if self.remove_waters else 'all'
     cache               = pdb_hierarchy.atom_selection_cache()
-    non_water_sel       = cache.selection(selection_string)
-    self.base_hierarchy = pdb_hierarchy.select(non_water_sel)
+    water_sel           = cache.selection(selection_string)
+    self.base_hierarchy = pdb_hierarchy.select(water_sel)
 
     # Reduce to single model
     self.base_hierarchy = reduce_models_common(self.base_hierarchy)
