@@ -10,6 +10,7 @@ def run(args):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().qdep
+  if not p.params.sc_size: print('Please provide sc_size'); return
   print('Reading', p.input.mtz)
   sc_size       = p.params.sc_size
   obj           = mtz.object(p.input.mtz)
