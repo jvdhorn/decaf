@@ -180,6 +180,8 @@ def model_worker(n_model):
                                    k_sol           = p.params.k_sol,
                                    b_sol           = p.params.b_sol,
                                    b_cart          = list(map(float,p.params.b_cart)))
+      if p.output.single_mtz:
+        f_model.write_mtz('single_supercell.mtz')
       print('Collecting f_model {}'.format(n_model))
       model.f_collected = collector.f_collect(f_model)
 
