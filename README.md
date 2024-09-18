@@ -203,6 +203,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `pdb` - input multistate pdb-file (can be multiple)
 * `mode` - ensemble treatment (`cov`, `cc`, `std`, `var` or `mean`, default `cov`)
 * `combine` - multiple input treatment (`both`, `sub`, `div`, `add` or `mul`, default `both`)
+* `lines` - plot lines at these x and y-positions (e.g. `"25.5 75.5"`)
 
 ### ensemble2adp
 * `pdb` - input pdb-file

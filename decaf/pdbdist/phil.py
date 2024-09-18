@@ -62,6 +62,9 @@ def phil_parse(args=None):
         lc = cyan
           .type = str
           .help = 'Line colors'
+        xlabel = *bottom top
+          .type = choice
+          .help = 'x-axis label position'
       }
       output
         .help = "Output files"
