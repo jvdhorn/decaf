@@ -33,7 +33,7 @@ def extract_grid(file, mode, chain, resrng, states, ref=None):
     grid = np.array((
              grid[0::3,0::3], grid[1::3,1::3], grid[2::3,2::3],
 #             grid[0::3,1::3], grid[0::3,2::3], grid[1::3,2::3],
-           )).mean(axis=0)
+           )).sum(axis=0)
 
   else:
     for model in calp.models()[min(mrng):max(mrng)+1]:
