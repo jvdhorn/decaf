@@ -105,7 +105,8 @@ def run(args):
 
   # Plot vertical lines
   lo, hi = plt.ylim()
-  plt.vlines(p.params.lines, lo, hi, linewidth=0.5, linestyles='dotted')
+  plt.vlines(p.params.lines, lo, hi, linewidth=0.5, linestyles='dotted',
+             zorder=-9e999)
 
   plt.tight_layout()
   if p.params.legend:
