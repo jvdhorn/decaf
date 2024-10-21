@@ -122,6 +122,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz` - input mtz-file (can be multiple)
 * `lbl` - array of interest (default `IDFF`)
 * `log` - plot logarithmic distributions (default `True`)
+* `byres` - plot average intensity in resolution bins (default `False`)
 * `resolution` - low and high resolution (e.g. `"3.6 3.4"`)
 
 ### ccmtz

@@ -513,6 +513,7 @@ class Model():
                   pick_extremes=None,
                   extremes_from_level=1,
                   precorrelate_level=1,
+                  randomize_after=[],
                   require_both=False,
                   uncorrelate=False,
                   percentile=0,
@@ -521,20 +522,21 @@ class Model():
                   scope=1):
 
     # Store correlation parameters
-    self.weight_exp     = weight_exp
-    self.spring_weights = spring_weights
-    self.seq            = correlate_sequential
-    self.iso            = correlate_insideout
-    self.reverse        = reverse
-    self.abf            = allow_bad_frac
-    self.dgf            = disallow_good_frac
-    self.require_both   = require_both
-    self.uncorrelate    = uncorrelate
-    self.percentile     = percentile
-    self.stretch        = stretch
-    self.pairs_frac     = pairs_frac
-    self.skip           = skip
-    self.override       = override
+    self.weight_exp      = weight_exp
+    self.spring_weights  = spring_weights
+    self.seq             = correlate_sequential
+    self.iso             = correlate_insideout
+    self.reverse         = reverse
+    self.abf             = allow_bad_frac
+    self.dgf             = disallow_good_frac
+    self.require_both    = require_both
+    self.uncorrelate     = uncorrelate
+    self.percentile      = percentile
+    self.stretch         = stretch
+    self.pairs_frac      = pairs_frac
+    self.skip            = skip
+    self.override        = override
+    self.randomize_after = randomize_after or []
 
     # Setup global paramters
     self.max_level         = max_level
@@ -1262,6 +1264,25 @@ class Model():
         chain.set_random(n_level_select=n_level, amp=amp)
       if n_level not in self.skip:
         self.correlate_level(n_level)
+      if n_level in self.randomize_after:
+        self.randomly_swap_all_chains()
+
+  def randomly_swap_all_chains(self):
+
+    for i in reversed(range(self.n_chains)):
+      j = int(np.random.random() * (i+1))
+      self.swap_chains(i, j)
+
+  def swap_chains(self, first, second):
+
+    first  = self.working_chains[first]
+    second = self.working_chains[second]
+
+    for n_level, level in first.mod_hierarchy.items():
+      for n_group, modifier in level.items():
+        first_shifts = modifier.get_shifts()
+        modifier.set_shifts(second.get_modifier(n_level, n_group).get_shifts())
+        second.get_modifier(n_level, n_group).set_shifts(first_shifts)
 
   def replace_with_extremes(self, n=()):
 
