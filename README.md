@@ -103,6 +103,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `save` - save image as high-res PNG instead of plotting (default `False`)
 * `depth` - additional depth of the slice on both sides (default `0`)
 * `sc_size` - size of the supercell for drawing Bragg positions (e.g. `"5 5 10"`)
+* `overlay` - colour of axes and Bragg position indicators (default `black`)
 * `log` - plot log10 of the intensities (default `False`)
 * `min` and `max` - minimum and maximum values to plot
 * `autoscale` - decrease upper bound for more detail in skewed slices (default `True`)
