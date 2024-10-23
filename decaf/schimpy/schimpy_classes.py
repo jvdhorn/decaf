@@ -510,6 +510,7 @@ class Model():
                   pairs_frac=1.,
                   skip=(),
                   override=None,
+                  adopt=None,
                   pick_extremes=None,
                   extremes_from_level=1,
                   precorrelate_level=1,
@@ -519,6 +520,7 @@ class Model():
                   use_pbc=True,
                   percentile=0,
                   max_level=-1,
+                  max_chains=9e999,
                   regularize=False,
                   scope=1):
 
@@ -541,6 +543,7 @@ class Model():
     self.randomize_after = randomize_after or []
 
     # Setup global paramters
+    self.max_chains        = max_chains
     self.max_level         = max_level
     self.working_hierarchy = self.base_hierarchy.deep_copy()
     working_model          = self.working_hierarchy.models()[0]
@@ -650,6 +653,12 @@ class Model():
       if regularize:
         special = 'nonbonded' if method == 'nb' else None
         self.regularize(environments=scope, special=special)
+
+    # Conformation overrides
+    if adopt:
+      pairs = zip(*2*[iter(adopt)])
+      for source, target in pairs:
+        self.working_chains[target].adopt_from(self.working_chains[source])
 
   def write_all_environments(self):
 
@@ -922,7 +931,8 @@ class Model():
     for n_level in levels:
       if min_level <= n_level <= max_level:
         for chain in self.working_chains:
-          chain.set_random(n_level_select=n_level, amp=amp)
+          if chain.n_chain < self.max_chains:
+            chain.set_random(n_level_select=n_level, amp=amp)
         if regularize_each_level:
           print('Regularizing level {}'.format(n_level))
           self.regularize(environments=environments)
@@ -1271,7 +1281,8 @@ class Model():
     if self.reverse: levels = levels[::-1]
     for n_level in levels:
       for chain in self.working_chains:
-        chain.set_random(n_level_select=n_level, amp=amp)
+        if chain.n_chain < self.max_chains:
+          chain.set_random(n_level_select=n_level, amp=amp)
       if n_level not in self.skip:
         self.correlate_level(n_level)
       if n_level in self.randomize_after:
