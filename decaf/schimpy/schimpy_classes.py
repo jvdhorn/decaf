@@ -516,6 +516,7 @@ class Model():
                   randomize_after=[],
                   require_both=False,
                   uncorrelate=False,
+                  use_pbc=True,
                   percentile=0,
                   max_level=-1,
                   regularize=False,
@@ -531,6 +532,7 @@ class Model():
     self.dgf             = disallow_good_frac
     self.require_both    = require_both
     self.uncorrelate     = uncorrelate
+    self.use_pbc         = use_pbc
     self.percentile      = percentile
     self.stretch         = stretch
     self.pairs_frac      = pairs_frac
@@ -748,8 +750,10 @@ class Model():
         )
       )
 
-    trans   = np.mgrid[-1:2,-1:2,-1:2].reshape(3,-1).T
-#    trans   = np.array([[0,0,0]])
+    if self.use_pbc:
+      trans   = np.mgrid[-1:2,-1:2,-1:2].reshape(3,-1).T
+    else:
+      trans   = np.array([[0,0,0]])
     frac    = xrs.sites_frac()
     cart    = xrs.sites_cart()
     opts    = [ort(flex.vec3_double(trans+frac[n])) for n in nchains]
@@ -1152,6 +1156,8 @@ class Model():
     if iso:
       pairs = pairs[np.argsort(map(grpsort.index,pairs[:,0]), kind='stable')[::iso]]
 
+    i_mask = j_mask = Ellipsis
+
     for g,i,j in pairs:
 
       idxs = indices[g]
@@ -1177,16 +1183,20 @@ class Model():
                   chains[i].apply_reverse_operations(flex.vec3_double(old_i))
                 ).as_numpy_array()
 
+      if not self.use_pbc:
+        i_mask = ~trns[i].any(axis=1)
+        j_mask = ~trns[j].any(axis=1)
+
       if exp == 1.:
-        old_i_energy = (np.square(ref_i - old_i) * wght).sum()
-        new_i_energy = (np.square(ref_i - new_i) * wght).sum()
-        old_j_energy = (np.square(ref_j - old_j) * wght).sum()
-        new_j_energy = (np.square(ref_j - new_j) * wght).sum()
+        old_i_energy = (np.square(ref_i - old_i) * wght)[i_mask].sum()
+        new_i_energy = (np.square(ref_i - new_i) * wght)[i_mask].sum()
+        old_j_energy = (np.square(ref_j - old_j) * wght)[j_mask].sum()
+        new_j_energy = (np.square(ref_j - new_j) * wght)[j_mask].sum()
       else:
-        old_i_energy = (np.square(ref_i - old_i).sum(axis=1)**exp * wght[...,0]).sum()
-        new_i_energy = (np.square(ref_i - new_i).sum(axis=1)**exp * wght[...,0]).sum()
-        old_j_energy = (np.square(ref_j - old_j).sum(axis=1)**exp * wght[...,0]).sum()
-        new_j_energy = (np.square(ref_j - new_j).sum(axis=1)**exp * wght[...,0]).sum()
+        old_i_energy = (np.square(ref_i - old_i).sum(axis=1)**exp * wght[...,0])[i_mask].sum()
+        new_i_energy = (np.square(ref_i - new_i).sum(axis=1)**exp * wght[...,0])[i_mask].sum()
+        old_j_energy = (np.square(ref_j - old_j).sum(axis=1)**exp * wght[...,0])[j_mask].sum()
+        new_j_energy = (np.square(ref_j - new_j).sum(axis=1)**exp * wght[...,0])[j_mask].sum()
 
       if require_both:
         allow = (new_i_energy < old_i_energy) and (new_j_energy < old_j_energy)
