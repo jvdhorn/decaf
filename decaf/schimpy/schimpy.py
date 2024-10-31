@@ -196,7 +196,7 @@ def model_worker(n_model):
     if n_model == 0:
       print('Writing visualizations for {}'.format(n_model))
       model.write_com_displacements(scale=p.output.scale_displacements)
-      model.write_all_environments()
+      model.write_all_environments(smooth=p.output.smooth_sort)
 
     if keep: model.add_coms_to_hierarchy()
     if p.output.superpose: model.chains_as_models()
