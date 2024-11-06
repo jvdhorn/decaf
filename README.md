@@ -56,7 +56,8 @@ Run any of the modules without arguments to get an overview of the available par
 * [`filter_mtz`](#filter_mtz) - Apply a kernel-filter to an mtz-file
 * [`qdep`](#qdep) - Find power law for intensity decay around Bragg positions in mtz-file
 * [`pdbrad`](#pdbrad) - Estimate the size of a pdb-object
-* [`pdbdist`](#pdbdist) - Plot C-alpha distance stdev matrix for multistate pdb
+* [`pdbdist`](#pdbdist) - Plot C-alpha covariance matrix for multistate pdb
+* [`covbydist`](#covbydist) - Plot C-alpha covariances by distance and fit decay function
 * [`ensemble2adp`](#ensemble2adp) - Convert multistate pdb to (anisotropic) ADPs
 * [`subadp`](#subadp) - Subtract ADPs from two pdb-files
 * [`btrace`](#btrace) - Plot C-alpha B-factor trace
@@ -201,7 +202,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `strong` - consider only this number of strongest reflections (default `100`)
 
 ### pdbrad
-* `pdb` - input pdb-file
+* `pdb` - input multistate pdb-file
 
 ### pdbdist
 * `pdb` - input multistate pdb-file (can be multiple)
@@ -209,8 +210,12 @@ Run any of the modules without arguments to get an overview of the available par
 * `combine` - multiple input treatment (`both`, `sub`, `div`, `add` or `mul`, default `both`)
 * `lines` - plot lines at these x and y-positions (e.g. `"25.5 75.5"`)
 
+### covbydist
+* `pdb` - input multistate pdb-file
+* `include_neighbours` - include neighbouring molecules in the analysis (default `True`)
+
 ### ensemble2adp
-* `pdb` - input pdb-file
+* `pdb` - input multistate pdb-file
 * `models` - limit number of models from the input pdb (e.g. `100`)
 
 ### subadp
