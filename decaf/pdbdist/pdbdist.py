@@ -11,7 +11,7 @@ funcs = {'std':np.std, 'var':np.var, 'mean':np.mean, 'add':np.add,
 def extract_grid(file, mode, chain, resrng, states, ref=None):
 
   print('Reading', file)
-  hier = pdb.input(file).construct_hierarchy()
+  hier = pdb.input(file).construct_hierarchy(False,False,False)
   sel  = hier.atom_selection_cache().selection('name CA')
   calp = hier.select(sel)
   resi = [atom.parent().parent().resseq_as_int() for atom in
@@ -79,6 +79,38 @@ def align_grids(grids):
   return grids, (lo, hi)
 
 
+def write_pymol_bonds(file, grid, lo, hi, norm, perc):
+
+  inp  = pdb.input(file)
+  hier = inp.construct_hierarchy(False,False,False)
+  sel  = hier.atom_selection_cache().selection('name CA')
+  hier = hier.select(sel)
+  xyz  = hier.models()[0].atoms().extract_xyz()
+  xyz  = sum((model.atoms().extract_xyz() for model in hier.models()[1:]), xyz)
+  xyz *= 1./len(hier.models())
+  hier.models()[0].atoms().set_xyz(xyz)
+  for model in hier.models()[1:]:
+    hier.remove_model(model)
+
+  print('Writing new PDB')
+  hier.write_pdb_file(file.replace('.pdb','_pdbdist.pdb'),
+                      crystal_symmetry = inp.crystal_symmetry_from_cryst1())
+
+  grid = grid / np.nanmax(grid) * norm
+  with np.errstate(invalid='ignore'):
+    grid[grid < np.nanpercentile(grid, 100-perc)] = np.nan
+
+  with open(file.replace('.pdb','_pdbdist.pml'), 'w') as cmdfile:
+    for a in range(lo, hi+1):
+      for b in range(lo, a):
+        val = grid[a-lo,b-lo]
+        if not np.isnan(val):
+          print('bond resi {} and name CA, resi {} and name CA'.format(a,b),
+                file=cmdfile)
+          print('set_bond stick_radius, {}, resi {} or resi {}'.format(val,a,b),
+                file=cmdfile)
+
+
 def run(args):
 
   scope       = phil.phil_parse(args = args)
@@ -121,6 +153,10 @@ def run(args):
   if p.params.full and np.isnan(grid[0,-1]):
     empty       = np.isnan(grid)
     grid[empty] = grid.T[empty]
+
+  # Write pymol stuff
+  if p.output.write_pymol_bonds:
+    write_pymol_bonds(p.input.pdb[0], grid, lo, hi, p.pymol.normalize, p.pymol.percentile)
      
   # Create custom colormap
   cmaps   = plt.colormaps()
@@ -162,8 +198,8 @@ def run(args):
   ax.xaxis.set_ticks_position(p.params.xlabel)
   ax.xaxis.set_label_position(p.params.xlabel)
   ax.set_frame_on(False)
-  ax.set_xlabel('Residue number')
-  ax.set_ylabel('Residue number')
+  ax.set_xlabel(p.params.label)
+  ax.set_ylabel(p.params.label)
   cb = fig.colorbar(im, label=label)
   fig.tight_layout()
   ax.set_yticks([t for t in ax.get_xticks() if lo <= t <= hi])

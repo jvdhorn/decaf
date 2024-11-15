@@ -11,7 +11,7 @@ def run(args):
   p           = scope.extract().pdbrad
   print('Reading', p.input.pdb)
   inp    = pdb.input(p.input.pdb)
-  hier   = inp.construct_hierarchy()
+  hier   = inp.construct_hierarchy(False,False,False)
   sel    = hier.atom_selection_cache().sel_protein()
   hier   = hier.select(sel)
   xrs    = hier.extract_xray_structure()
