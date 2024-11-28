@@ -52,10 +52,12 @@ def run(args):
   corr   = first.correlation(second, use_binning=True, assert_is_similar_symmetry=False)
   corr.show()
   ccall  = first.correlation(second, assert_is_similar_symmetry=False).coefficient()
-  print('CC all:  ', ccall)
+  print('CC all      :', ccall)
   second = second.customized_copy(crystal_symmetry=first.crystal_symmetry())
-  r1     = first.f_sq_as_f().r1_factor(first.scale(second).f_sq_as_f())
-  print('R-factor:', r1)
+  r1i    = first.r1_factor(first.scale(second))
+  print('R-factor (I):', r1i)
+  r1f    = first.f_sq_as_f().r1_factor(first.scale(second).f_sq_as_f())
+  print('R-factor (F):', r1f)
 
   if p.input.plot: 
     x = ['$\infty$'] + ['%.2f'%corr.binner.bin_d_range(i)[1] for i in corr.binner.range_used()]
