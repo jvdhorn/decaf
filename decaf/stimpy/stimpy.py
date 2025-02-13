@@ -120,10 +120,12 @@ def nw_stats_dual(N, mean, var, skew):
   if skew < 0: skew = 0
   N1 = 1
   N2 = N
-  func = lambda (S1, S2): (skew/2. * var ** (3./2) - S1**3/N1**2 - S2**3/N2**2) ** 2
-  init = (mean/3., mean/3.)
+  def func((S1, S2)): return (skew/2. * var ** (3./2) - S1**3/N1**2 - S2**3/N2**2) ** 2
+  init = (mean/10.,) * 2
+  method = 'Powell'
   bounds = None # ((0,mean), (0,mean))
-  Sigma1, Sigma2 = optimize.minimize(func, x0=init, bounds=bounds, method='CG').x
+  Sigma1, Sigma2 = optimize.minimize(func, x0=init, bounds=bounds, method=method,
+                                     options={'maxiter':1000}, tol=1e-5).x
   Var = var - Sigma1 ** 2 / N1 - Sigma2 ** 2 / N2
   Mu = mean - Sigma1 - Sigma2
   return Sigma1, Sigma2, Var, Mu
