@@ -70,6 +70,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `sc_size` - size of the supercell (e.g. `"5 5 10"`)
 * `correlate` - enable or disable correlation of TLS-groups (default `True`)
 * `use_pbc` - enable or disable periodic boundary conditions (default `True`)
+* `intra_only` - ignore intermolecular interactions for these levels (e.g. `"2"`)
 * `stretch` - stretch parameter for the anchor points (default `0.25`)
 * `cutoff` - distance cutoff for intermolecular interactions (default `3.0`)
 * `weights` - power for the number of interactions (default `1.5`)

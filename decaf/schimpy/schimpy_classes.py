@@ -547,6 +547,7 @@ class Model():
                   require_both=False,
                   uncorrelate=False,
                   use_pbc=True,
+                  intra_only=False,
                   percentile=0,
                   max_level=-1,
                   max_chains=9e999,
@@ -564,6 +565,7 @@ class Model():
     self.require_both    = require_both
     self.uncorrelate     = uncorrelate
     self.use_pbc         = use_pbc
+    self.intra_only      = intra_only
     self.percentile      = percentile
     self.stretch         = stretch
     self.pairs_frac      = pairs_frac
@@ -1160,7 +1162,7 @@ class Model():
   def optimize_level(self, n_level, weight_exp=2., spring_weights=2., seq=0, iso=0,
                      allow_bad_frac=0., disallow_good_frac=0., require_both=False,
                      uncorrelate=False, percentile=0, stretch=1., pairs_frac=1., 
-                     override=None, swap_shifts=False):
+                     intra_only=False, override=None, swap_shifts=False):
 
     contact = np.array(self.environments.get_contact(n_level))
     conshft = np.array(self.environments.get_conshft(n_level))
@@ -1248,6 +1250,9 @@ class Model():
         i_mask = ~trns[i].any(axis=1)
         j_mask = ~trns[j].any(axis=1)
 
+      if intra_only:
+        i_mask = j_mask = (idxs[i,:,1] == i)
+
       if exp == 1.:
         old_i_energy = (np.square(ref_i - old_i) * wght)[i_mask].sum()
         new_i_energy = (np.square(ref_i - new_i) * wght)[i_mask].sum()
@@ -1304,14 +1309,15 @@ class Model():
     mod_a.set_coordinates(coords_b)
     mod_b.set_coordinates(coords_a)
 
-  def correlate_level(self, n_level, swap_shifts=True):
+  def correlate_level(self, n_level, swap_shifts=True, intra_only=False):
 
     orders = self.optimize_level(n_level, swap_shifts=swap_shifts, weight_exp=self.weight_exp,
                                  spring_weights=self.spring_weights, seq=self.seq, iso=self.iso,
                                  allow_bad_frac=self.abf, disallow_good_frac=self.dgf,
                                  require_both=self.require_both, uncorrelate=self.uncorrelate,
                                  percentile=self.percentile, stretch=self.stretch,
-                                 pairs_frac=self.pairs_frac, override=self.override)
+                                 pairs_frac=self.pairs_frac, override=self.override,
+                                 intra_only=intra_only)
 
     for n_group, order in orders.items():
       done = set()
@@ -1335,7 +1341,8 @@ class Model():
         if chain.n_chain < self.max_chains:
           chain.set_random(n_level_select=n_level, amp=amp)
       if n_level not in self.skip:
-        self.correlate_level(n_level)
+        intra_only = n_level in self.intra_only
+        self.correlate_level(n_level, intra_only=intra_only)
       if n_level in self.randomize_after:
         self.randomly_swap_all_chains()
 
