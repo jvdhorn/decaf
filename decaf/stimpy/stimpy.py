@@ -123,48 +123,35 @@ def draw_from_enw(N1, Sigma1, N2, Sigma2, mu, sigma, size):
 
   return gamma1_rvs + gamma2_rvs + normal_rvs
 
-def nw_stats_dual(N, data):
+def nw_stats_dual(N, mean, var, skew, gain):
 
-  data = data.copy()
-  data.sort()
+  if skew < 0: skew = 0
 
-  N1   = 1
-  N2   = N
-  size = data.shape[0]
-  mean = data.mean()
-  var  = data.var()
-  std  = data.std()
-  skew = max(0,stats.skew(data))
+  def S1_from_S2(S2):
+    return np.cbrt(skew/2.*var**(3./2) - S2**3/N**2)
 
-  class target(object):
-    def __init__(self, p=0., q=1.):
-      self.p = p
-      self.q = q
-    def __call__(self, (S1, S2, V)):
-      result   = 0
-      M        = mean - S1 - S2
-      for n in range(1):
-        sample   = draw_from_enw(N1, max(0,S1), N2, max(0,S2), M, max(0,V)**.5, size)
-        ks       = stats.ks_2samp(data, sample).statistic
-        mean_dev = abs(mean-sample.mean())/mean if mean else 0
-        std_dev  = abs(std-sample.std())/std if var else 0
-        skew_dev = abs(skew-stats.skew(sample))/skew if skew else 0
-        result  += ks + skew_dev + std_dev + mean_dev
-      self.p  *= self.q
-      return result
-#  init = (mean/3.,)*4
-#  mthd = 'Nelder-Mead'
-#  opts = {'maxfev':1000}
-#  res  = optimize.minimize(target(), x0=init, method=mthd, options=opts)
-#  print(res.success, res.nfev, res.fun, res.message)
-#  Sigma1, Sigma2, Mu, Var = res.x
-  res = optimize.brute(target(), (slice(0,mean,mean/10),)*3, finish=optimize.fmin)
-  print(target()(res))
-  Sigma1, Sigma2, Var = res
-  Mu  = mean - Sigma1 - Sigma2
+  def target(S2):
+    S1 = S1_from_S2(S2)
+    return ((var-S1**2-S2**2/N)/(mean-S1-S2) - gain)**2
 
-  return Sigma1, Sigma2, Var, Mu
+  Sigma2 = optimize.brute(target, [slice(0,mean,mean/1000.)], finish=optimize.fmin)
+  Sigma1 = S1_from_S2(Sigma2)
+  Mu     = mean - Sigma1 - Sigma2
+  Var    = var - Sigma1**2 - Sigma2**2/N
+  return (Sigma1, Sigma2, Var, Mu)
+  
+def nw_stats_gain(mean, var, skew, gain):
 
+  if skew < 0: skew = 0
+
+  def target(N):
+    Sigma, Var, Mu = nw_stats(max(0,N), mean, var, skew)
+    return (Var/Mu - gain)**2
+
+  N = optimize.minimize(target, 1, method='Nelder-Mead').x
+  Sigma, Var, Mu = nw_stats(N, mean, var, skew)
+  return (N, Sigma, Var, Mu)
+  
 def nw_stats(N, mean, var, skew):
 
   if skew < 0: skew = 0
@@ -181,7 +168,8 @@ def nw_stats_discrete(N, mean, var):
 
 def image_region_statistics(array, regions, threshold=None, save_img=True, write=True,
                             template=None, directory='stimpy', pref='', sigma=3, N=8,
-                            mode='continuous', use_fit_params=False, remove_excess=False):
+                            mode='continuous', use_fit_params=False, remove_excess=False,
+                            gain=1):
 
   if threshold is None:
     threshold = array.min()
@@ -229,8 +217,11 @@ def image_region_statistics(array, regions, threshold=None, save_img=True, write
 
     if use_fit_params:
       mean, var, skew = fitmean, fitvar, fitskew
+
+    if n == 0:
+      Sigma, Var, Mu = 0, 0, 0
    
-    if mode == 'continuous':
+    elif mode == 'continuous':
       Sigma, Var, Mu = nw_stats(N, mean, var, skew)
       print('Noisy Wilson stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
       print()
@@ -240,11 +231,17 @@ def image_region_statistics(array, regions, threshold=None, save_img=True, write
       print('Noisy Wilson stats: Sigma={:.2f}; Mu={:.2f}'.format(Sigma, Mu))
       print()
 
+    elif mode == 'gain':
+      N, Sigma, Var, Mu = nw_stats_gain(mean, var, skew, gain)
+      print('Noisy Wilson stats: N={:.2f}; Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(
+            *map(float,(N, Sigma, Var, Mu))))
+      print()
+
     elif mode == 'dual':
-      fit_data = data if data.shape[0] <= 10000 else np.random.choice(data, 10000, replace=False)
-      Sigma1, Sigma2, Var, Mu = nw_stats_dual(N, fit_data)
+      Sigma1, Sigma2, Var, Mu = nw_stats_dual(N, mean, var, skew, gain)
       Sigma = Sigma1 + Sigma2
-      print('Noisy Wilson stats: Sigma1={:.2f}; Sigma2={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma1, Sigma2, Var, Mu))
+      print('Noisy Wilson stats: Sigma1={:.2f}; Sigma2={:.2f}; Var={:.2f}; Mu={:.2f}'.format(
+            *map(float,(Sigma1, Sigma2, Var, Mu))))
       print()
 
     if save_img and template is not None:
@@ -351,7 +348,7 @@ def run(args):
                                   interpolate    = p.params.interpolate_panels,
                                   threshold      = p.params.threshold,
                                   min_group_size = p.params.min_group_size)
-  region_statistics(regions)
+#  region_statistics(regions)
   plot_regions(regions, show=p.output.show, filename='{}/{}_regions.png'.format(path, pref))
 
   # Show plots if desired
@@ -378,7 +375,8 @@ def run(args):
                                          sigma          = p.params.sigma,
                                          remove_excess  = p.params.remove_excess,
                                          mode           = p.params.mode,
-                                         use_fit_params = p.params.use_fit_params)
+                                         use_fit_params = p.params.use_fit_params,
+                                         gain           = p.params.gain)
   background   = smooth(background, p.params.smooth_background)
   corrected    = image_data - background
   badmask     ^= bmask
