@@ -40,6 +40,7 @@ def run(args):
 
   # Output
   strf = '%f' if p.params.floats else '%e'
+  print('Column labels   :', *obj.column_labels())
   print('Space group     :', first.space_group_info().symbol_and_number())
   print('Resolution range:', *map('{:.5f}'.format,first.resolution_range()))
   print('Min max indices :', *first.min_max_indices())

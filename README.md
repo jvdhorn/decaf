@@ -157,7 +157,8 @@ Run any of the modules without arguments to get an overview of the available par
 ### stimpy3d
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
-* `bins` - number of resolution shells (default `1`)
+* `bins` - number of resolution shells (default `50`)
+* `mode` - Noisy Wilson distribution treatment (`continuous`, `dual`, default `dual`)
 * `N` - expected number of independent rotations (default `1.0`)
 
 ### patterson
