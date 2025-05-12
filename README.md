@@ -94,7 +94,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `radial` - polarization-corrected radial average
 * `bin_counts` - bin regions within this range of counts (default `1.0`)
 * `N` - expected number of independent rotations (default `1.0`)
-* `mode` - Noisy Wilson distribution treatment (`continuous`, `discrete`, `gain` or `dual`, default `dual`)
+* `mode` - Noisy Wilson distribution treatment (`continuous`, `discrete`, `gain` or `dual`, default `continuous`)
 * `gain` - estimate for the gain of the detector (default `1.0`)
 * `median_size` - kernel size of the median filter (default `9`)
 * `dilation_size` - kernel size of the mask dilation (default `5`)
@@ -158,7 +158,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
 * `bins` - number of resolution shells (default `50`)
-* `mode` - Noisy Wilson distribution treatment (`continuous`, `dual`, default `dual`)
+* `mode` - Noisy Wilson distribution treatment (`continuous`, `dual`, default `continuous`)
 * `N` - expected number of independent rotations (default `1.0`)
 
 ### patterson
