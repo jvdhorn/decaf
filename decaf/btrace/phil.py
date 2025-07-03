@@ -38,6 +38,9 @@ def phil_parse(args=None):
         max = None
           .type = float
           .help = 'Set max y-value'
+        chain = 0
+          .type = ints
+          .help = 'Chains to plot'
       }
       output
         .help = "Output files"
