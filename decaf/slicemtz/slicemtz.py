@@ -317,7 +317,7 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
   plt.rc('font', size=5. * scale)
   figsize = 8 * scale, 6 * scale
   fig, (ax, dx, cax, pad) = plt.subplots(1,4,figsize=figsize,
-    gridspec_kw={'width_ratios':[0.85, 0.04, 0.02, 0.09], 'wspace':0, 'hspace':0})
+    gridspec_kw={'width_ratios':[0.80, 0.04, 0.02, 0.14], 'wspace':0, 'hspace':0})
   ax.set_axis_off()
   dx.set_axis_off()
   pad.set_axis_off()
