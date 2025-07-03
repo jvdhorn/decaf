@@ -301,7 +301,7 @@ class Manager():
   def process_pdb_in(self):
 
     pdb_inp             = iotbx.pdb.input(self.pdb_in)
-    pdb_hierarchy       = pdb_inp.construct_hierarchy(False,False,False)
+    pdb_hierarchy       = pdb_inp.construct_hierarchy()
 
     # Filter out water
     selection_string    = 'not resname HOH' if self.remove_waters else 'all'
