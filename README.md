@@ -42,12 +42,27 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 * `weights` - power for the number of interactions (default 1.5)
 * `max_level` - highest level of the TLS-hierarchy to include (default 1)
 * `high_resolution` - high resolution cutoff (default 2)
-* `k_sol` and `b_sol` - bulk solvent parameters (default 0.25 and 50)
-* `processes` - number of parallel processes (default 1)
+* `k_sol` and `b_sol` - bulk solvent parameters (default 0.35 and 50)
+* `processes` - number of parallel processes (default 1, watch memory usage!)
 * `models` - number of models to simulate (default 128)
 
 ### stimpy
+* `image` - raw image file
+* `polar` - polarization-corrected intermediate background
+* `bin_photons` - bin regions within this range of counts (default 1)
+* `N` - expected number of independent rotations (default 1)
+* `bragg_mask_median_filter` - kernel size of the median filter (default 9)
+* `bragg_mask_dilation` - kernel size of the mask dilation (default 7)
+
 ### slicemtz
+* `mtz_1` - input mtz-file
+* `lbl_1` - array of interest (default IDFF)
+* `slice` - desired slice to plot (default hk0)
+* `depth` - additional depth of the slice on both sides (default 0)
+* `sc_size` - size of the supercell for drawing Bragg positions (e.g. "5 5 10")
+* `log` - plot log10 of the intensities (default False)
+* `min` and `max` - minimum and maximum values to plot
+
 ### submtz
 ### plotmtz
 ### ccmtz
