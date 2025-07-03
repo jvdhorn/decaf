@@ -173,11 +173,9 @@ def model_worker(n_model):
 
       print('Calculating f_model {}'.format(n_model))
       f_model = model.calc_f_model(high_resolution = p.params.resolution,
-                                   low_resolution  = None,
                                    k_sol           = p.params.k_sol,
                                    b_sol           = p.params.b_sol,
-                                   b_cart          = list(map(float,p.params.b_cart)),
-                                   wavelength      = p.params.wavelength)
+                                   b_cart          = list(map(float,p.params.b_cart)))
       print('Collecting f_model {}'.format(n_model))
       model.f_collected = collector.f_collect(f_model)
 
