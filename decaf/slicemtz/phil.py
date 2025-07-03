@@ -82,6 +82,9 @@ def phil_parse(args=None):
         inset = None
           .type = floats
           .help = 'Create inset with zoom around index, using zoom syntax'
+        position = *bl br tl tr
+          .type = choice
+          .help = 'Corner in which to place the inset'
         dotsize = 1
           .type = int
           .help = 'Width of the axes and Bragg position indicators (higher = thinner)'
@@ -110,6 +113,9 @@ def phil_parse(args=None):
         png_out = None
           .type = path
           .help = 'PNG output file'
+        figscale = 4.0
+          .type = float
+          .help = 'Scalar for the output image file'
       }
     }
     """)
