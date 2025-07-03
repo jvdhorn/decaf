@@ -183,7 +183,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `lbl` - array of interest (default `IDFF`)
 * `size` - filter size (default `1`)
 * `filter` - filter type (`gaussian` or `uniform`, default `gaussian`)
-* `interpolate` - fill missing values with filtered intensities (default `False`)
+* `interpolate` - interpolate missing intensities using a normalized convolution (default `False`)
 
 ### qdep
 * `mtz` - input mtz-file

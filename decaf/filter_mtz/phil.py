@@ -30,7 +30,7 @@ def phil_parse(args=None):
           .help = 'Filter type'
         interpolate = False
           .type = bool
-          .help = 'Interpolate missing values up to resolution limit'
+          .help = 'Interpolate missing values up to resolution limit using normalized convolution'
       }
       output
         .help = "Output files"
