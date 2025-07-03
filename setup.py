@@ -10,6 +10,7 @@ setup(  name                = 'diffuse',
         install_requires    = ( ),
         package_dir         = {'':'src'},
         packages            = find_packages(where='src'),
+        package_data        = {'':'*'},
         include_package_data= True,
         classifiers         = ['Programming Language :: Python :: 3'],
         )
