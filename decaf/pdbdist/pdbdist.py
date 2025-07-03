@@ -150,6 +150,8 @@ def run(args):
   cb = fig.colorbar(im, label=' '.join(label))
   fig.tight_layout()
   ax.set_yticks([t for t in ax.get_xticks() if lo <= t <= hi])
+  ax.hlines(p.params.lines, lo-0.5, hi+0.5, color=p.params.lc, lw=0.5)
+  ax.vlines(p.params.lines, lo-0.5, hi+0.5, color=p.params.lc, lw=0.5)
   plt.savefig(p.output.png_out, dpi=300)
 
   if p.params.show:
