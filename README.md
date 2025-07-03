@@ -46,6 +46,7 @@ Run any of the modules without arguments to get an overview of the available par
 * [`mtz2txt`](#mtz2txt) - Extract raw intensities from mtz-file
 * [`map2mtz`](#map2mtz) - Convert map-file with experimental intensities to mtz
 * [`filter_mtz`](#filter_mtz) - Apply a kernel-filter to an mtz-file
+* [`qdep`](#qdep) - Find power law for intensity decay around Bragg positions in mtz-file
 * [`pdbrad`](#pdbrad) - Estimate the size of a pdb-object
 * [`btrace`](#btrace) - Plot C-alpha B-factor trace
 
@@ -147,6 +148,12 @@ Run any of the modules without arguments to get an overview of the available par
 * `lbl` - array of interest (default `IDFF`)
 * `size` - filter size (default `1`)
 * `filter` - filter type (`gaussian` or `uniform`, default `gaussian`)
+
+### qdep
+* `mtz` - input mtz-file
+* `lbl` - array of interest (default `IDFF`)
+* `sc_size` - supercell size (e.g. `"5 5 10"`)
+* `strong` - consider only this number of strongest reflections (e.g. `100`)
 
 ### pdbrad
 * `pdb` - input pdb-file
