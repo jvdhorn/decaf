@@ -46,7 +46,8 @@ Run any of the modules without arguments to get an overview of the available par
 * [`stimpy3d`](#stimpy3d) - Apply the stimpy-procedure to resolution bins in mtz-file
 * [`pattsize`](#pattsize) - Estimate the size of the Patterson origin-peak
 * [`mtz2txt`](#mtz2txt) - Extract raw intensities from mtz-file
-* [`map2mtz`](#map2mtz) - Convert map-file with experimental intensities to mtz
+* [`mtz2map`](#mtz2map) - Convert mtz to ccp4 map-file
+* [`map2mtz`](#map2mtz) - Convert ccp4 map-file to mtz
 * [`filter_mtz`](#filter_mtz) - Apply a kernel-filter to an mtz-file
 * [`qdep`](#qdep) - Find power law for intensity decay around Bragg positions in mtz-file
 * [`pdbrad`](#pdbrad) - Estimate the size of a pdb-object
@@ -139,6 +140,12 @@ Run any of the modules without arguments to get an overview of the available par
 ### mtz2txt
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
+* `resolution` - low and high resolution (e.g. `"3.6 3.4"`)
+
+### mtz2map
+* `mtz` - input mtz-file
+* `lbl` - array of interest (default `IDFF`)
+* `fill` - fill value for missing reflections (default `-1000`)
 * `resolution` - low and high resolution (e.g. `"3.6 3.4"`)
 
 ### map2mtz
