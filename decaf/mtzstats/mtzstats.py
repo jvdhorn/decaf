@@ -30,6 +30,7 @@ def run(args):
   print('Unit cell param.:', *map('{:.5f}'.format,first.unit_cell().parameters()))
   print('Reciprocal cell :', *map('{:.5f}'.format,first.unit_cell().reciprocal_parameters()))
   print('Number of refl. :', npdata.size)
+  print('Fraction neg.   :', (npdata < 0).sum() / npdata.size)
   print('Minimum         :', npdata.min())
   print('Maximum         :', npdata.max())
   print('Mean            :', npdata.mean())
