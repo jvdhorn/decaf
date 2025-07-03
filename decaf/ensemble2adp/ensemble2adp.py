@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 from scitbx.array_family import flex
 from iotbx import pdb
+from mmtbx import tls
 from . import phil
 import numpy as np
 
@@ -41,12 +42,12 @@ def run(args):
   means *= 1./len(hier.models())
 
   print('Calculating covariances')
-  for i_atom, atom in enumerate(hier.models()[0].atoms()):
-    M = np.array([model.atoms()[i_atom].xyz for model in hier.models()]
-                 ).reshape(-1,3) - [means[i_atom]]
-    cov = np.dot(M.T, M) / (M.shape[0] - 1)
-    atom.set_uij(tuple(cov[(0,1,2,0,0,1),(0,1,2,1,2,2)]))
-    atom.set_b((M**2).sum()/M.shape[0] * biso_const)
+  n_atoms = len(hier.models()[0].atoms())
+  coords  = hier.atoms().extract_xyz()
+  for i, atom in enumerate(hier.models()[0].atoms()):
+    ensemble = coords[i::n_atoms]
+    atom.set_uij(tls.u_cart_from_xyz(ensemble))
+    atom.set_b(sum(atom.uij[:3]) * biso_const)
 
   hier.models()[0].atoms().set_xyz(means)
 
