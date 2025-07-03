@@ -4,6 +4,7 @@ A Python package for simulating diffuse scattering of X-rays in protein crystals
 * Phenix/cctbx: runs in phenix.python (2.7.x) and depends on cctbx modules
 * Numpy
 * Scipy
+* Matplotlib
 
 # Usage
 Make sure `phenix.python` is available.
@@ -64,15 +65,65 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 * `min` and `max` - minimum and maximum values to plot
 
 ### submtz
+* `mtz_1` - first input mtz-file
+* `mtz_2` - second input mtz-file
+* `lbl_1` - first array of interest (default IDFF)
+* `lbl_2` - second array of interest (default IDFF)
+* `add` - add instead of subtract (default False)
+* `scale` - scale factor for second mtz-file (default 1)
+
 ### plotmtz
+* `mtz_1` - input mtz-file (can be multiple)
+* `lbl_1` - array of interest (default IDFF)
+* `log` - plot logarithmic distributions (default True)
+* `resolution` - set low and high resolution (eg "3.6 3.4")
+
 ### ccmtz
+* `mtz_1` - first input mtz-file
+* `mtz_2` - second input mtz-file
+* `lbl_1` - first array of interest (default IDFF)
+* `lbl_2` - second array of interest (default IDFF)
+* `bins` - number of resolution shells
+* `hlim` and `klim` and `llim` - limit h, k, and l (e.g. "-20 20")
+
 ### rmbragg
+* `mtz_1` - input mtz-file
+* `sc_size` - supercell size (e.g. "5 5 10")
+* `box` - number of voxels to remove around every Bragg position (e.g. "1 1 1")
+* `keep` - invert selection
+
 ### rmerge
+* `mtz_1` - input mtz-file
+* `lbl_1` - array of interest (default IDFF)
+* `space_group` - new space group (symbol or number, e.g. 96)
+
 ### mtzstats
+* `mtz_1` - input mtz-file
+* `lbl_1` - array of interest (default IDFF)
+
 ### stimpy3d
+* `mtz_1` - input mtz-file
+* `lbl_1` - array of interest (default IDFF)
+* `bins` - number of resolution shells (default 1)
+* `N` - expected number of independent rotations (default 1)
+
 ### pattsize
+* `map_1` - input patterson map
+* `binsize` - size of radial bins in Angstrom (default 1.0)
+* `sigma` - sigma cutoff to determine size (default 2.0)
+
 ### mtz2txt
+* `mtz_1` - input mtz-file
+* `lbl_1` - array of interest (default IDFF)
+* `resolution` - set low and high resolution (eg "3.6 3.4")
+
 ### filter_mtz
+* `mtz_1` - input mtz-file
+* `lbl_1` - array of interest (default IDFF)
+* `size` - filter size (default 1)
+* `filter` - filter type (gaussian or uniform, default gaussian)
+
 ### pdbrad
+* `pdb` - input pdb-file
 
 # References
