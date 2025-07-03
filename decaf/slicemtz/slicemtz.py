@@ -59,15 +59,15 @@ def run(args):
   else:
     reader  = ccp4_map.map_reader(p.input.mtz)
     grid    = reader.map_data().as_numpy_array()
-    minimum = grid.min()
-    cutoff  = (p.input.cutoff if p.input.cutoff is not None else minimum if
-               minimum == stats.mode(grid,axis=None).mode else minimum - 1)
+    mode    = stats.mode(grid,axis=None)
+    cutoff  = (p.input.cutoff if p.input.cutoff is not None else mode.mode if
+               mode.count/grid.size > (0.95 - np.pi/6) else grid.min() - 1)
     grid[grid<=cutoff] = np.nan
     x, y, z = grid.shape
     offset  = x//2, y//2, z//2
     cell    = list(reader.unit_cell().parameters())
     cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
-    reci    = type(reader.unit_cell)(cell)
+    reci    = type(reader.unit_cell())(cell)
   if p.params.center:
     grid    = np.roll(grid, offset, axis=(0,1,2))
   slevel  = p.params.slice.lower().strip('hkl')
