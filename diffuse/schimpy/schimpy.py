@@ -21,21 +21,17 @@ def run(args):
                            for file_name  in glob.glob(expression)]
   else:
     tls_in    = [p.input.pdb_in]
-  tls_origin  = list(map(float, p.input.tls_origin))
-  multipliers = list(map(float, p.input.tls_multipliers * 3))[:3]
-  sc_size     = list(map(int, p.input.sc_size))
-  write_after = list(map(int, p.input.n_models))
 
   print('Initializing')
   max_level  = max(p.input.max_level, p.correlation.contact_level)
   manager    = tls.Manager(tls_in      = tls_in,
                            pdb_in      = p.input.pdb_in,
-                           tls_origin  = tls_origin,
-                           mult        = multipliers,
+                           tls_origin  = p.input.tls_origin,
+                           mult        = p.input.tls_multipliers,
                            zero_trace  = p.input.zero_trace,
                            max_level   = max_level,
                            min_level   = p.input.min_level,
-                           sc_size     = sc_size,
+                           sc_size     = p.input.sc_size,
                            seed_offset = p.input.seed,
                            reset_b     = p.input.reset_b)
 
@@ -55,7 +51,7 @@ def run(args):
   
   try:
     for result in pool.imap_unordered(func     = model_worker,
-                                      iterable = range(max(write_after))):
+                                      iterable = range(max(p.input.n_models))):
       
       n_model = result.n_model
       if hasattr(result, 'working_hierarchy'):
@@ -64,15 +60,15 @@ def run(args):
       print("Model {} finished".format(n_model))
 
       # Write stuff if appropriate
-      if p.output.write_b and result.msd_collected in write_after:
+      if p.output.write_b and result.msd_collected in p.input.n_models:
         print('Writing ensemble B {}'.format(result.msd_collected))
         file_name = file_number(p.output.b_out, result.msd_collected)
         collector.write_b(file_name)
-      if p.output.write_mtz and result.f_collected in write_after:
+      if p.output.write_mtz and result.f_collected in p.input.n_models:
         print('Writing MTZ {}'.format(result.f_collected))
         file_name = file_number(p.output.mtz_out, result.f_collected)
         collector.write_mtz(file_name)
-      if collector.shifts_count.value and result.shifts_collected in write_after:
+      if collector.shifts_count.value and result.shifts_collected in p.input.n_models:
         print('Writing regularization shifts {}'.format(result.shifts_collected))
         file_name = file_number('regularization_shifts.pdb', result.shifts_collected)
         collector.write_shifts(file_name)
