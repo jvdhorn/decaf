@@ -29,7 +29,11 @@ def main(args, log):
   distr  = np.histogram(npdata, bins=p.params.bins)[0] / npdata.size
   distr  = distr[distr > 0]
   entropy= -sum(distr * np.log(distr))
+  print('Space group     :', first.space_group_info().symbol_and_number())
   print('Resolution range:', *first.resolution_range())
+  print('Min max indices :', *first.min_max_indices())
+  print('Unit cell param.:', *first.unit_cell().parameters())
+  print('Reciprocal cell :', *first.unit_cell().reciprocal_parameters())
   print('Number of refl. :', npdata.size)
   print('Minimum         :', npdata.min())
   print('Maximum         :', npdata.max())
