@@ -14,7 +14,7 @@ Make sure `cctbx.python` is available and the `dxtbx` package is installed.
 
 Clone the repository
 ```
-git clone https://github.com/jvdhorn/diffuse
+git clone https://github.com/jvdhorn/decaf
 ```
 
 Add package to `PATH` with
