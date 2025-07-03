@@ -1,0 +1,19 @@
+#!/bin/sh
+
+MODULE="decaf.subadp.__init__"
+
+# Check if the module is available
+cctbx.python -c "import decaf" >/dev/null 2>&1
+
+if [ $? -eq 0 ]; then
+
+  # If this runs successfully, then execute with arguments
+  cctbx.python -m ${MODULE} "$@"
+
+else
+
+  # Use plain python as fallback
+  python -m ${MODULE} "$@"
+
+fi
+

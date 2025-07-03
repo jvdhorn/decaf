@@ -58,6 +58,7 @@ Run any of the modules without arguments to get an overview of the available par
 * [`pdbrad`](#pdbrad) - Estimate the size of a pdb-object
 * [`pdbdist`](#pdbdist) - Plot C-alpha distance stdev matrix for multistate pdb
 * [`ensemble2adp`](#ensemble2adp) - Convert multistate pdb to (anisotropic) ADPs
+* [`subadp`](#subadp) - Subtract ADPs from two pdb-files
 * [`btrace`](#btrace) - Plot C-alpha B-factor trace
 
 ## Most important command-line parameters
@@ -206,6 +207,11 @@ Run any of the modules without arguments to get an overview of the available par
 ### ensemble2adp
 * `pdb` - input pdb-file
 * `models` - limit number of models from the input pdb (e.g. `100`)
+
+### subadp
+* `pdb_1` - first input pdb-file
+* `pdb_2` - second input pdb-file (can be multiple)
+* `mode` - use a different operator (`sub` or `add`, default `sub`)
 
 ### btrace
 * `input` - input pdb or json (can be multiple)
