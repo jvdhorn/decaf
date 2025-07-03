@@ -2,7 +2,7 @@ from __future__ import print_function, division
 from iotbx import pdb
 from cctbx.array_family import flex
 from . import phil
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt, colors
 import numpy as np
 
 funcs = {'std':np.std, 'var':np.var, 'mean':np.mean, 'add':np.add,
@@ -87,6 +87,25 @@ def run(args):
         valid = ~np.isnan(merge)
         grid[valid] = merge[valid]
  
+  # Create custom colormap
+  cmaps   = plt.colormaps()
+  pos     = next(m for m in cmaps if m.lower()==p.params.positive_cmap.lower())
+  poscmap = plt.get_cmap(pos)
+  neg     = next(m for m in cmaps if m.lower()==p.params.negative_cmap.lower())
+  negcmap = plt.get_cmap(neg)
+  high    = p.params.max if p.params.max is not None else np.nanmax(grid)
+  low     = p.params.min if p.params.min is not None else np.nanmin(grid)
+  if low < 0 < high:
+    frac  = high / (high - low)
+    poss  = poscmap(np.linspace(0, frac/max(frac,1-frac), int(frac * 5040)))
+    negs  = negcmap(np.linspace((1-frac)/max(frac,1-frac), 0, int((1-frac) * 5040)))
+    stack = np.vstack((negs, poss))
+    cmap  = colors.LinearSegmentedColormap.from_list('composite', stack)
+  elif low >= 0:
+    cmap  = poscmap
+  elif high <= 0:
+    cmap  = negcmap
+
   # Construct label 
   base = 'C$_{\\alpha}$ distance'
   unit = '($\mathrm{\AA}'+'^{2}'*(p.params.ensemble in {'var'})+'$)'
@@ -101,7 +120,7 @@ def run(args):
   # Make plot
   fig, ax = plt.subplots(figsize=(5,4))
   im = ax.imshow(grid, origin='lower', vmin=p.params.min, vmax=p.params.max,
-                 extent=(lo-.5,hi+.5,lo-.5,hi+.5), cmap=p.params.cmap)
+                 extent=(lo-.5,hi+.5,lo-.5,hi+.5), cmap=cmap)
   ax.xaxis.set_ticks_position('top')
   ax.xaxis.set_label_position('top')
   ax.set_frame_on(False)
