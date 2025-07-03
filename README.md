@@ -50,7 +50,8 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 * `high_resolution` - high resolution cutoff (default `2.0`)
 * `k_sol` and `b_sol` - bulk solvent parameters (default `0.35` and `50.0`)
 * `processes` - number of parallel processes (default `1`, watch memory usage!)
-* `models` - number of models to simulate (default `128`)
+* `interval` - number of seconds between consecutive simultaions (default `20`)
+* `n_models` - number of supercells to simulate (default `128`)
 
 ### stimpy
 * `image` - raw image file
