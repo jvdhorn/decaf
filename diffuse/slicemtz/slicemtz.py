@@ -21,8 +21,9 @@ def main(args, log):
   obj     = mtz.object(p.input.mtz)
   labels  = obj.column_labels()
   label   = p.input.lbl if p.input.lbl in labels else labels[3]
-  arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(
-            label).extract_values()).expand_to_p1()
+  hi, lo  = (sorted(p.params.resolution) + [float('-inf')])[:2]
+  arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(label
+            ).extract_values()).expand_to_p1().resolution_filter(lo, hi)
   data    = arr.data().as_numpy_array()
   ind     = arr.indices().as_vec3_double().as_numpy_array().astype(int)
   offset  = abs(ind).max(axis=0)
