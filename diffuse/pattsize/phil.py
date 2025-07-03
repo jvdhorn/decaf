@@ -21,12 +21,15 @@ def phil_parse(args=None):
         sigma = 2.
           .type = float
           .help = 'Sigma cutoff used to determine object size'
+        full = False
+          .type = bool
+          .help = 'Analyze the full map, not just up to the cutoff (can take minutes)'
         show = False
           .type = bool
           .help = 'Show plot'
         scale = *linear log
           .type = choice
-          .help = 'Scale log or linear'
+          .help = 'Scale y-axis log or linear'
       }
     }
     """)
