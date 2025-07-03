@@ -27,14 +27,19 @@ def run(args):
     scale = p.params.scale
   print('Using scale factor', scale)
   second._data *= scale
-  if p.params.add:
-    print('Adding arrays')
-    first._data += second.data()
-    join = '_add_'
-  else:
+  if p.params.mode == 'sub':
     print('Subtracting arrays')
     first._data -= second.data()
-    join = '_sub_'
+  elif p.params.mode == 'add':
+    print('Adding arrays')
+    first._data += second.data()
+  elif p.params.mode == 'mul':
+    print('Multiplying arrays')
+    first._data *= second.data()
+  elif p.params.mode == 'add':
+    print('Dividing arrays')
+    first._data /= second.data()
+  join = '_' + p.params.mode + '_'
   print('Writing new MTZ')
   mtzobj = first.as_mtz_dataset(column_root_label=p.input.lbl_1, column_types='J')
   name   = (p.input.mtz_1.replace('.mtz', join) + p.input.mtz_2).replace('/','_')
