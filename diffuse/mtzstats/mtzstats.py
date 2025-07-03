@@ -17,8 +17,11 @@ def main(args, log):
   p           = scope.extract().mtzstats
   print('Reading', p.input.mtz)
   obj    = mtz.object(p.input.mtz)
-  first  = obj.crystals()[0].miller_set(False).array(obj.get_column(
-           p.input.lbl).extract_values().as_double())
+  lores  = max(p.input.resolution)
+  hires  = min(p.input.resolution)
+  if lores == hires: lores = float('inf')
+  first  = obj.crystals()[0].miller_set(False).array(obj.get_column(p.input.lbl
+           ).extract_values().as_double()).resolution_filter(lores, hires)
   npdata = first.data().select(first.data() > p.input.cutoff).as_numpy_array()
   rms    = (npdata - npdata.mean()).std()
   norm   = (npdata - npdata.min()) / (npdata.max() - npdata.min())
@@ -27,18 +30,21 @@ def main(args, log):
   distr  = np.histogram(npdata, bins=p.params.bins)[0] / npdata.size
   distr  = distr[distr > 0]
   entropy= -sum(distr * np.log(distr))
+  print('Resolution range:', *first.resolution_range())
   print('Number of refl. :', npdata.size)
-  print('Min             :', npdata.min())
-  print('Max             :', npdata.max())
+  print('Minimum         :', npdata.min())
+  print('Maximum         :', npdata.max())
   print('Mean            :', npdata.mean())
-  print('Var             :', npdata.var())
+  print('Median          :', np.median(npdata))
+  print('Std. deviation  :', npdata.std())
+  print('Variance        :', npdata.var())
   print('RMS contrast    :', rms)
   print('   >  normalized:', nrms)
   print('Var[I]/Mean[I]^2:', spcont)
-  print('Shannon entropy :', entropy, '({} bins)'.format(p.params.bins))
+  print('Shannon entropy :', entropy)
 
   sg     = p.params.sg or str(first.space_group_info())
   symm   = crystal.symmetry(unit_cell=first.unit_cell(), space_group_symbol=sg)
   merged = first.customized_copy(crystal_symmetry = symm).merge_equivalents()
-  symbol = symm.space_group_info().symbol_and_number()
-  print('R_merge         :', merged.r_merge(), '(for {})'.format(symbol))
+  symbol = ''.join(str(symm.space_group_info()).split())
+  print('R_int {:10s}:'.format(symbol), merged.r_merge())
