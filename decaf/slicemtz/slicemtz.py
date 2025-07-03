@@ -86,7 +86,7 @@ def run(args):
   # Construct Gall-Peters projection
   if p.params.projection:
     radius = min(1./p.params.projection, *orth(offset))
-    v_samp = int(offset[-1] * 2 + 1)
+    v_samp = int(max(offset) * 2 + 1)
     h_samp = int(v_samp * np.pi // 4 * 2 + 1)
     layer  = []
     for phi in 1j ** np.linspace(-2, 2, h_samp):
