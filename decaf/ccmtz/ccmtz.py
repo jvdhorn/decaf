@@ -33,13 +33,6 @@ def run(args):
   lneg   = (-l >= min(llim)) & (-l <= max(llim))
   sel    = flex.bool((hpos & kpos & lpos) | (hneg & kneg & lneg))
   first  = first.select(sel)
-  # Select fraction
-  perc   = abs(p.input.fraction) * 100
-  if p.input.fraction > 0:
-    sel  = first.data() < np.percentile(first.data().as_numpy_array(), perc)
-  else:
-    sel  = first.data() > np.percentile(first.data().as_numpy_array(), 100 - perc)
-  first  = first.select(sel)
   first, second = first.common_sets(second, assert_is_similar_symmetry=False)
   print('Calculating correlation coefficients')
   first.setup_binner(n_bins=p.input.bins)

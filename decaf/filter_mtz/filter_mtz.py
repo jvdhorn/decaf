@@ -33,7 +33,9 @@ def run(args):
   bgrid[tuple(( vind + offset).T)] = 1
   bgrid[tuple((-vind + offset).T)] = 1
   with np.errstate(all='ignore'):
-    data = (filt(agrid, size) / filt(bgrid, size))[tuple((ind + offset).T)]
+    data = (filt(agrid, size, mode='constant')
+           /filt(bgrid, size, mode='constant')
+           )[tuple((ind + offset).T)]
   arr._data = flex.double(data)
 
   if p.params.interpolate:

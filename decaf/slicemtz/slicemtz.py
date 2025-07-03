@@ -45,8 +45,7 @@ def run(args):
     ind     = arr.indices().as_vec3_double().as_numpy_array().astype(int)
     offset  = abs(ind).max(axis=0)
     shape   = 2 * offset + 1
-    grid    = np.zeros(shape=shape)
-    grid[:] = np.nan
+    grid    = np.full(shape, np.nan)
     grid[tuple((-ind + offset).T)] = data
     grid[tuple(( ind + offset).T)] = data
     cell    = arr.unit_cell().reciprocal_parameters()
