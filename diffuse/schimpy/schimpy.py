@@ -45,7 +45,7 @@ def main(args, log):
                            log         = log)
 
   miller_set = miller.build_set(crystal_symmetry = manager.sc_symm,
-                                d_min            = p.params.high_resolution,
+                                d_min            = p.params.resolution,
                                 anomalous_flag   = False)
 
   collector  =    tls.Collector(log              = log,
@@ -178,8 +178,8 @@ def model_worker(n_model):
         time.sleep(5)
 
       print('Calculating f_model {}'.format(n_model))
-      f_model = model.calc_f_model(high_resolution = p.params.high_resolution,
-                                   low_resolution  = p.params.low_resolution,
+      f_model = model.calc_f_model(high_resolution = p.params.resolution,
+                                   low_resolution  = None,
                                    k_sol           = p.params.k_sol,
                                    b_sol           = p.params.b_sol,
                                    b_cart          = list(map(float,p.params.b_cart)),
