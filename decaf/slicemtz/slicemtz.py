@@ -85,14 +85,18 @@ def run(args):
 
   # Construct Gall-Peters projection
   if p.params.projection:
-    radius = min(1./p.params.projection, *orth(offset))
-    v_samp = int(max(offset) * 2 + 1)
-    h_samp = int(v_samp * np.pi // 4 * 2 + 1)
-    z      = np.linspace(-radius, radius, v_samp)
-    xynorm = 1j ** np.linspace(-2, 2, h_samp)
-    xymult = (radius ** 2 - z ** 2)**0.5
-    xyz    = np.hstack((np.outer(xymult,xynorm).view(float).reshape(-1,2),
-                        z.repeat(xynorm.size)[...,None]))
+    width  = 721
+    if p.params.projection == 'gp':
+      phi  = np.arcsin(np.linspace(-1, 1, int(width // np.pi * 2 + 1)))
+    elif p.params.projection == 'eq':
+      phi  = np.linspace(-1, 1, width // 2 + 1) * np.pi/2.
+    elif p.params.projection == 'mercator':
+      phi  = 2 * np.arctan(np.exp(np.linspace(-1, 1, width) * np.pi)) - np.pi/2.
+    radius = min(orth(offset))
+    xy     = 1j ** np.linspace(-2, 2, width)
+    z      = np.sin(phi)
+    xyz    = np.hstack((np.outer((1-z*z)**0.5, xy).view(float).reshape(-1,2),
+                        z.repeat(xy.size)[...,None])) * radius
     hkl    = frac(flex.vec3_double(xyz)).as_numpy_array().astype(int) + offset
     layer  = grid[tuple(hkl.T)].reshape(z.size, -1)
     nans   = np.isnan(layer)
@@ -168,6 +172,9 @@ def run(args):
     x, y  = mask.shape
     mask[:,y//2] = 1.
     mask[x//2,:] = 1.
+    if p.params.projection:
+      mask[:,y//4    ] = 1.
+      mask[:,y//4 * 3] = 1.
 
   # Trim mask to convex hull
   if mask.any():
