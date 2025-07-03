@@ -185,7 +185,7 @@ def run(args):
   cnt  = p.params.contours
   dstr = p.params.distribution
 
-  if cnt > 0:
+  if cnt:
     name += '_cnt%d'%cnt
 
   if p.params.save:
@@ -248,13 +248,17 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr):
   ax.set_ylim((clip[2], clip[3]))
 
   # Actual plot
-  if cnt > 0:
+  if cnt:
     with np.errstate(divide='ignore', invalid='ignore'):
       copy = layer.copy()
       copy[copy<vmin]=vmin
       copy[copy>vmax]=vmax
-    cr = ax.contour(copy, cmap=cmap, transform=trans, vmin=vmin, vmax=vmax,
-                   origin='lower', extent=ext, levels=cnt, linewidths=0.2, zorder=0)
+    kw = {'cmap':cmap, 'transform':trans, 'vmin':vmin, 'vmax':vmax,
+          'origin':'lower', 'extent':ext, 'levels':abs(cnt), 'zorder':0}
+    if cnt < 0:
+      cr = ax.contour(copy, linewidths=0.2, **kw)
+    elif cnt > 0:
+      cr = ax.contourf(copy, **kw)
     im = plt.cm.ScalarMappable(norm=colors.Normalize(vmin=vmin, vmax=vmax), cmap=cmap)
     im.set_array([])
   else:
