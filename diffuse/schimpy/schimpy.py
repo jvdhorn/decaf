@@ -146,6 +146,7 @@ def model_worker(n_model):
                       contact_level=p.correlation.contact_level,
                       allow_bad_frac=p.correlation.allow_bad_frac,
                       disallow_good_frac=p.correlation.disallow_good_frac,
+                      pairs_frac=p.correlation.swap_frac,
                       require_both=p.correlation.require_both,
                       uncorrelate=p.correlation.uncorrelate,
                       percentile=p.correlation.energy_percentile,
