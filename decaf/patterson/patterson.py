@@ -31,6 +31,7 @@ def run(args):
 
   isiarray = obj.column_types()[obj.column_labels().index(p.input.lbl)] == 'J'
   if not p.params.use_intensities and isiarray:
+    first.set_observation_type_xray_intensity()
     first = first.f_sq_as_f()
   if p.params.use_intensities and not isiarray:
     first = first.f_as_f_sq()
@@ -40,9 +41,9 @@ def run(args):
 
   if p.params.center:
     patt._real_map = pdata = patt._real_map.as_numpy_array()
-    if not pdata[-1,:,:].any(): pdata = pdata[:-1,:,:]
-    if not pdata[:,-1,:].any(): pdata = pdata[:,:-1,:]
-    if not pdata[:,:,-1].any(): pdata = pdata[:,:,:-1]
+    while not pdata[-1,:,:].any(): pdata = pdata[:-1,:,:]
+    while not pdata[:,-1,:].any(): pdata = pdata[:,:-1,:]
+    while not pdata[:,:,-1].any(): pdata = pdata[:,:,:-1]
     offset   = np.array([i//2 for i in pdata.shape])
     pdata    = np.roll(pdata, offset, (0,1,2))
     if pdata.shape[0] % 2 == 0:
@@ -52,7 +53,7 @@ def run(args):
     if pdata.shape[2] % 2 == 0:
       pdata = np.concatenate((pdata,pdata[:,:,:1]), axis=2)
     if p.params.limit is not None:
-      lim    = np.array([p.params.limit * p.params.sample]*3).astype(int)
+      lim    = np.array([p.params.limit * p.params.sample / 2.]*3).astype(int)
       pdata  = pdata[tuple(map(slice,offset-lim, offset+lim+1))]
       offset = lim
     patt._real_map = flex.double(pdata.ravel())
