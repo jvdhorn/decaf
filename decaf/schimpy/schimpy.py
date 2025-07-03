@@ -23,7 +23,7 @@ def run(args):
     tls_in    = [p.input.pdb_in]
 
   print('Initializing')
-  max_level  = max(p.input.max_level, p.correlation.contact_level)
+  max_level  = max(p.input.max_level, p.correlation.contact_level, p.input.extremes_from_level)
   manager    = tls.Manager(tls_in      = tls_in,
                            pdb_in      = p.input.pdb_in,
                            tls_origin  = p.input.tls_origin,
@@ -151,6 +151,7 @@ def model_worker(n_model):
                       skip=p.correlation.skip_levels,
                       override=p.correlation.override_weights,
                       pick_extremes=p.input.pick_extremes,
+                      extremes_from_level=p.input.extremes_from_level,
                       max_level=p.input.max_level,
                       rigid_only=p.environments.rigid_only,
                       protein_only=p.environments.protein_only,
