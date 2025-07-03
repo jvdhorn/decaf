@@ -51,16 +51,15 @@ def run(args):
   select        = select[np.concatenate(data_sub, axis=1)[select].min(axis=1)>0.]
   select        = select[-i_lim:] if i_lim >=0 else select[:-i_lim]
   for n,arr in enumerate(data_sub):
-    fold              = sum(np.split(arr[select], 2, axis=1)) / 2.
-    q_log             = np.log(np.arange(1, arr.shape[1]//2 + 1) * unit_cell[n] * 2 * np.pi)
-    fit               = np.polyfit(q_log, np.log(fold.T), 1)[0]
-    bins              = int(np.ceil(np.log2(fit.shape[0]))+1)
+    fold        = sum(np.split(arr[select], 2, axis=1)) / 2.
+    q_log       = np.log(np.arange(1, arr.shape[1]//2 + 1) * unit_cell[n] * 2 * np.pi)
+    fit         = np.polyfit(q_log, np.log(fold.T), 1)[0]
+    bins        = int(np.ceil(np.log2(fit.shape[0]))+1)
     if p.params.plot:
       plt.hist(fit, bins=bins, histtype='stepfilled', alpha=0.3, label='abc'[n]+'*')
-    x,y,z = plt.hist(fit, bins=bins, histtype='step', color='black', lw=.5)
-    mode              = y[x.argmax():][:2].sum()/2.
-    print('{}*: {} pts, range {}, mean exponent {:.3f} +/- {:.3f} (mode {:.3f})'.format(
-          'abc'[n], fit.shape[0], arr.shape[1]//2, fit.mean(), fit.std(), mode))
+      plt.hist(fit, bins=bins, histtype='step', color='black', lw=.5)
+    print('{}*: {} pts, range {}, mean exponent {:.3f} +/- {:.3f}'.format(
+          'abc'[n], fit.shape[0], arr.shape[1]//2, fit.mean(), fit.std()))
   if p.params.plot:
     plt.legend();
     plt.title('Intensity decay around Bragg positions')
