@@ -72,11 +72,11 @@ def main(args, log):
     print('Region', n, 'range:', *bins.bin_d_range(n+1))
     print('N={:.0f}; mean={:.2f}; var={:.2f}; skew={:.2f}'.format(
           data_filt.size, mean, var, skew))
-    fit             = stats.skewnorm.fit(data_sel)
-    skewnorm        = stats.skewnorm(*fit)
-    m, v, s         = skewnorm.stats(moments='mvs')
-    print('Fit stats: mean={:.2f}; var={:.2f}; skew={:.2f}'.format(m, v, s))
-    if p.input.use_fit_params: mean, var, skew = m, v, s
+    if p.input.use_fit_params:
+      fit             = stats.skewnorm.fit(data_sel)
+      skewnorm        = stats.skewnorm(*fit)
+      mean, var, skew = skewnorm.stats(moments='mvs')
+      print('Fit stats: mean={:.2f}; var={:.2f}; skew={:.2f}'.format(mean, var, skew))
     Sigma, Var, Mu  = nw_stats(p.input.N, mean, var, skew)
     print('Noisy Wilson stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
     muzerofunc      = lambda x: nw_stats(x, mean, var, skew)[-1]**2
@@ -95,8 +95,9 @@ def main(args, log):
       plt.figure()
       y, x = plt.hist(data_filt, bins=25)[:2]
       x    = (x[:-1] + x[1:]) / 2
-      pdf  = skewnorm.pdf(x)
-      plt.plot(x, pdf * mask.sum() * (x[1] - x[0]))
+      if p.input.use_fit_params:
+        pdf  = skewnorm.pdf(x)
+        plt.plot(x, pdf * mask.sum() * (x[1] - x[0]))
       name = p.input.mtz.replace('.mtz','_region_{}_statistics.png'.format(n))
       plt.savefig(drc + name)
       plt.close()
