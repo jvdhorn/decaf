@@ -9,6 +9,11 @@ A Python package for simulating diffuse scattering of X-rays in protein crystals
 # Usage
 Make sure `cctbx.python` is available.
 
+Clone the repository
+```
+git clone https://github.com/jvdhorn/diffuse
+```
+
 Add package to `PATH` with
 ```
 source source_env.sh
@@ -50,7 +55,7 @@ Command-line parameters can be provided using Phil syntax. Run any of the module
 * `high_resolution` - high resolution cutoff (default `2.0`)
 * `k_sol` and `b_sol` - bulk solvent parameters (default `0.35` and `50.0`)
 * `processes` - number of parallel processes (default `1`, watch memory usage!)
-* `interval` - number of seconds between consecutive simultaions (default `20`)
+* `interval` - number of seconds between consecutive simulations (default `20`)
 * `n_models` - number of supercells to simulate (default `128`)
 
 ### stimpy
