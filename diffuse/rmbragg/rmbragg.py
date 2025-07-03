@@ -14,12 +14,12 @@ def main(args, log):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().rmbragg
-  print('Reading', p.input.mtz_1)
+  print('Reading', p.input.mtz)
   keep          = p.params.keep
   sc_size       = list(map(int, p.params.sc_size))
   lower         = [int(i)//2 for i in p.params.box]
   upper         = [i-j for i,j in zip(sc_size, lower)]
-  mtz_object    = mtz.object(p.input.mtz_1)
+  mtz_object    = mtz.object(p.input.mtz)
 
   print('Removing voxels')
   indices       = mtz_object.extract_miller_indices()
@@ -32,7 +32,7 @@ def main(args, log):
   if p.output.mtz_out:
     label = p.output.mtz_out.replace('.mtz','')
   else:
-    label = '{}_reduced'.format(p.input.mtz_1.replace('.mtz',''))
+    label = '{}_reduced'.format(p.input.mtz.replace('.mtz',''))
 
   print('Writing new MTZ')
   mtz_object.write(label+'.mtz')

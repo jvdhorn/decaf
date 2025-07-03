@@ -15,9 +15,9 @@ def phil_parse(args=None):
         image = None
           .type = path
           .help = 'Basic image input file'
-        polar = None
+        radial = None
           .type = path
-          .help = 'Polarization uncorrected average image input file'
+          .help = 'Radial average image input file'
       }
       params
         .help = "Control running"
@@ -25,12 +25,12 @@ def phil_parse(args=None):
         image_scale = 1.0
           .type = float
           .help = 'If input image has been scaled, it will be divided by this number'
-        polar_scale = 1.0
+        radial_scale = 1.0
           .type = float
-          .help = 'If polar image has been scaled, it will be divided by this number'
-        bin_photons = 1.0
+          .help = 'If radial image has been scaled, it will be divided by this number'
+        bin_counts = 1.0
           .type = float
-          .help = 'Photon counts within this range are considered to be the same in the polar image'
+          .help = 'Intensity counts within this range are considered to be the same in the radial image'
         min_group_size = 1000
           .type = int
           .help = 'Contiguous regions must have this amount of pixels, otherwise they will be redistributed'
@@ -67,12 +67,12 @@ def phil_parse(args=None):
         smooth_background = 3
           .type = int
           .help = 'Smooth the region-based background with a kernel of this size'
-        bragg_mask_median_filter = 9
+        median_size = 9
           .type = int
-          .help = 'Median filter mask for identifying peaks'
-        bragg_mask_dilation = 7
+          .help = 'Median filter mask size for identifying peaks'
+        dilation_size = 7
           .type = int
-          .help = 'Dilation mask for the removal of Bragg peaks'
+          .help = 'Dilation mask size for the removal of Bragg peaks'
       }
       output
         .help = "Output parameters"
@@ -96,7 +96,7 @@ def phil_parse(args=None):
     }
     """)
 
-  defaults = ['image','polar']
+  defaults = ['image','radial']
   for i, arg in enumerate(args):
     if '=' not in arg:
       args[i] = defaults.pop(0)+'='+arg

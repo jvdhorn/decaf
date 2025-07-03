@@ -39,8 +39,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `plotmtz` - Plot intensity distributions in mtz-files
 * `ccmtz` - Calculate correlation coefficient and R1-values between mtz-files
 * `rmbragg` - Remove supercell voxels around Bragg positions in mtz-file
-* `rmerge` - Calculate R-int of mtz-file
-* `mtzstats` - Show various statistics for mtz-file
+* `mtzstats` - Show various statistics including R-int for mtz-file
 * `stimpy3d` - Apply the stimpy-procedure to resolution bins in mtz-file
 * `pattsize` - Estimate the size of the Patterson origin-peak
 * `mtz2txt` - Extract raw intensities from mtz-file
@@ -57,23 +56,23 @@ Run any of the modules without arguments to get an overview of the available par
 * `cutoff` - distance cutoff for intermolecular interactions (default `3.0`)
 * `weights` - power for the number of interactions (default `1.5`)
 * `max_level` - highest level of the TLS-hierarchy to include (default `1`)
-* `high_resolution` - high resolution cutoff (default `2.0`)
+* `high_resolution` - resolution cutoff (default `2.0`)
 * `k_sol` and `b_sol` - bulk solvent parameters (default `0.35` and `50.0`)
 * `processes` - number of parallel processes (default `1`, watch memory usage!)
-* `interval` - number of seconds between consecutive simulations (default `20`)
+* `interval` - number of seconds between consecutive simulations (default `1`)
 * `n_models` - number of supercells to simulate (default `128`)
 
 ### stimpy
 * `image` - raw image file
 * `polar` - polarization-corrected intermediate background
-* `bin_photons` - bin regions within this range of counts (default `1.0`)
+* `bin_counts` - bin regions within this range of counts (default `1.0`)
 * `N` - expected number of independent rotations (default `1.0`)
-* `bragg_mask_median_filter` - kernel size of the median filter (default `9`)
-* `bragg_mask_dilation` - kernel size of the mask dilation (default `7`)
+* `median_size` - kernel size of the median filter (default `9`)
+* `dilation_size` - kernel size of the mask dilation (default `7`)
 
 ### slicemtz
-* `mtz_1` - input mtz-file
-* `lbl_1` - array of interest (default `IDFF`)
+* `mtz` - input mtz-file
+* `lbl` - array of interest (default `IDFF`)
 * `slice` - desired slice to plot (default `hk0`)
 * `depth` - additional depth of the slice on both sides (default `0`)
 * `sc_size` - size of the supercell for drawing Bragg positions (e.g. `"5 5 10"`)
@@ -89,8 +88,8 @@ Run any of the modules without arguments to get an overview of the available par
 * `scale` - scale factor for second mtz-file (default `1.0`)
 
 ### plotmtz
-* `mtz_1` - input mtz-file (can be multiple)
-* `lbl_1` - array of interest (default `IDFF`)
+* `mtz` - input mtz-file (can be multiple)
+* `lbl` - array of interest (default `IDFF`)
 * `log` - plot logarithmic distributions (default `True`)
 * `resolution` - set low and high resolution (eg `"3.6 3.4"`)
 
@@ -103,39 +102,35 @@ Run any of the modules without arguments to get an overview of the available par
 * `hlim` and `klim` and `llim` - limit h, k, and l (e.g. `"-20 20"`)
 
 ### rmbragg
-* `mtz_1` - input mtz-file
+* `mtz` - input mtz-file
 * `sc_size` - supercell size (e.g. `"5 5 10"`)
 * `box` - number of voxels to remove around every Bragg position (e.g. `"1 1 1"`)
 * `keep` - invert selection (default `False`)
 
-### rmerge
-* `mtz_1` - input mtz-file
-* `lbl_1` - array of interest (default `IDFF`)
-* `space_group` - new space group (symbol or number, e.g. `96`)
-
 ### mtzstats
-* `mtz_1` - input mtz-file
-* `lbl_1` - array of interest (default `IDFF`)
+* `mtz` - input mtz-file
+* `lbl` - array of interest (default `IDFF`)
+* `sg` - Space group for R-int (symbol or number, e.g. `P43212` or `96`)
 
 ### stimpy3d
-* `mtz_1` - input mtz-file
-* `lbl_1` - array of interest (default `IDFF`)
+* `mtz` - input mtz-file
+* `lbl` - array of interest (default `IDFF`)
 * `bins` - number of resolution shells (default `1`)
 * `N` - expected number of independent rotations (default `1.0`)
 
 ### pattsize
-* `map_1` - input patterson map
+* `map` - input patterson map
 * `binsize` - size of radial bins in Angstrom (default `1.0`)
 * `sigma` - sigma cutoff to determine size (default `2.0`)
 
 ### mtz2txt
-* `mtz_1` - input mtz-file
-* `lbl_1` - array of interest (default `IDFF`)
+* `mtz` - input mtz-file
+* `lbl` - array of interest (default `IDFF`)
 * `resolution` - set low and high resolution (eg `"3.6 3.4"`)
 
 ### filter_mtz
-* `mtz_1` - input mtz-file
-* `lbl_1` - array of interest (default `IDFF`)
+* `mtz` - input mtz-file
+* `lbl` - array of interest (default `IDFF`)
 * `size` - filter size (default `1`)
 * `filter` - filter type (`gaussian` or `uniform`, default `gaussian`)
 

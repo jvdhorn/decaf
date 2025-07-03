@@ -57,7 +57,7 @@ def phil_parse(args=None):
         seed = 0
           .type = int
           .help = 'Seed offset control (-1 for random)'
-        interval = 20
+        interval = 1
           .type = float
           .help = 'Time delay (s) between initial simulations'
       }
@@ -76,7 +76,7 @@ def phil_parse(args=None):
         cutoff = 3.
           .type = float
           .help = 'Distance cutoff for neighouring chains'
-        contact_stretch = 0.25
+        stretch = 0.25
           .type = float
           .help = 'Relative distance from the contact points to the center of mass of the corresponding group'
       }
@@ -147,7 +147,7 @@ def phil_parse(args=None):
         weights = 1.5
           .type = float
           .help = 'Weights are set to n_interactions to the power of this number'
-        spring_weights = 2.
+        force_power = 2.
           .type = float
           .help = 'The spring force scales with the distance to this power'
       }
@@ -157,7 +157,7 @@ def phil_parse(args=None):
         high_resolution = 2.0
           .type = float
           .help = 'High resolution limit for structure factor calculation'
-        low_resolution = 0.0
+        low_resolution = None
           .type = float
           .help = 'Low resolution limit for structure factor calculation'
         k_sol = 0.35

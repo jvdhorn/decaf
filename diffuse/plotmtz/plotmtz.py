@@ -15,11 +15,11 @@ def main(args, log):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().plotmtz
-  files  = list(p.input.mtz_1)
+  files  = list(p.input.mtz)
   print('Reading', files[0])
   obj    = mtz.object(files[0])
   first  = obj.crystals()[0].miller_set().array(obj.get_column(
-           p.input.lbl_1).extract_values().as_double())
+           p.input.lbl).extract_values().as_double())
   first  = first.select(first.data() > p.params.cutoff)
   binner = first.setup_binner(n_bins=p.input.bins)
   ind    = binner.bin_indices()
@@ -42,7 +42,7 @@ def main(args, log):
   plt.xticks(xticks, x)
   plt.xlabel('Resolution shell limits ($\AA$)')
   plt.ylabel('Mean intensity')
-  plt.legend()
+  if p.params.legend: plt.legend()
   plt.tight_layout()
   name ='plotmtz_{}_byres.png'.format(files[0].replace('/','_').replace('.mtz',''))
   plt.savefig(name, dpi=300)
@@ -56,7 +56,7 @@ def main(args, log):
   for file in files:
     obj    = mtz.object(file)
     first  = obj.crystals()[0].miller_set().array(obj.get_column(
-             p.input.lbl_1).extract_values().as_double())
+             p.input.lbl).extract_values().as_double())
     first  = first.select(first.data() > p.params.cutoff)
     first  = first.resolution_filter(lores, hires)
     data   = first.data().as_numpy_array()
@@ -70,7 +70,7 @@ def main(args, log):
   plt.xlabel('Intensity')
   plt.ylabel('Counts')
   plt.tight_layout()
-  plt.legend()
+  if p.params.legend: plt.legend()
   file = files[0].replace('/','_')
   name = 'plotmtz_{}_distribution.png'.format(file.replace('.mtz',''))
   if not p.params.log: name.replace('.png','_lin.png')
