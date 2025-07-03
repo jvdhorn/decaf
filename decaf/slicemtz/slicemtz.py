@@ -2,13 +2,30 @@ from __future__ import division, print_function
 from iotbx import mtz, ccp4_map
 from scitbx.array_family import flex
 from matplotlib import pyplot as plt, colors, ticker, transforms as tr
-from scipy import ndimage as ndi, stats
+from scipy import ndimage as ndi, stats, spatial
 import numpy as np
 from . import phil
 
+
 def log10(value):
 
-  return np.log10(value) if value >= 1 else -np.log10(-value) if value <= -1 else 0
+  value = np.array(value)
+  value[(-1 < value) & (value < 1)] = 0
+  value[value >=  1] =  np.log10( value[value >=  1])
+  value[value <= -1] = -np.log10(-value[value <= -1])
+
+  return value
+
+
+class Hull(spatial.ConvexHull):
+
+  def filter(self, pts):
+
+    mask = np.array(
+             [np.dot(eq[:-1], pts.T) + eq[-1] < 1e-12 for eq in self.equations]
+           ).T.all(axis=1).ravel()
+
+    return pts[mask]
 
 
 def run(args):
@@ -46,7 +63,7 @@ def run(args):
     cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
   if p.params.center:
     grid    = np.roll(grid, offset, axis=(0,1,2))
-  slevel   = p.params.slice.lower().strip('hkl')
+  slevel  = p.params.slice.lower().strip('hkl')
   dim     = p.params.slice.find(slevel)
   level   = min(grid.shape[dim]-1, max(0, int(slevel) + int(offset[dim])))
   label   = p.params.slice.lower().replace(slevel, str(int(level-offset[dim])))
@@ -59,8 +76,8 @@ def run(args):
     name += p.params.mode
   with np.errstate(all='ignore'):
     func  = getattr(np, 'nan' + p.params.mode)
-    layer = func(slab, axis=dim)
-    nans  = np.isnan(slab).all(axis=dim)
+    layer = func(slab, axis=dim).T
+    nans  = np.isnan(slab).all(axis=dim).T
     layer[nans] = np.nan
 
   # Multiply and offset
@@ -75,7 +92,6 @@ def run(args):
                      'min'      : ndi.minimum_filter,
                      'max'      : ndi.maximum_filter,
                      'median'   : ndi.median_filter}[p.params.fmode]
-    nans          = np.isnan(layer)
     layer[nans]   = 0.
     layer         = filt(layer, p.params.filter, mode='constant')
     layer[nans]   = np.nan
@@ -91,16 +107,14 @@ def run(args):
   # Apply log scaling
   if p.params.log:
     with np.errstate(all='ignore'):
-      layer[(layer < 1) & (layer > -1)] = 0
-      layer[layer >=  1] =  np.log10( layer[layer >=  1])
-      layer[layer <= -1] = -np.log10(-layer[layer <= -1])
+      layer = log10(layer)
     name += '_log'
 
   # Autoscale
   high = np.nanmax(layer)
   low  = np.nanmin(layer)
   if p.params.autoscale:
-    values   = layer[~np.isnan(layer)]
+    values   = layer[~nans]
     while True:
       mean   = np.mean(values)
       lim    = p.params.sigma * np.std(values)
@@ -120,17 +134,13 @@ def run(args):
 
   # Identify Bragg positions
   mask    = np.full(layer.shape, np.nan)
-  sc_size = p.params.sc_size
-  if -1 not in sc_size:
+  if p.params.sc_size is not None:
+    sc_size = list(p.params.sc_size)
     sc_size.pop(dim)
+    hull  = Hull(np.array(np.where(~nans)).T)
     b_ind = np.array(np.meshgrid(*map(range, mask.shape))).reshape(2,-1).T
-    b_ind = b_ind[((b_ind-off2d) % sc_size == 0).all(axis=1)]
-    mask[tuple(b_ind.T)]  = 1.
-    mask[np.isnan(layer)] = np.nan
-
-  # Transpose layer and mask
-  layer = layer.T
-  mask  = mask.T
+    b_ind = b_ind[((b_ind-off2d) % sc_size[::-1] == 0).all(axis=1)]
+    mask[tuple(hull.filter(b_ind).T)] = 1.
 
   # Overlay axes
   if p.params.axes:
@@ -140,11 +150,11 @@ def run(args):
 
   # Trim
   i, j = off2d
-  ext  = [-i-0.5, i+0.5, -j-0.5, j+0.5]
+  ext  = [-j-0.5, j+0.5, -i-0.5, i+0.5]
   clip = None
 
   if p.params.trim:
-    notnans  = ~np.isnan(layer)
+    notnans  = ~nans
     xwhere   = np.argwhere(notnans.any(axis=0))
     ywhere   = np.argwhere(notnans.any(axis=1))
     nwext    = ext[:]
