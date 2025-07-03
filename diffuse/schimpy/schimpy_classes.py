@@ -225,9 +225,8 @@ def write_b_factors_to_json(sequence, b_factors, file_name='ensemble_b.json'):
 class Manager():
 
   def __init__(self, tls_in, pdb_in, tls_origin, mult, max_level, min_level,
-               sc_size, seed_offset=0, reset_b=False, log=None):
+               sc_size, seed_offset=0, reset_b=False):
 
-    self.log            = open('log.txt', 'a')
     self.input_files    = tls_in
     self.pdb_in         = pdb_in
     self.origin         = tls_origin
@@ -244,31 +243,32 @@ class Manager():
 
   def build_tls_hierarchy(self):
 
-    file_type = get_file_extension(self.input_files)
-    if file_type == 'csv':
-      self.tls_hierarchy = tls_from_csv(input_files = self.input_files,
-                                        origin      = self.origin,
-                                        mult        = self.mult,
-                                        cache       = self.base_cache,
-                                        max_level   = self.max_level,
-                                        min_level   = self.min_level,
-                                        log         = self.log)
-    elif file_type == 'pdb':
-      self.tls_hierarchy = tls_from_pdb(input_files = self.input_files,
-                                        cache       = self.base_cache,
-                                        mult        = self.mult,
-                                        max_level   = self.max_level,
-                                        min_level   = self.min_level,
-                                        log         = self.log)
-    elif file_type == 'json':
-      self.tls_hierarchy = tls_from_json(input_file = self.input_files[0],
-                                         cache      = self.base_cache,
-                                         max_level  = self.max_level,
-                                         min_level  = self.min_level,
-                                         mult       = self.mult,
-                                         log        = self.log)
-    else:
-      print('Unsupported file type', file=self.log)
+    with open('tls_analysis_log.txt','w') as log:
+      file_type = get_file_extension(self.input_files)
+      if file_type == 'csv':
+        self.tls_hierarchy = tls_from_csv(input_files = self.input_files,
+                                          origin      = self.origin,
+                                          mult        = self.mult,
+                                          cache       = self.base_cache,
+                                          max_level   = self.max_level,
+                                          min_level   = self.min_level,
+                                          log         = log)
+      elif file_type == 'pdb':
+        self.tls_hierarchy = tls_from_pdb(input_files = self.input_files,
+                                          cache       = self.base_cache,
+                                          mult        = self.mult,
+                                          max_level   = self.max_level,
+                                          min_level   = self.min_level,
+                                          log         = log)
+      elif file_type == 'json':
+        self.tls_hierarchy = tls_from_json(input_file = self.input_files[0],
+                                           cache      = self.base_cache,
+                                           max_level  = self.max_level,
+                                           min_level  = self.min_level,
+                                           mult       = self.mult,
+                                           log        = log)
+      else:
+        print('Unsupported file type')
 
   def process_pdb_in(self):
 
@@ -310,8 +310,7 @@ class Manager():
                               sc_symm           = self.sc_symm,
                               tls_hierarchy     = self.tls_hierarchy,
                               n_model           = n_model,
-                              seed_offset       = self.seed_offset,
-                              log               = self.log)
+                              seed_offset       = self.seed_offset)
     self.working_models.append(n_model)
     return model_manager
 
@@ -411,10 +410,8 @@ class Model():
                sc_symm,
                n_model,
                tls_hierarchy,
-               seed_offset = 0,
-               log = None):
+               seed_offset = 0):
       
-    self.log               = log
     self.cryst_symm        = cryst_symm
     self.sc_size           = sc_size
     self.sc_symm           = sc_symm
@@ -508,8 +505,7 @@ class Model():
                               parent_cell        = self.cryst_symm.unit_cell(),
                               n_chain            = next(n_asu_iter),
                               restraints_manager = restraints_manager,
-                              residues           = set(residues),
-                              log                = self.log)
+                              residues           = set(residues))
         self.working_chains.append(chain_manager)
    
     # Clean up
@@ -844,9 +840,6 @@ class Model():
       del self.environments
     if hasattr(self, 'intermolecular_proxies'):
       del self.intermolecular_proxies
-    if hasattr(self, 'log'):
-      self.log.close()
-      del(self.log)
 
   def coordinates(self,fractional=False):
 
@@ -1379,8 +1372,7 @@ class Environments():
                inherit_contacts  = True,
                contact_level     = -1,
                write_environment = False,
-               need_restraints   = False,
-               log               = None):
+               need_restraints   = False):
 
     self.chains   = chains
     self.crystal_symmetry = crystal_symmetry
@@ -1926,10 +1918,8 @@ class Chain():
                parent_cell,
                n_chain            = None,
                restraints_manager = None,
-               residues           = {-1},
-               log                = None):
+               residues           = {-1}):
    
-    self.log                = log
     self.tls_hierarchy      = tls_hierarchy
     self.n_chain            = n_chain
     self.rank               = n_chain
@@ -1960,8 +1950,7 @@ class Chain():
         atoms     = self.working_atoms().select(tls_obj.selection)
         modifier  = Modifier(working_atoms   = atoms,
                              tls_obj         = tls_obj,
-                             parent          = self,
-                             log             = self.log)
+                             parent          = self)
         self.mod_hierarchy[n_level][n_group] = modifier
 
   def get_modifier(self, n_layer, n_group):
@@ -2139,7 +2128,7 @@ def lbfgs(sites_cart,
 
 class Modifier():
 
-  def __init__(self, tls_obj, working_atoms, parent, log=None):
+  def __init__(self, tls_obj, working_atoms, parent):
 
     self.atoms  = working_atoms
     self.origin = tls_obj.origin
@@ -2147,7 +2136,6 @@ class Modifier():
     self.eps    = tls_obj.eps
     self.amp    = tls_obj.amp
     self.parent = parent
-    self.log    = log
     self.shifts = None
     self.size   = working_atoms.size()
     self.residues = set(atom.fetch_labels().resseq_as_int() for atom in self.atoms)
@@ -2234,9 +2222,8 @@ class Modifier():
 
 class Collector():
 
-  def __init__(self, base_hierarchy, cryst_symm, miller_set=None, log=None):
+  def __init__(self, base_hierarchy, cryst_symm, miller_set=None):
 
-    self.log              = log
     self.base_hierarchy   = base_hierarchy
     self.cryst_symm       = cryst_symm
     self.cache            = base_hierarchy.atom_selection_cache()

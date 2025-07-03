@@ -9,11 +9,6 @@ from . import phil
 
 def run(args):
 
-  with open('log.txt', 'w') as log:
-    main(args = args, log = log)
-
-def main(args, log):
-
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().slicemtz
@@ -48,6 +43,9 @@ def main(args, log):
     layer = func(slab, axis=dim)
     nans  = np.isnan(slab).all(axis=dim)
     layer[nans] = np.nan
+
+  # Multiply and offset
+  layer   = (layer * p.params.multiply) + p.params.add
 
   # Apply filter
   if p.params.filter_size > 0:
@@ -168,10 +166,12 @@ def main(args, log):
   # Make plot
   cnt  = p.params.contours
   dstr = p.params.distribution
-  fig  = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 8, False, dstr)
-  fig.savefig(p.input.mtz.replace('.mtz', name+'.png'))
 
-  if p.params.show:
+  if p.params.save:
+    fig  = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 8, False, dstr)
+    fig.savefig(p.input.mtz.replace('.mtz', name+'.png'))
+
+  else:
     fig = plot_layer(layer, mask, low, high, cmap, ang, asp, clip, cnt, 1, True, dstr)
     plt.show()
 
