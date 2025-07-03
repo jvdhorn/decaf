@@ -12,7 +12,7 @@ def run(args):
   p           = scope.extract().covbydist
 
   print('Reading', p.input.pdb)
-  hier = pdb.input(p.input.pdb).construct_hierarchy()
+  hier = pdb.input(p.input.pdb).construct_hierarchy(False,False,False)
   if not p.params.include_neighbours:
     hier = hier.select(hier.atom_selection_cache().sel_chain_id('A'))
   hier = hier.select(hier.atom_selection_cache().sel_name(' CA '))

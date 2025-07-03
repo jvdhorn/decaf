@@ -151,7 +151,7 @@ def tls_from_pdb(input_files, max_level, min_level, cache, mult, zero_trace, log
     if n_layer >= min_level and (n_layer <= max_level or max_level == -1):
       groups = TLS_Level()
       pdb_inp = iotbx.pdb.input(file_name = file_name)
-      pdb_hierarchy = pdb_inp.construct_hierarchy()
+      pdb_hierarchy = pdb_inp.construct_hierarchy(False,False,False)
       tls_params = pdb_inp.extract_tls_params(pdb_hierarchy).tls_params
       for j, group in enumerate(tls_params):
         n = j + 1
@@ -301,7 +301,7 @@ class Manager():
   def process_pdb_in(self):
 
     pdb_inp             = iotbx.pdb.input(self.pdb_in)
-    pdb_hierarchy       = pdb_inp.construct_hierarchy()
+    pdb_hierarchy       = pdb_inp.construct_hierarchy(False,False,False)
 
     # Filter out water
     selection_string    = 'not resname HOH' if self.remove_waters else 'all'

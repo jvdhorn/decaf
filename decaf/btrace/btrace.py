@@ -35,7 +35,7 @@ def extract_b(file, chain=0):
     return x, y, label
 
   elif file.endswith('.pdb'):
-    hier = pdb.input(file).construct_hierarchy()
+    hier = pdb.input(file).construct_hierarchy(False,False,False)
     sel  = hier.atom_selection_cache().selection('name CA')
     calp = hier.select(sel).models()[0].chains()[chain].atoms()
     x, y = zip(*[(a.parent().parent().resseq_as_int(), a.b) for a in calp])

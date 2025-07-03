@@ -15,14 +15,14 @@ def run(args):
   p           = scope.extract().subadp
   print('Reading', p.input.pdb_1)
   inp    = pdb.input(p.input.pdb_1)
-  hier   = inp.construct_hierarchy()
+  hier   = inp.construct_hierarchy(False,False,False)
   for model in hier.models()[1:]: hier.remove_model(model)
   common = {atom.pdb_label_columns() for atom in hier.atoms()}
 
   for file in p.input.pdb_2:
     print('Reading', file)
     # Reduce to common atoms
-    second  = pdb.input(file).construct_hierarchy()
+    second  = pdb.input(file).construct_hierarchy(False,False,False)
     for model in second.models()[1:]: second.remove_model(model)
     common &= {atom.pdb_label_columns() for atom in second.atoms()}
     hier = hier.select(

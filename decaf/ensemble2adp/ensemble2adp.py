@@ -14,7 +14,7 @@ def run(args):
   p           = scope.extract().ensemble2adp
   print('Reading', p.input.pdb)
   inp    = pdb.input(p.input.pdb)
-  hier   = inp.construct_hierarchy()
+  hier   = inp.construct_hierarchy(False,False,False)
   if p.input.models:
     for model in hier.models()[p.input.models:]:
       hier.remove_model(model)

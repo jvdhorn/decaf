@@ -65,6 +65,19 @@ def phil_parse(args=None):
         xlabel = *bottom top
           .type = choice
           .help = 'x-axis label position'
+        label = Residue number
+          .type = str
+          .help = 'Label used for both axes'
+      }
+      pymol
+        .help = "Pymol visualization parameters"
+      {
+        normalize = 1.0
+          .type = float
+          .help = 'Maximum stick radius'
+        percentile = 25
+          .type = float
+          .help = 'Percentile of bonds to draw'
       }
       output
         .help = "Output files"
@@ -72,6 +85,9 @@ def phil_parse(args=None):
         png_out = pdbdist.png
           .type = path
           .help = 'Output plot png'
+        write_pymol_bonds = False
+          .type = bool
+          .help = 'Visualize result as bonds between C-alphas'
       }
     }
     """)
