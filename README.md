@@ -51,6 +51,7 @@ Run any of the modules without arguments to get an overview of the available par
 * [`filter_mtz`](#filter_mtz) - Apply a kernel-filter to an mtz-file
 * [`qdep`](#qdep) - Find power law for intensity decay around Bragg positions in mtz-file
 * [`pdbrad`](#pdbrad) - Estimate the size of a pdb-object
+* [`pdbdist`](#pdbdist) - Plot C-alpha distance stdev matrix for multistate pdb
 * [`btrace`](#btrace) - Plot C-alpha B-factor trace
 
 ## Most important command-line parameters
@@ -165,6 +166,9 @@ Run any of the modules without arguments to get an overview of the available par
 * `strong` - consider only this number of strongest reflections (e.g. `100`)
 
 ### pdbrad
+* `pdb` - input pdb-file
+
+### pdbdist
 * `pdb` - input pdb-file
 
 ### btrace
