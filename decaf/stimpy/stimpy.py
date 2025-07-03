@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from scitbx.array_family import flex
-from scipy import ndimage, stats, optimize
+from scipy import ndimage, stats, optimize, signal
 from dxtbx.format.FormatCBFMini import FormatCBFMini as formatter
 from matplotlib import pyplot as plt, colors
 import os
@@ -115,19 +115,43 @@ def filter_sigma(array, sigma=3, repeat=99):
       repeat  = 0
   return array
 
-def nw_stats_dual(N, mean, var, skew):
+def draw_from_enw(N1, Sigma1, N2, Sigma2, mu, sigma, size):
 
-  if skew < 0: skew = 0
-  N1 = 1
-  N2 = N
-  def func((S1, S2)): return (skew/2. * var ** (3./2) - S1**3/N1**2 - S2**3/N2**2) ** 2
-  init = (mean/10.,) * 2
-  method = 'Powell'
-  bounds = None # ((0,mean), (0,mean))
-  Sigma1, Sigma2 = optimize.minimize(func, x0=init, bounds=bounds, method=method,
-                                     options={'maxiter':1000}, tol=1e-5).x
-  Var = var - Sigma1 ** 2 / N1 - Sigma2 ** 2 / N2
-  Mu = mean - Sigma1 - Sigma2
+  gamma1_rvs = stats.gamma(N1, Sigma1/N1).rvs(size=size)
+  gamma2_rvs = stats.gamma(N2, Sigma2/N2).rvs(size=size)
+  normal_rvs = stats.norm(mu, sigma).rvs(size=size)
+
+  return gamma1_rvs + gamma2_rvs + normal_rvs
+
+def nw_stats_dual(N, data):
+
+  N1   = 1
+  N2   = N
+  size = data.shape[0]
+  mean = data.mean()
+
+  class target(object):
+    def __init__(self, p=0.0, q=2.0):
+      self.p = p
+      self.q = q
+    def __call__(self, (S1, S2, M, V)):
+      ks = stats.ks_2samp(
+             draw_from_enw(N1, S1, N2, S2, M, max(0,V)**.5, size),
+             data
+           ).statistic
+      mean_penalty  = abs(S1 + S2 + M - mean)
+      neg_penalty   = abs(S1)-S1 + abs(S2)-S2 + abs(M)+M + abs(V)-V
+      result        = ks + self.p * mean_penalty + self.p * neg_penalty
+      self.p       *= self.q
+      return result
+
+  init = (mean/3.,)*4
+  mthd = 'Nelder-Mead'
+  opts = {'maxfev':100000}
+  res  = optimize.minimize(target(1e-3,1.01), x0=init, method=mthd, options=opts)
+  print(res.success, res.nfev, res.fun, res.message)
+  Sigma1, Sigma2, Mu, Var = res.x
+
   return Sigma1, Sigma2, Var, Mu
 
 def nw_stats(N, mean, var, skew):
@@ -144,7 +168,9 @@ def nw_stats_discrete(N, mean, var):
   Mu    = mean - Sigma
   return (Sigma, Mu)
 
-def image_region_statistics(array, regions, threshold=None, save_img=True, write=True, template=None, directory='stimpy', pref='', sigma=3, N=8, mode='continuous', use_fit_params=False, remove_excess=False):
+def image_region_statistics(array, regions, threshold=None, save_img=True, write=True,
+                            template=None, directory='stimpy', pref='', sigma=3, N=8,
+                            mode='continuous', use_fit_params=False, remove_excess=False):
 
   if threshold is None:
     threshold = array.min()
@@ -204,7 +230,8 @@ def image_region_statistics(array, regions, threshold=None, save_img=True, write
       print()
 
     elif mode == 'dual':
-      Sigma1, Sigma2, Var, Mu = nw_stats_dual(N, mean, var, skew)
+      fit_data = data if data.shape[0] <= 10000 else np.random.choice(data, 10000, replace=False)
+      Sigma1, Sigma2, Var, Mu = nw_stats_dual(N, fit_data)
       Sigma = Sigma1 + Sigma2
       print('Noisy Wilson stats: Sigma1={:.2f}; Sigma2={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma1, Sigma2, Var, Mu))
       print()
