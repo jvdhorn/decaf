@@ -3,6 +3,7 @@ from scitbx.array_family import flex
 from iotbx import mtz
 from . import phil
 import matplotlib.pyplot as plt
+import numpy as np
 
 def run(args):
 
@@ -19,8 +20,7 @@ def run(args):
   second = obj.crystals()[0].miller_set(False).array(obj.get_column(
            p.input.lbl_2).extract_values().as_double())
   second = second.select(second.data() > p.input.cutoff)
-  print('Calculating correlation coefficients')
-  first, second = first.common_sets(second)
+  # Select within limits
   h,k,l  = first.indices().as_vec3_double().as_numpy_array().T
   hlim   = list(map(float, p.input.hlim.split()))
   klim   = list(map(float, p.input.klim.split()))
@@ -33,7 +33,15 @@ def run(args):
   lneg   = (-l >= min(llim)) & (-l <= max(llim))
   sel    = flex.bool((hpos & kpos & lpos) | (hneg & kneg & lneg))
   first  = first.select(sel)
-  second = second.select(sel)
+  # Select fraction
+  perc   = abs(p.input.fraction) * 100
+  if p.input.fraction > 0:
+    sel  = first.data() < np.percentile(first.data().as_numpy_array(), perc)
+  else:
+    sel  = first.data() > np.percentile(first.data().as_numpy_array(), 100 - perc)
+  first  = first.select(sel)
+  first, second = first.common_sets(second)
+  print('Calculating correlation coefficients')
   first.setup_binner(n_bins=p.input.bins)
   corr   = first.correlation(second, use_binning=True, assert_is_similar_symmetry=False)
   corr.show()
@@ -42,17 +50,16 @@ def run(args):
   r1     = first.f_sq_as_f().r1_factor(first.scale(second).f_sq_as_f())
   print('R-factor:', r1)
 
-  x = ['$\infty$'] + ['%.2f'%corr.binner.bin_d_range(i)[1] for i in corr.binner.range_used()]
-  y = [corr.data[i] for i in corr.binner.range_used()]
-  xticks = [i-0.5 for i in range(len(x))]
-
-  if len(y) >= 10:
-    xsel   = [int(i//(len(y)/10)) for i in range(len(y))]+[10]
-    xind   = [xsel.index(i) for i in range(11)]
-    x      = [x[i] for i in xind]
-    xticks = [xticks[i] for i in xind]
-  
   if p.input.plot: 
+    x = ['$\infty$'] + ['%.2f'%corr.binner.bin_d_range(i)[1] for i in corr.binner.range_used()]
+    y = [corr.data[i] for i in corr.binner.range_used()]
+    xticks = [i-0.5 for i in range(len(x))]
+    if len(y) >= 10:
+      xsel   = [int(i//(len(y)/10)) for i in range(len(y))]+[10]
+      xind   = [xsel.index(i) for i in range(11)]
+      x      = [x[i] for i in xind]
+      xticks = [xticks[i] for i in xind]
+  
     plt.bar(range(len(y)), y, label='Binned')
     plt.plot(xticks, [ccall] * len(xticks))
     plt.plot(xticks, [ccall] * len(xticks), label='All')

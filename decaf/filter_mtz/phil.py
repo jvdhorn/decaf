@@ -28,6 +28,9 @@ def phil_parse(args=None):
         filter = *gaussian uniform
           .type = choice
           .help = 'Filter type'
+        interpolate = False
+          .type = bool
+          .help = 'Interpolate missing values up to resolution limit'
       }
       output
         .help = "Output files"

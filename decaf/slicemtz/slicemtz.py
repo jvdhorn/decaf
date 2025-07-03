@@ -6,6 +6,11 @@ from scipy import ndimage as ndi, stats
 import numpy as np
 from . import phil
 
+def log10(value):
+
+  return np.log10(value) if value >= 1 else -np.log10(-value) if value <= -1 else 0
+
+
 def run(args):
 
   scope       = phil.phil_parse(args = args)
@@ -83,29 +88,17 @@ def run(args):
     if p.params.fmode != 'gaussian':
       name += p.params.fmode
   
-  # Redefine min and max
-  if p.params.max is not None:
-    high  = p.params.max
-    name += '_max%d'%high
-  else:
-    high  = np.nanmax(layer)
-  if p.params.min is not None:
-    low   = p.params.min
-    name += '_min%d'%low
-  else:
-    low   = np.nanmin(layer)
-
   # Apply log scaling
   if p.params.log:
     with np.errstate(all='ignore'):
       layer[(layer < 1) & (layer > -1)] = 0
       layer[layer >=  1] =  np.log10( layer[layer >=  1])
       layer[layer <= -1] = -np.log10(-layer[layer <= -1])
-      high = np.log10(high) if high >= 1 else -np.log10(-high) if high <= -1 else 0
-      low = np.log10(low) if low >= 1 else -np.log10(-low) if low <= -1 else 0
     name += '_log'
 
   # Autoscale
+  high = np.nanmax(layer)
+  low  = np.nanmin(layer)
   if p.params.autoscale:
     values   = layer[~np.isnan(layer)]
     while True:
@@ -116,6 +109,14 @@ def run(args):
       else: values = values[mask]
     high = min(high, mean + lim)
     low  = max(low, mean - lim)
+
+  # Overrule high and low
+  if p.params.max is not None:
+    high  = log10(p.params.max) if p.params.log else p.params.max
+    name += '_max%d'%high
+  if p.params.min is not None:
+    low   = log10(p.params.min) if p.params.log else p.params.min
+    name += '_min%d'%low
 
   # Identify Bragg positions
   mask    = np.full(layer.shape, np.nan)

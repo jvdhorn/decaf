@@ -15,19 +15,34 @@ def phil_parse(args=None):
         mtz = None
           .type = path
           .help = 'Mtz input file'
+        lbl = IDFF
+          .type = str
+          .help = 'Array of interest (used for intensity fraction)'
       }
       params
         .help = "Control running"
       {
-        sc_size = 1 1 1
-          .type = strings
+        sc_size = None
+          .type = ints
           .help = 'Supercell size'
         box = 1 1 1
-          .type = strings
+          .type = ints
           .help = 'Box size, odd numbers only, 1 1 1 for just Bragg'
+        hlim = '-inf +inf'
+          .type = str
+          .help = 'Limit reflections in h (inclusive)'
+        klim = '-inf +inf'
+          .type = str
+          .help = 'Limit reflections in k (inclusive)'
+        llim = '-inf +inf'
+          .type = str
+          .help = 'Limit reflections in l (inclusive)'
+        fraction = 1.0
+          .type = float
+          .help = 'Consider only this fraction of lowest intensities'
         keep = False
           .type = bool
-          .help = 'Setting this to True inverts the selection, keeping the Bragg peaks'
+          .help = 'Invert selection'
       }
       output
         .help = "Output files"
