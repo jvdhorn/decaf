@@ -148,13 +148,20 @@ def run(args):
   layer = layer.T
   mask  = mask.T
 
+  # Extract transformations
+  lens = list(cell[:3])
+  lens.pop(dim)
+  ang  = np.radians(90 - cell[3 + dim])
+  asp  = lens[1]/lens[0] * np.cos(ang)
+
   # Trim edges
   i, j = off2d
   clip = [-i-0.5, i+0.5, -j-0.5, j+0.5]
 
   if p.params.zoom is not None:
     x,y,z = (p.params.zoom+[15])[:3]
-    clip  = [x-z, x+z, y-z, y+z]
+    w,h   = max(z,z*asp), max(z,z/asp)
+    clip  = [x-w, x+w, y-h, y+h]
     name += '_x%d_y%d'%(x,y)
 
   elif p.params.trim:
@@ -172,7 +179,8 @@ def run(args):
   # Create inset
   if p.params.inset is not None:
     x,y,z = (p.params.inset+[15])[:3]
-    inset = [x-z, x+z, y-z, y+z]
+    w,h   = max(z,z*asp), max(z,z/asp)
+    inset = [x-w, x+w, y-h, y+h]
   else:
     inset = None
 
@@ -197,12 +205,6 @@ def run(args):
     cmap  = poscmap
   elif high <= 0:
     cmap  = negcmap
-
-  # Extract transformations
-  lens = list(cell[:3])
-  lens.pop(dim)
-  ang  = np.radians(90 - cell[3 + dim])
-  asp  = lens[1]/lens[0] * np.cos(ang)
 
   # Make plot
   cnt  = p.params.contours
@@ -304,9 +306,11 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, dstr, 
 
   # Plot inset
   if inset is not None:
-    x, y = fig.transFigure.inverted().transform(ax.transAxes.transform((0.5,0.5)))
-    i, j = fig.transFigure.inverted().transform(ax.transAxes.transform((0,0)))
-    ins = fig.add_axes([i, j, x-i, y-j])
+    x, y = ax.transAxes.transform((0.5,0.5))
+    i, j = ax.transAxes.transform((0,0))
+    w, h = fig.transFigure.inverted().transform([min(x-i, y-j)] * 2)
+    x, y = fig.transFigure.inverted().transform((x,y))
+    ins = fig.add_axes([x-w, y-h, w, h])
     ins.tick_params(left=False,right=False,top=False,bottom=False,labelleft=False,
                     labelright=False,labeltop=False,labelbottom=False)
     plot_section(ins, layer, mask, vmin, vmax, asp, cmap, cnt, ang, inset)
