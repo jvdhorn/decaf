@@ -173,7 +173,7 @@ def run(args):
     return
 
   # Multiply and offset
-  layer   = (layer * p.params.multiply) + p.params.add
+  layer   = (layer ** p.params.power * p.params.multiply) + p.params.add
   off2d   = np.array(layer.shape) // 2
 
   # Apply filter

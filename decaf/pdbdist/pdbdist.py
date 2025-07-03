@@ -7,8 +7,6 @@ import numpy as np
 
 funcs = {'std':np.std, 'var':np.var, 'mean':np.mean, 'add':np.add,
          'sub':np.subtract, 'div':np.divide, 'mul':np.multiply}
-modes = {'std':'standard deviation', 'var':'variance', 'mean':'mean',
-         'add':'sum', 'sub':'difference', 'div':'ratio', 'mul':'product'}
 
 def extract_grid(file, mode, chain, resrng, states, ref=None):
 
@@ -25,19 +23,28 @@ def extract_grid(file, mode, chain, resrng, states, ref=None):
   resi = [resi[i] for i in sel]
   grid = []
 
-  for model in calp.models()[min(mrng):max(mrng)+1]:
-    xyz  = model.chains()[chain].atoms().extract_xyz().select(sel)
-    dmat = [((xyz - coord).dot()**0.5).as_numpy_array() for coord in xyz]
-    grid.append(dmat)
+  if mode in {'cc', 'cov'}:
+    for model in calp.models()[min(mrng):max(mrng)+1]:
+      grid.append(model.chains()[chain].atoms().extract_xyz(
+                  ).select(sel).as_numpy_array())
 
-  grid = np.array(grid)
+    mode = {'cc':np.corrcoef, 'cov':np.cov}[mode]
+    grid = np.array(map(mode, np.array(grid).T)).sum(axis=0) / 3.
 
-  if ref is not None and ref[1:] == (lo, hi):
-    grid -= ref[0]
+  else:
+    for model in calp.models()[min(mrng):max(mrng)+1]:
+      xyz  = model.chains()[chain].atoms().extract_xyz().select(sel)
+      dmat = [((xyz - coord).dot()**0.5).as_numpy_array() for coord in xyz]
+      grid.append(dmat)
+ 
+    grid = np.array(grid)
+ 
+    if ref is not None and ref[1:] == (lo, hi):
+      grid -= ref[0]
+ 
+    mode = funcs[mode]
+    grid = mode(grid, axis=0)
 
-  mode = funcs[mode]
-  res  = mode(grid)
-  grid = mode(grid, axis=0)
   grid[np.triu_indices(grid.shape[0],1)] = np.nan
 
   for n in range(lo, hi):
@@ -45,8 +52,7 @@ def extract_grid(file, mode, chain, resrng, states, ref=None):
       grid = np.insert(grid, n-lo, np.nan, axis=0)
       grid = np.insert(grid, n-lo, np.nan, axis=1)
 
-  print('All distances considered:', res)
-  print('Mean matrix value       :', np.nanmean(grid))
+  print('Mean matrix value:', np.nanmean(grid))
 
   return grid, lo, hi
 
@@ -82,7 +88,7 @@ def run(args):
     ref = None
 
   # Extract and align grids
-  grids = [extract_grid(file, p.params.ensemble, p.params.chain,
+  grids = [extract_grid(file, p.params.mode, p.params.chain,
                         p.params.residue_range, p.params.states,
                         ref)
            for file in p.input.pdb[:4]]
@@ -91,7 +97,7 @@ def run(args):
   # Combine grids
   if len(grids) == 1:
     grid = grids[0]
-  elif p.params.mode == 'combine':
+  elif p.params.combine == 'both':
     grid, second = grids[:2]
     second = second.T
     valid  = ~np.isnan(second)
@@ -100,14 +106,18 @@ def run(args):
     pairs = zip(*(2*[iter(grids)]))
     for n, (a, b) in enumerate(pairs):
       with np.errstate(divide='ignore', invalid='ignore'):
-        merge = funcs[p.params.mode](a, b)
+        merge = funcs[p.params.combine](a, b)
       if n == 0:
         grid = merge
       else:
         merge = merge.T
         valid = ~np.isnan(merge)
         grid[valid] = merge[valid]
- 
+
+  if p.params.full and np.isnan(grid[0,-1]):
+    empty       = np.isnan(grid)
+    grid[empty] = grid.T[empty]
+     
   # Create custom colormap
   cmaps   = plt.colormaps()
   pos     = next(m for m in cmaps if m.lower()==p.params.positive_cmap.lower())
@@ -128,15 +138,18 @@ def run(args):
     cmap  = negcmap
 
   # Construct label 
-  base = 'C$_{\\alpha}$ distance'
-  unit = '($\mathrm{\AA}'+'^{2}'*(p.params.ensemble in {'var'})+'$)'
-  elbl = modes[p.params.ensemble]
-  if p.params.mode == 'combine':
-    label = [base, elbl, unit]
-  else:
-    mlbl = modes[p.params.mode]
-    label = [base, elbl, mlbl, unit]
-    if p.params.mode in {'div','mul'}: label.remove(unit)
+  label = 'C$_{\\alpha}$ '
+  if   p.params.mode == 'cov' : label += 'position covariance%s ($\mathrm{\AA}^{2}$)'
+  elif p.params.mode == 'cc'  : label += 'position correlation%s'
+  elif p.params.mode == 'std' : label += 'distance standard deviation%s ($\mathrm{\AA}$)'
+  elif p.params.mode == 'var' : label += 'distance variation%s ($\mathrm{\AA}^{2}$)'
+  elif p.params.mode == 'mean': label += 'distance mean%s ($\mathrm{\AA}$)'
+
+  if   p.params.combine == 'sub': label = label%' difference'
+  elif p.params.combine == 'add': label = label%' sum'
+  elif p.params.combine == 'mul': label = label[:label.find('%s')+2]%' product'
+  elif p.params.combine == 'div': label = label[:label.find('%s')+2]%' ratio'
+  else                          : label = label%''
 
   # Make plot
   fig, ax = plt.subplots(figsize=(5,4))
@@ -147,7 +160,7 @@ def run(args):
   ax.set_frame_on(False)
   ax.set_xlabel('Residue number')
   ax.set_ylabel('Residue number')
-  cb = fig.colorbar(im, label=' '.join(label))
+  cb = fig.colorbar(im, label=label)
   fig.tight_layout()
   ax.set_yticks([t for t in ax.get_xticks() if lo <= t <= hi])
   ax.hlines(p.params.lines, lo-0.5, hi+0.5, color=p.params.lc, lw=0.5)
