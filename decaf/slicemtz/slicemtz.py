@@ -154,33 +154,35 @@ def run(args):
   ang  = np.radians(90 - cell[3 + dim])
   asp  = lens[1]/lens[0] * np.cos(ang)
 
-  # Trim edges
+  # Zoom or trim
   i, j = off2d
-  clip = [-i-0.5, i+0.5, -j-0.5, j+0.5]
+  edge = [-i-0.5, i+0.5, -j-0.5, j+0.5]
 
   if p.params.zoom is not None:
-    x,y,z = (p.params.zoom+[15])[:3]
-    w,h   = max(z,z*asp), max(z,z/asp)
-    clip  = [x-w, x+w, y-h, y+h]
-    name += '_x%d_y%d'%(x,y)
-
-  elif p.params.trim:
-    notnans  = ~np.isnan(layer)
-    xwhere   = np.argwhere(notnans.any(axis=0))
-    ywhere   = np.argwhere(notnans.any(axis=1))
-    clip[0] += xwhere.min()
-    clip[1] -= layer.shape[1] - xwhere.max() - 1
-    clip[2] += ywhere.min()
-    clip[3] -= layer.shape[0] - ywhere.max() - 1
+    clip  = (p.params.zoom+[15])[:3]
+    name += '_zoom'
 
   else:
-    name += '_full'
+    if p.params.trim:
+      notnans  = ~np.isnan(layer)
+      xwhere   = np.argwhere(notnans.any(axis=0))
+      ywhere   = np.argwhere(notnans.any(axis=1))
+      edge[0] += xwhere.min()
+      edge[1] -= layer.shape[1] - xwhere.max() - 1
+      edge[2] += ywhere.min()
+      edge[3] -= layer.shape[0] - ywhere.max() - 1
+    else:
+      name += '_full'
 
-  # Create inset
+    x        = edge[0] + (edge[1] - edge[0]) / 2.
+    y        = edge[2] + (edge[3] - edge[2]) / 2.
+    z        = max(edge[1] - edge[0], edge[3] - edge[2]) / 2.
+    clip     = [x,y,z]
+
+  # Prepare inset
   if p.params.inset is not None:
-    x,y,z = (p.params.inset+[15])[:3]
-    w,h   = max(z,z*asp), max(z,z/asp)
-    inset = [x-w, x+w, y-h, y+h]
+    inset = (p.params.inset+[15])[:3]
+    name += '_inset'
   else:
     inset = None
 
@@ -242,9 +244,6 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip):
 
   ax.transData = trans
 
-  ax.set_xlim((clip[0], clip[1]))
-  ax.set_ylim((clip[2], clip[3]))
-
   # Actual plot
   if cnt:
     with np.errstate(divide='ignore', invalid='ignore'):
@@ -267,6 +266,16 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip):
   # Plot axes and Bragg positions
   ax.imshow(mask, cmap='binary_r', transform=trans, aspect=asp,
             origin='lower', extent=ext, interpolation='none', zorder=1)
+
+  # Set plot limits
+  x,y,z = clip
+  if z <= 1:
+    x,y = ax.transData.inverted().transform(ax.transAxes.transform((x,y)))
+    z  *= max(i, j) * 2
+
+  w,h = min(z,z*asp), min(z,z/asp)
+  ax.set_xlim((x-w, x+w))
+  ax.set_ylim((y-h, y+h))
 
   return im
 
