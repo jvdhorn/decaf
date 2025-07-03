@@ -239,9 +239,10 @@ def image_region_statistics(array, regions, threshold=None, save_img=True, write
 
     elif mode == 'dual':
       Sigma1, Sigma2, Var, Mu = nw_stats_dual(N, mean, var, skew, gain)
-      Sigma = Sigma1 + Sigma2
-      print('Noisy Wilson stats: Sigma1={:.2f}; Sigma2={:.2f}; Var={:.2f}; Mu={:.2f}'.format(
-            *map(float,(Sigma1, Sigma2, Var, Mu))))
+      Sigma  = Sigma1 + Sigma2
+      Nequiv = Sigma ** 2 / (Sigma1 ** 2 + Sigma2 ** 2 / N) # stats.stackexchange.com/a/191912
+      print('Noisy Wilson stats: N(equiv)={:.2f} Sigma1={:.2f}; Sigma2={:.2f}; Var={:.2f}; Mu={:.2f}'.format(
+            *map(float,(Nequiv, Sigma1, Sigma2, Var, Mu))))
       print()
 
     if save_img and template is not None:
