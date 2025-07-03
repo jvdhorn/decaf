@@ -10,37 +10,6 @@ def run(args):
   scope       = phil.phil_parse(args = args)
   if not args: scope.show(attributes_level=2); return
   p           = scope.extract().plotmtz
-  files  = list(p.input.mtz)
-  print('Reading', files[0])
-  obj    = mtz.object(files[0])
-  first  = obj.crystals()[0].miller_set().array(obj.get_column(
-           p.input.lbl).extract_values().as_double())
-  first  = first.select(first.data() > p.params.cutoff)
-  binner = first.setup_binner(n_bins=p.input.bins)
-  ind    = binner.bin_indices()
-  means  = [first.data().select(ind==i).min_max_mean().mean for i in binner.range_used()]
-  mean   = first.data().min_max_mean().mean
-
-  x = ['$\infty$'] + ['%.2f'%binner.bin_d_range(i)[1] for i in binner.range_used()]
-  y = means
-  xticks = [i-0.5 for i in range(len(x))]
-
-  if len(y) >= 10:
-    xsel   = [int(i//(len(y)/10)) for i in range(len(y))]+[10]
-    xind   = [xsel.index(i) for i in range(11)]
-    x      = [x[i] for i in xind]
-    xticks = [xticks[i] for i in xind]
-   
-  plt.bar(range(len(y)), y, label='Binned')
-  plt.plot(xticks, [mean] * len(xticks))
-  plt.plot(xticks, [mean] * len(xticks), label='All')
-  plt.xticks(xticks, x)
-  plt.xlabel('Resolution shell limits ($\AA$)')
-  plt.ylabel('Mean intensity')
-  if p.params.legend: plt.legend()
-  plt.tight_layout()
-  name ='plotmtz_{}_byres.png'.format(files[0].replace('/','_').replace('.mtz',''))
-  plt.savefig(name, dpi=300)
 
   # Plot distribution
   plt.close()
@@ -53,7 +22,9 @@ def run(args):
   lores = max(p.params.resolution)
   hires = min(p.params.resolution)
   if lores == hires: lores = 9e99
+  files = list(p.input.mtz)
   for file in files:
+    print('Reading', file)
     obj    = mtz.object(file)
     first  = obj.crystals()[0].miller_set().array(obj.get_column(
              p.input.lbl).extract_values().as_double())
@@ -75,6 +46,7 @@ def run(args):
   file = files[0].replace('/','_')
   name = 'plotmtz_{}_distribution.png'.format(file.replace('.mtz',''))
   if not p.params.log: name.replace('.png','_lin.png')
+  name = p.output.png_out or name
   plt.savefig(name, dpi=300)
 
   if p.input.show:

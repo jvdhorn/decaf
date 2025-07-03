@@ -42,6 +42,13 @@ def phil_parse(args=None):
           .type = float
           .help = 'Only consider intensities larger than this value'
       }
+      output
+        .help = "Output files"
+      {
+        png_out = None
+        .type = path
+        .help = 'PNG output file'
+      }
     }
     """)
 
