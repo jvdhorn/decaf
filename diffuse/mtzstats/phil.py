@@ -21,6 +21,9 @@ def phil_parse(args=None):
         cutoff = -9e99
           .type = float
           .help = 'Only consider intensities larger than this value'
+        resolution = 0
+          .type = floats
+          .help = 'Resolution limit (or range if 2 values are provided)'
       }
       params
         .help = "Running parameters"
