@@ -151,7 +151,7 @@ Run any of the modules without arguments to get an overview of the available par
 ### pdbrad
 * `pdb` - input pdb-file
 
-### pdbrad
+### btrace
 * `input` - input pdb or json (can be multiple)
 * `lines` - plot vertical lines at these x-positions (e.g. `"25.5 75.5"`)
 
