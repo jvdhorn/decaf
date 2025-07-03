@@ -2,7 +2,7 @@ from __future__ import division, print_function
 from iotbx import mtz, ccp4_map
 from scitbx.array_family import flex
 from matplotlib import pyplot as plt, colors, ticker, transforms as tr
-from scipy import ndimage as ndi
+from scipy import ndimage as ndi, stats
 import numpy as np
 import warnings
 from . import phil
@@ -29,21 +29,22 @@ def run(args):
     grid[tuple((-ind + offset).T)] = data
     grid[tuple(( ind + offset).T)] = data
     cell    = arr.unit_cell().reciprocal_parameters()
-  elif p.input.mtz.endswith('.map'):
+  else:
     reader  = ccp4_map.map_reader(p.input.mtz)
     grid    = reader.map_data().as_numpy_array()
-    cutoff  = grid.min() if p.input.cutoff is None else p.input.cutoff
+    minimum = grid.min()
+    cutoff  = (p.input.cutoff if p.input.cutoff is not None else minimum if
+               minimum == stats.mode(grid,axis=None).mode[0] else minimum - 1)
     grid[grid<=cutoff] = np.nan
     x, y, z = grid.shape
     offset  = x//2, y//2, z//2
     cell    = list(reader.unit_cell().parameters())
     cell[:3]= list(map(lambda x,y:x/y, cell[:3], reader.unit_cell_grid))
-  else: return
   if p.params.center:
     grid    = np.roll(grid, offset, axis=(0,1,2))
   level   = p.params.slice.strip('hkl')
   dim     = p.params.slice.find(level)
-  level   = int(level) + int(offset[dim])
+  level   = min(grid.shape[dim]-1, max(0, int(level) + int(offset[dim])))
   sel     = [slice(None)] * 3
   sel[dim]= slice(level-p.params.depth, level+1+p.params.depth)
   slab    = grid[tuple(sel)]
@@ -164,10 +165,15 @@ def run(args):
   negcmap = plt.get_cmap(neg)
   high    = high if high is not None else np.nanmax(layer)
   low     = low if low is not None else np.nanmin(layer)
+  frac    = high / (high - low)
+  if p.params.normalize_cmap:
+    pfrac =    frac  / max(frac, 1-frac)
+    nfrac = (1-frac) / max(frac, 1-frac)
+  else:
+    pfrac = nfrac = 1
   if low < 0 < high:
-    frac  = high / (high - low)
-    poss  = poscmap(np.linspace(0, 1, int(frac * 5040)))
-    negs  = negcmap(np.linspace(1, 0, int((1-frac) * 5040)))
+    poss  = poscmap(np.linspace(0, pfrac, int(frac * 5040)))
+    negs  = negcmap(np.linspace(nfrac, 0, int((1-frac) * 5040)))
     stack = np.vstack((negs, poss))
     cmap  = colors.LinearSegmentedColormap.from_list('composite', stack)
   elif low >= 0:
