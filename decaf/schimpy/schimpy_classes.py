@@ -437,6 +437,18 @@ def int_generator(start=0):
 
   while True: yield start; start+=1
 
+def pick_from(collection, n=2):
+
+  collection = tuple(collection)
+
+  if n == 0:
+    yield ()
+  else:
+    for i, item in enumerate(collection):
+      for others in pick_from(collection[i+1:], n=n-1):
+        yield (item,) + others
+
+
 class Model():
   
   def __init__(self,
@@ -496,6 +508,7 @@ class Model():
                   pairs_frac=1.,
                   skip=(),
                   override=None,
+                  pick_extremes=None,
                   require_both=False,
                   uncorrelate=False,
                   percentile=0,
@@ -598,7 +611,8 @@ class Model():
                                  abf=allow_bad_frac, dgf=disallow_good_frac,
                                  require_both=require_both, uncorrelate=uncorrelate,
                                  percentile=percentile, stretch=stretch, 
-                                 pairs_frac=pairs_frac, skip=skip, override=override)
+                                 pairs_frac=pairs_frac, skip=skip, override=override,
+                                 pick_extremes=pick_extremes)
       else:
         self.all_set_random(amp=amp, max_level=correlate_after, reverse=reverse)
         if correlate:
@@ -1252,7 +1266,8 @@ class Model():
   def shift_and_correlate(self, amp=1.0, weight_exp=2., spring_weights=2.,
                           seq=0, iso=0, reverse=False, abf=0., dgf=0.,
                           require_both=False, uncorrelate=False, percentile=0,
-                          stretch=1., pairs_frac=1., skip=(), override=None):
+                          stretch=1., pairs_frac=1., skip=(), override=None,
+                          pick_extremes=None):
 
     levels = sorted(self.tls_hierarchy.keys())
     levels = [lvl for lvl in levels if lvl <= self.max_level or self.max_level < 0]
@@ -1260,11 +1275,48 @@ class Model():
     for n_level in levels:
       for chain in self.working_chains:
         chain.set_random(n_level_select=n_level, amp=amp)
+      if pick_extremes and n_level == levels[0]:
+        self.replace_by_extremes(pick_extremes)
       if n_level not in skip:
         self.correlate_level(n_level, weight_exp=weight_exp, spring_weights=spring_weights,
                              seq=seq, iso=iso, abf=abf, dgf=dgf, require_both=require_both,
                              uncorrelate=uncorrelate, percentile=percentile, stretch=stretch,
                              pairs_frac=pairs_frac, override=override)
+
+  def replace_by_extremes(self, n=2):
+
+    extremes     = self.find_extremes(n)
+    avail_coords = [chain.base_coordinates() for chain in extremes]
+
+    if len(avail_coords) == 1:
+      avail_coords.append(extremes[0].init_coordinates)
+
+    for chain in self.working_chains:
+      coords = avail_coords[np.random.randint(len(avail_coords))]
+      chain.set_coordinates(chain.apply_operations(coords))
+
+  def find_extremes(self, n=2):
+
+    def get_coords(chain, cache=dict()):
+      result = cache.get(chain.n_chain)
+      if result is None:
+        result = chain.base_coordinates()
+        cache[chain.n_chain] = result
+      return result
+
+    best_score = -1
+    best_combo = ()
+    for combo in pick_from(self.working_chains, n):
+      score = 0
+      for a, b in pick_from(combo, 2):
+        score += flex.sum((get_coords(a) - get_coords(b)).dot()) ** 0.5
+      else:
+        score = flex.sum((get_coords(combo[0])-combo[0].init_coordinates).dot()) ** 0.5
+      if score > best_score:
+        best_score = score
+        best_combo = combo
+
+    return best_combo
 
   def random_analysis(self, amp=1.0):
 
