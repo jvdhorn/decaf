@@ -8,7 +8,7 @@ setup(  name                = 'diffuse',
         url                 = '',
         license             = '',
         install_requires    = ( ),
-        package_dir         = {'':'scud'},
+        package_dir         = {'':'diffuse'},
         packages            = find_packages(where   ='diffuse-python',
                                             exclude = ( )
                                             ),
