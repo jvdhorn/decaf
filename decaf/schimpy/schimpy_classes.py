@@ -134,10 +134,20 @@ def tls_from_csv(input_files, max_level, min_level, origin, cache, mult, zero_tr
                             log              = log)
           except Exception as e:
             print(('Error while analyzing TLS group {} '
-                   'in layer {} with selection string "{}": {}'
-                   '\nUsing previous group as substitute.')
+                   'in level {} with selection string "{}": {}'
+                   '\nRelaxing EPS check.')
                    .format(n, n_layer, selection_string, e))
-            groups[n] = groups[n-1]
+            groups[n] = TLS(t                = t,
+                            l                = l,
+                            s                = s,
+                            amp              = amp,
+                            mult             = mult,
+                            zero_trace       = zero_trace,
+                            origin           = origin,
+                            selection_string = selection_string,
+                            selection        = selection,
+                            eps_check        = False,
+                            log              = log)
       read_mat.close()
       read_amp.close()
       tls_hierarchy[n_layer] = groups
@@ -168,10 +178,19 @@ def tls_from_pdb(input_files, max_level, min_level, cache, mult, zero_trace, log
                           log              = log)
         except Exception as e:
           print(('Error while analyzing TLS group {} '
-                 'in layer {} with selection string "{}": {}'
-                 '\nUsing previous group as substitute.')
+                 'in level {} with selection string "{}": {}'
+                 '\nRelaxing EPS check.')
                  .format(n, n_layer, group.selection_string, e))
-          groups[n] = groups[n-1]
+          groups[n] = TLS(t                = group.t,
+                          l                = group.l,
+                          s                = group.s,
+                          origin           = group.origin,
+                          mult             = mult,
+                          zero_trace       = zero_trace,
+                          selection_string = group.selection_string,
+                          selection        = selection,
+                          eps_check        = False,
+                          log              = log)
       if groups:
         tls_hierarchy[n_layer] = groups
         n_layer               += 1
@@ -207,10 +226,20 @@ def tls_from_json(input_file, max_level, min_level, cache, mult, zero_trace, log
                           log              = log)
         except Exception as e:
           print(('Error while analyzing TLS group {} '
-                 'in layer {} with selection string "{}": {}'
-                 '\nUsing previous group as substitute.')
+                 'in level {} with selection string "{}": {}'
+                 '\nRelaxing EPS check.')
                  .format(n, n_level, group['selection'], e))
-          groups[n] = groups[n-1]
+          groups[n] = TLS(t                = modes['T'],
+                          l                = modes['L'],
+                          s                = modes['S'],
+                          amp              = list(modes['amplitudes'].values())[0],
+                          mult             = mult,
+                          zero_trace       = zero_trace,
+                          origin           = list(group['tls_origins'].values())[0],
+                          selection_string = sele_str,
+                          selection        = selection,
+                          eps_check        = False,
+                          log              = log)
       tls_hierarchy[n_level] = groups
   return tls_hierarchy
 
@@ -2339,7 +2368,6 @@ class Modifier():
     self.atoms  = working_atoms
     self.origin = tls_obj.origin
     self.r      = tls_obj.r
-    self.eps    = tls_obj.eps
     self.amp    = tls_obj.amp
     self.parent = parent
     self.shifts = None
@@ -2576,12 +2604,11 @@ class Collector():
 class TLS():
 
   def __init__(self, t, l, s, origin, selection_string, selection, amp=1.,
-               zero_trace=False, mult=(1.,1.,1.), eps=1.e-6, log=None):
+               zero_trace=False, mult=(1.,1.,1.), eps_check=True, log=None):
 
     if zero_trace: s[0]=s[4]=s[8]=0
 
     self.log               = log
-    self.eps               = eps
     self.T                 = matrix.sym(sym_mat3=t) * mult[0]
     self.L                 = matrix.sym(sym_mat3=l)*DEG2RADSQ * mult[1]
     self.S                 = matrix.sqr(s)*DEG2RAD * mult[2]
@@ -2589,16 +2616,21 @@ class TLS():
     self.origin            = origin
     self.selection_string  = selection_string
     self.selection         = selection
+    eps                    = dict() if eps_check else {'eps':1., 'self_check_eps':1.}
 
     try:
       self.r = analysis.run(T              = self.T,
                             L              = self.L,
                             S              = self.S,
                             implementation = 'c++',
-                            log            = self.log).self_check()
-    except:
+                            log            = self.log,
+                            **eps
+               ).self_check()
+    except TypeError:
       self.r = analysis.run(T              = self.T,
                             L              = self.L,
                             S              = self.S,
-                            log            = self.log).self_check()
+                            log            = self.log,
+                            **eps
+               ).self_check()
   
