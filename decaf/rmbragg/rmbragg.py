@@ -24,16 +24,22 @@ def run(args):
     half   = np.array(p.params.box) // 2
     box    = half * 2 + 1
 
-    offset = abs(indices).max(axis=0) + half
+    offset = abs(indices).max(axis=0) + half + p.params.sc_size
     shape  = 2 * offset + 1
     grid   = np.full(shape, np.nan)
     grid[tuple((-indices + offset).T)] = data
     grid[tuple(( indices + offset).T)] = data
     shadow = grid.copy()
 
+    # Find all indices
     bragg  = arr.miller_set(arr.indices(), False).complete_set().indices(
              ).as_vec3_double().as_numpy_array().astype(int)
+    # Filter for Bragg
     bragg  = bragg[(bragg % p.params.sc_size == 0).all(axis=1)] + offset - half
+    # Expand by one supercell size on all sides
+    exp    = np.mgrid[-1:2,-1:2,-1:2].reshape(3,-1).T * p.params.sc_size
+    bragg  = (np.repeat(bragg,27,axis=0).reshape(-1,27,3) + exp).reshape(-1, 3)
+    bragg  = np.unique(bragg, axis=0)
 
     with np.errstate(all='ignore'):
       for ind in bragg:
