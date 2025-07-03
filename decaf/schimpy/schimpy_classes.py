@@ -660,9 +660,31 @@ class Model():
       for source, target in pairs:
         self.working_chains[target].adopt_from(self.working_chains[source])
 
-  def write_all_environments(self):
+  def rank_chains_by_rmsd(self):
+
+    curr = 0
+    rank = 0
+    todo = set(chain.n_chain for chain in self.working_chains) - {curr}
+    self.working_chains[curr].rank = rank
+
+    while todo:
+
+      coord_a = self.working_chains[curr].base_coordinates()
+
+      def key(other):
+        coord_b = self.working_chains[other].base_coordinates()
+        return (coord_b - coord_a).dot().as_numpy_array().sum()
+
+      rank += 1
+      curr  = min(todo, key=key)
+      todo -= {curr}
+      self.working_chains[curr].rank = rank
+
+  def write_all_environments(self, smooth=False):
 
     if hasattr(self, 'environments'):
+      if smooth:
+        self.rank_chains_by_rmsd()
       master_hier = self.environments.template.deep_copy()
       master_hier.atoms().reset_i_seq()
       calphas     = master_hier.get_peptide_c_alpha_selection()

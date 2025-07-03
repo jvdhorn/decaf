@@ -209,7 +209,7 @@ def phil_parse(args=None):
       output
         .help = "output files"
       {
-        write_pdb = 1
+        write_pdb = 0
           .type = int
           .help = 'Write PDB-file containting this many structures (-1 for all)'
         write_mmcif = False
@@ -227,9 +227,12 @@ def phil_parse(args=None):
         pdb_out = supercell_out.pdb
           .type = path
           .help = 'Name of output file containing supercell'
-        superpose = True
+        superpose = False
           .type = bool
           .help = 'Superpose structures in the pdb'
+        smooth_sort = False
+          .type = bool
+          .help = 'Sort environments for smooth transitions'
         scale_displacements = 25.
           .type = float
           .help = 'Scale factor for visual center of mass displacements'
