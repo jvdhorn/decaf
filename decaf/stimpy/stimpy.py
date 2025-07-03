@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from scitbx.array_family import flex
-from scipy import ndimage, stats
+from scipy import ndimage, stats, optimize
 from dxtbx.format.FormatCBFMini import FormatCBFMini as formatter
 from matplotlib import pyplot as plt, colors
 import os
@@ -115,6 +115,19 @@ def filter_sigma(array, sigma=3, repeat=99):
       repeat  = 0
   return array
 
+def nw_stats_dual(N, mean, var, skew):
+
+  if skew < 0: skew = 0
+  N1 = 1
+  N2 = N
+  func = lambda (S1, S2): (skew/2. * var ** (3./2) - S1**3/N1**2 - S2**3/N2**2) ** 2
+  init = (mean/3., mean/3.)
+  bounds = None # ((0,mean), (0,mean))
+  Sigma1, Sigma2 = optimize.minimize(func, x0=init, bounds=bounds, method='CG').x
+  Var = var - Sigma1 ** 2 / N1 - Sigma2 ** 2 / N2
+  Mu = mean - Sigma1 - Sigma2
+  return Sigma1, Sigma2, Var, Mu
+
 def nw_stats(N, mean, var, skew):
 
   if skew < 0: skew = 0
@@ -129,7 +142,7 @@ def nw_stats_discrete(N, mean, var):
   Mu    = mean - Sigma
   return (Sigma, Mu)
 
-def image_region_statistics(array, regions, threshold=None, save_img=True, write=True, template=None, directory='stimpy', pref='', sigma=3, N=8, discrete=False, use_fit_params=False, remove_excess=False):
+def image_region_statistics(array, regions, threshold=None, save_img=True, write=True, template=None, directory='stimpy', pref='', sigma=3, N=8, mode='continuous', use_fit_params=False, remove_excess=False):
 
   if threshold is None:
     threshold = array.min()
@@ -178,14 +191,20 @@ def image_region_statistics(array, regions, threshold=None, save_img=True, write
     if use_fit_params:
       mean, var, skew = fitmean, fitvar, fitskew
    
-    if not discrete:
+    if mode == 'continuous':
       Sigma, Var, Mu = nw_stats(N, mean, var, skew)
       print('Noisy Wilson stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
       print()
 
-    else:
+    elif mode == 'discrete':
       Sigma, Mu = nw_stats_discrete(N, mean, var)
       print('Noisy Wilson stats: Sigma={:.2f}; Mu={:.2f}'.format(Sigma, Mu))
+      print()
+
+    elif mode == 'dual':
+      Sigma1, Sigma2, Var, Mu = nw_stats_dual(N, mean, var, skew)
+      Sigma = Sigma1 + Sigma2
+      print('Noisy Wilson stats: Sigma1={:.2f}; Sigma2={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma1, Sigma2, Var, Mu))
       print()
 
     if save_img and template is not None:
@@ -318,7 +337,7 @@ def run(args):
                                          N              = p.params.N,
                                          sigma          = p.params.sigma,
                                          remove_excess  = p.params.remove_excess,
-                                         discrete       = p.params.discrete,
+                                         mode           = p.params.mode,
                                          use_fit_params = p.params.use_fit_params)
   background   = smooth(background, p.params.smooth_background)
   corrected    = image_data - background

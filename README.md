@@ -93,7 +93,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `radial` - polarization-corrected radial average
 * `bin_counts` - bin regions within this range of counts (default `1.0`)
 * `N` - expected number of independent rotations (default `1.0`)
-* `discrete` - estimate background using discrete noisy Wilson statistics (default `False`)
+* `mode` - Noisy Wilson distribution treatment (`continuous`, `discrete` or `dual`, default `continuous`)
 * `median_size` - kernel size of the median filter (default `9`)
 * `dilation_size` - kernel size of the mask dilation (default `5`)
 
