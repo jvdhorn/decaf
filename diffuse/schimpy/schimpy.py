@@ -122,7 +122,7 @@ def model_worker(n_model):
   try:
     # Enforce start intervals
     with start_time.get_lock():
-      time.sleep(max(0, start_time.value - time.time()))
+      time.sleep(max(0.1, start_time.value - time.time()))
       start_time.value = time.time() + p.input.interval
     # Start building
     print('Building model {}'.format(n_model))
