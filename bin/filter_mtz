@@ -1,0 +1,3 @@
+#!/bin/sh
+
+phenix.python -m src.filter_mtz.__init__ "$@"
