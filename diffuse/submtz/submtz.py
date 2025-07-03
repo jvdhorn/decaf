@@ -36,7 +36,7 @@ def run(args):
   elif p.params.mode == 'mul':
     print('Multiplying arrays')
     first._data *= second.data()
-  elif p.params.mode == 'add':
+  elif p.params.mode == 'div':
     print('Dividing arrays')
     first._data /= second.data()
   join = '_' + p.params.mode + '_'
