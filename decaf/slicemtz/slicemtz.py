@@ -134,10 +134,8 @@ def run(args):
   # Overlay axes
   if p.params.axes:
     x, y   = mask.shape
-    xwhere = np.argwhere(~np.isnan(layer[:,y//2]))
-    ywhere = np.argwhere(~np.isnan(layer[x//2,:]))
-    if xwhere.size: mask[xwhere.min():xwhere.max(),y//2] = 1.
-    if ywhere.size: mask[x//2,ywhere.min():ywhere.max()] = 1.
+    mask[:,y//2] = 1.
+    mask[x//2,:] = 1.
 
   # Trim
   i, j = off2d
@@ -242,6 +240,11 @@ def axes_to_data(ax, xy):
     return ax.transData.inverted().transform(ax.transAxes.transform(xy))
 
 
+def data_to_axes(ax, xy):
+
+    return ax.transAxes.inverted().transform(ax.transData.transform(xy))
+
+
 def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
 
   # Dummy plot
@@ -291,6 +294,16 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
     w,h = min(z,z*asp), min(z,z/asp)
     ax.set_xlim((x-w, x+w))
     ax.set_ylim((y-h, y+h))
+  else:
+    j, i = layer.shape
+    xcrd = np.linspace(ext[0]+0.5, ext[1]-0.5, i)
+    ycrd = np.linspace(ext[2]+0.5, ext[3]-0.5, j)
+    mask = ~np.isnan(layer.ravel())
+    mesh = np.array(np.meshgrid(xcrd, ycrd)).reshape(2,-1).T[mask]
+    axxy = data_to_axes(ax, mesh)
+    x0,_ = axes_to_data(ax, (axxy[:,0].min(), 0.5))
+    x1,_ = axes_to_data(ax, (axxy[:,0].max(), 0.5))
+    ax.set_xlim((x0-0.5, x1+0.5))
 
   return im
 
