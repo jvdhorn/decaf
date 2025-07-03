@@ -169,7 +169,9 @@ Run any of the modules without arguments to get an overview of the available par
 * `pdb` - input pdb-file
 
 ### pdbdist
-* `pdb` - input multistate pdb-file
+* `pdb` - input multistate pdb-file (can be multiple)
+* `ensemble` - ensemble treatment (`std`, `var` or `mean`, default `std`)
+* `mode` - multiple input treatment (`combine`, `sub`, `div`, `add`, `mul` or `mean`, default `combine`)
 
 ### btrace
 * `input` - input pdb or json (can be multiple)
