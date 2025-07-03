@@ -169,7 +169,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `pdb` - input pdb-file
 
 ### pdbdist
-* `pdb` - input pdb-file
+* `pdb` - input multistate pdb-file
 
 ### btrace
 * `input` - input pdb or json (can be multiple)

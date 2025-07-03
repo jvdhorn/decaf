@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-
 def run(args):
 
   scope       = phil.phil_parse(args = args)
