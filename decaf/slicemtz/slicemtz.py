@@ -88,17 +88,16 @@ def run(args):
     radius = min(1./p.params.projection, *orth(offset))
     v_samp = int(max(offset) * 2 + 1)
     h_samp = int(v_samp * np.pi // 4 * 2 + 1)
-    layer  = []
-    for phi in 1j ** np.linspace(-2, 2, h_samp):
-      row = []
-      for z in np.linspace(-radius, radius, v_samp):
-        a     = (radius**2 - z**2) ** 0.5 * phi
-        h,k,l = (int(i) + j for i,j in zip(frac((a.real,a.imag,z)), offset))
-        row.append(grid[h,k,l])
-      layer.append(row)
-    layer = np.array(layer).T
-    nans  = np.isnan(layer)
-    cell  = (1,1,1,90,90,90)
+    z      = np.linspace(-radius, radius, v_samp)
+    xynorm = 1j ** np.linspace(-2, 2, h_samp)
+    xymult = (radius ** 2 - z ** 2)**0.5
+    xyz    = np.hstack((np.outer(xymult,xynorm).view(float).reshape(-1,2),
+                        z.repeat(xynorm.size)[...,None]))
+    hkl    = frac(flex.vec3_double(xyz)).as_numpy_array().astype(int) + offset
+    layer  = grid[tuple(hkl.T)].reshape(z.size, -1)
+    nans   = np.isnan(layer)
+    cell   = (1,1,1,90,90,90)
+    del xyz, hkl
 
   # Multiply and offset
   layer   = (layer * p.params.multiply) + p.params.add
