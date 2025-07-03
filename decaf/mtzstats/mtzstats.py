@@ -3,7 +3,7 @@ from scitbx.array_family import flex
 from iotbx import mtz
 from cctbx import crystal
 from . import phil
-from scipy import stats
+from scipy import stats, ndimage
 import numpy as np
 
 def run(args):
@@ -19,6 +19,12 @@ def run(args):
   first  = obj.crystals()[0].miller_set(False).array(obj.get_column(p.input.lbl
            ).extract_values().as_double()).resolution_filter(lores, hires)
   npdata = first.data().select(first.data() > p.input.cutoff).as_numpy_array()
+  ind    = first.indices().as_vec3_double().as_numpy_array().astype(int)
+  offset = abs(ind).max(axis=0) + 1
+  grid   = np.full(offset * 2 + 1, npdata.min()-1)
+  grid[tuple((offset+ind).T)] = npdata
+  grid[tuple((offset-ind).T)] = npdata
+  maxima = (ndimage.maximum_filter(grid, 3) == grid)[tuple((offset+ind).T)].sum()
   norm   = (npdata - npdata.min()) / (npdata.max() - npdata.min())
   rmsc   = norm.std()
   spcont = npdata.var() / npdata.mean() ** 2
@@ -32,6 +38,7 @@ def run(args):
   print('Reciprocal cell :', *map('{:.5f}'.format,first.unit_cell().reciprocal_parameters()))
   print('Number of refl. :', npdata.size)
   print('Fraction neg.   :', (npdata < 0).sum() / npdata.size)
+  print('No. local maxima:', maxima)
   print('Minimum         :', npdata.min())
   print('Maximum         :', npdata.max())
   print('Mean            :', npdata.mean())
@@ -43,8 +50,9 @@ def run(args):
   print('Var[I]/Mean[I]^2:', spcont)
   print('Shannon entropy :', entropy)
 
-  sg     = p.params.sg or str(first.space_group_info())
-  symm   = crystal.symmetry(unit_cell=first.unit_cell(), space_group_symbol=sg)
-  merged = first.customized_copy(crystal_symmetry = symm).merge_equivalents()
-  symbol = ''.join(str(symm.space_group_info()).split())
-  print('R_int {:10s}:'.format(symbol), merged.r_merge())
+  if p.params.sg is not None:
+    sg     = p.params.sg or str(first.space_group_info())
+    symm   = crystal.symmetry(unit_cell=first.unit_cell(), space_group_symbol=sg)
+    merged = first.customized_copy(crystal_symmetry = symm).merge_equivalents()
+    symbol = ''.join(str(symm.space_group_info()).split())
+    print('R_int {:10s}:'.format(symbol), merged.r_merge())
