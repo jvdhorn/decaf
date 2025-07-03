@@ -45,12 +45,17 @@ def extract_grid(file, mode, chain, resrng, states):
 def align_grids(grids):
 
   grids, lows, highs = map(list,zip(*grids))
-  lo, hi = max(lows), min(highs)
+  lo, hi = min(lows), max(highs)
 
   for n, (grid, low, high) in enumerate(zip(grids, lows, highs)):
-    start    = lo - low or None
-    end      = hi - high or None
-    grids[n] = grid[start:end, start:end]
+    grid     = np.concatenate((
+                  np.full((low-lo, grid.shape[1]),np.nan), grid,
+                  np.full((hi-high, grid.shape[1]),np.nan)
+               ), axis=0)
+    grids[n] = np.concatenate((
+                  np.full((grid.shape[0],low-lo),np.nan), grid,
+                  np.full((grid.shape[0],hi-high),np.nan)
+               ), axis=1)
 
   return grids, (lo, hi)
 

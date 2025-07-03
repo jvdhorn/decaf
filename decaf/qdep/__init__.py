@@ -1,6 +1,6 @@
 import sys
 
-import qdep
+from . import qdep
 
 
 def main():
