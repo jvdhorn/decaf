@@ -27,7 +27,8 @@ def run(args):
   grid[tuple(( ind + origin).T)] = data
 
   flex_data = flex.double(grid.ravel())
-  flex_data.reshape(flex.grid(grid.shape))
+  flex_data.reshape(flex.grid(tuple(-i-2 for i in origin),
+                              tuple(i-1 for i in origin)))
 
   if p.output.map_out:
     label = p.output.map_out.replace('.map', '')
