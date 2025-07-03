@@ -70,7 +70,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `bin_counts` - bin regions within this range of counts (default `1.0`)
 * `N` - expected number of independent rotations (default `1.0`)
 * `median_size` - kernel size of the median filter (default `9`)
-* `dilation_size` - kernel size of the mask dilation (default `7`)
+* `dilation_size` - kernel size of the mask dilation (default `5`)
 
 ### slicemtz
 * `mtz` - input mtz-file
