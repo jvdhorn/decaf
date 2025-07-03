@@ -591,7 +591,7 @@ class Model():
       self.write_tls_colors()
 
     # Initialize environments
-    if correlate or regularize or self.n_model == 0:
+    if correlate or precorrelate_level or regularize or self.n_model == 0:
       self.init_environments(dist_cutoff=dist_cutoff,
                              rigid_only=rigid_only,
                              protein_only=protein_only,
@@ -725,8 +725,8 @@ class Model():
                   ).format(n+1,n+1,n+1, dist))
         out.write('color {}, visible and id {:d}\n'.format(col, n+1))
         out.write('color {}, _d{:d}\n'.format(col, n+1))
-        out.write('group d, _d*')
-        out.write('hide labels')
+      out.write('group d, _d*\n')
+      out.write('hide labels\n')
 
     # Calculate displacement dot products
     nchains = list(range(self.n_chains))
