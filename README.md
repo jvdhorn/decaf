@@ -92,7 +92,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz` - input mtz-file (can be multiple)
 * `lbl` - array of interest (default `IDFF`)
 * `log` - plot logarithmic distributions (default `True`)
-* `resolution` - set low and high resolution (eg `"3.6 3.4"`)
+* `resolution` - low and high resolution (eg `"3.6 3.4"`)
 
 ### ccmtz
 * `mtz_1` - first input mtz-file
@@ -111,7 +111,7 @@ Run any of the modules without arguments to get an overview of the available par
 ### mtzstats
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
-* `sg` - Space group for R-int (symbol or number, e.g. `P43212` or `96`)
+* `sg` - space group for R-int (symbol or number, e.g. `P43212` or `96`)
 
 ### stimpy3d
 * `mtz` - input mtz-file
@@ -127,11 +127,11 @@ Run any of the modules without arguments to get an overview of the available par
 ### mtz2txt
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
-* `resolution` - set low and high resolution (eg `"3.6 3.4"`)
+* `resolution` - low and high resolution (eg `"3.6 3.4"`)
 
 ### map2mtz
 * `map` - input map-file
-* `resolution` - set resolution limit (eg `2.0`)
+* `resolution` - resolution limit (eg `2.0`)
 
 ### filter_mtz
 * `mtz` - input mtz-file
