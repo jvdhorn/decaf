@@ -1913,9 +1913,9 @@ class Environments():
         write()
         write('ENVIRONMENT DETAILS.')
         write('  DISTANCE CUTOFF: {:.2f} A'.format(dist_cutoff))
-        write('  ATOMS INCLUDED: {}'.format(
-              'RIGID ONLY' if rigid_only else 'PROTEIN ONLY' if protein_only else 'ALL'
-              ))
+        write('  ATOMS INCLUDED: {}'.format('RIGID AND '*rigid_only + ('HBOND ONLY'
+              if hbond_only else 'HEAVY ONLY' if heavy_only else 'PROTEIN ONLY' if
+              protein_only else 'ALL')))
         write('  CHAIN A NEIGHBOURS: {}'.format(len(chain_ids)))
         write()
         for n, chain_id in enumerate(chain_ids):
