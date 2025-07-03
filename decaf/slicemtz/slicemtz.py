@@ -50,13 +50,15 @@ def sigma_cutoff(a, sigma):
   return values
 
 
-def expanddiag(a):
+def softexpand(a):
 
   with np.errstate(all='ignore'):
     a      = a.copy()
     offset = np.array(a.shape) // 2
     ind    = np.mgrid[tuple(map(slice, a.shape))].reshape(3,-1).T - offset
-    signs  = ind // abs(ind)
+    signs  = (ind/abs(ind).max(axis=1,keepdims=True)).round()
+    signs[np.isnan(signs)] = 0.
+    signs  = signs.astype(int)
     nans   = np.isnan(a)
     a[nans]= a[tuple((ind-signs+offset).T)][nans.ravel()]
 
@@ -153,7 +155,7 @@ def run(args):
              ).as_numpy_array().astype(int) + offset
     valid  = (((0,0,0) <= hkl) & (hkl < grid.shape)).all(axis=1)
     layer  = np.full(hkl.shape[0], np.nan)
-    layer[valid] = expanddiag(grid)[tuple(hkl[valid].T)]
+    layer[valid] = softexpand(grid)[tuple(hkl[valid].T)]
     layer  = layer.reshape(z.size, -1)
     nans   = np.isnan(layer)
     cell   = (1,1,1,90,90,90)
