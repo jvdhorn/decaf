@@ -91,7 +91,7 @@ class TLS_Level(dict):
            cmd = 'color {}, id {}\n'.format(color, atom.serial)
            pymol_script.write(cmd)
 
-def tls_from_csv(input_files, max_level, min_level, origin, cache, mult, log=None):
+def tls_from_csv(input_files, max_level, min_level, origin, cache, mult, zero_trace, log=None):
   
   tls_hierarchy = {}
   mat_files = {}
@@ -126,6 +126,7 @@ def tls_from_csv(input_files, max_level, min_level, origin, cache, mult, log=Non
                             s                = s,
                             amp              = amp,
                             mult             = mult,
+                            zero_trace       = zero_trace,
                             origin           = origin,
                             selection_string = selection_string,
                             selection        = selection,
@@ -141,7 +142,7 @@ def tls_from_csv(input_files, max_level, min_level, origin, cache, mult, log=Non
       tls_hierarchy[n_layer] = groups
   return tls_hierarchy
 
-def tls_from_pdb(input_files, max_level, min_level, cache, mult, log=None):
+def tls_from_pdb(input_files, max_level, min_level, cache, mult, zero_trace, log=None):
 
   tls_hierarchy = {}
   for i, file_name in enumerate(input_files):
@@ -160,6 +161,7 @@ def tls_from_pdb(input_files, max_level, min_level, cache, mult, log=None):
                           s                = group.s,
                           origin           = group.origin,
                           mult             = mult,
+                          zero_trace       = zero_trace,
                           selection_string = group.selection_string,
                           selection        = selection,
                           log              = log)
@@ -172,7 +174,7 @@ def tls_from_pdb(input_files, max_level, min_level, cache, mult, log=None):
       tls_hierarchy[n_layer] = groups
   return tls_hierarchy
 
-def tls_from_json(input_file, max_level, min_level, cache, mult, log=None):
+def tls_from_json(input_file, max_level, min_level, cache, mult, zero_trace, log=None):
 
   tls_hierarchy = {}
   with open(input_file) as json_in:
@@ -195,6 +197,7 @@ def tls_from_json(input_file, max_level, min_level, cache, mult, log=None):
                           s                = modes['S'],
                           amp              = list(modes['amplitudes'].values())[0],
                           mult             = mult,
+                          zero_trace       = zero_trace,
                           origin           = list(group['tls_origins'].values())[0],
                           selection_string = sele_str,
                           selection        = selection,
@@ -223,12 +226,13 @@ def write_b_factors_to_json(sequence, b_factors, file_name='ensemble_b.json'):
 class Manager():
 
   def __init__(self, tls_in, pdb_in, tls_origin, mult, max_level, min_level,
-               sc_size, seed_offset=0, reset_b=False):
+               sc_size, zero_trace, seed_offset=0, reset_b=False):
 
     self.input_files    = tls_in
     self.pdb_in         = pdb_in
     self.origin         = tls_origin
     self.mult           = mult
+    self.zero_trace     = zero_trace
     self.max_level      = max_level
     self.min_level      = min_level
     self.sc_size        = sc_size
@@ -247,6 +251,7 @@ class Manager():
         self.tls_hierarchy = tls_from_csv(input_files = self.input_files,
                                           origin      = self.origin,
                                           mult        = self.mult,
+                                          zero_trace  = self.zero_trace,
                                           cache       = self.base_cache,
                                           max_level   = self.max_level,
                                           min_level   = self.min_level,
@@ -255,6 +260,7 @@ class Manager():
         self.tls_hierarchy = tls_from_pdb(input_files = self.input_files,
                                           cache       = self.base_cache,
                                           mult        = self.mult,
+                                          zero_trace  = self.zero_trace,
                                           max_level   = self.max_level,
                                           min_level   = self.min_level,
                                           log         = log)
@@ -264,6 +270,7 @@ class Manager():
                                            max_level  = self.max_level,
                                            min_level  = self.min_level,
                                            mult       = self.mult,
+                                           zero_trace = self.zero_trace,
                                            log        = log)
       else:
         print('Unsupported file type')
@@ -2369,7 +2376,10 @@ class Collector():
 
 class TLS():
 
-  def __init__(self, t, l, s, origin, selection_string, selection, amp=1., mult=(1.,1.,1.), eps=1.e-6, log=None):
+  def __init__(self, t, l, s, origin, selection_string, selection, amp=1.,
+               zero_trace=False, mult=(1.,1.,1.), eps=1.e-6, log=None):
+
+    if zero_trace: s[0]=s[4]=s[8]=0
 
     self.log               = log
     self.eps               = eps
