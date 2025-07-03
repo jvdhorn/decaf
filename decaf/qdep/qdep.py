@@ -29,7 +29,7 @@ def run(args):
   unit_cell     = arr.crystal_symmetry().unit_cell().parameters()[:3]
   indices       = np.stack(np.meshgrid(*map(np.arange, grid.shape))).reshape(3,-1).T
   bragg         = indices[((indices - origin) % sc_size == 0).all(axis=1)]
-  ranges        = [dim if dim>0 else (sc-1)//2 for sc, dim in zip(sc_size,p.params.range)]
+  ranges        = [dim if dim>0 else max(2,(sc-1)//2) for sc, dim in zip(sc_size,p.params.range)]
   premask       = ~((bragg<ranges) ^ (-bragg+origin+origin<ranges)).any(axis=1)
   lower         = tuple(map(int, p.params.min or (bragg - origin).min(axis=0)))
   upper         = tuple(map(int, p.params.max or (bragg - origin).max(axis=0)))
