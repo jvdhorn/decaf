@@ -35,7 +35,19 @@ def run(args):
   first  = first.select(sel)
   first, second = first.common_sets(second, assert_is_similar_symmetry=False)
   print('Calculating correlation coefficients')
-  first.setup_binner(n_bins=p.input.bins)
+  bins   = first.setup_binner(n_bins=p.input.bins)
+  if p.input.subtract:
+    func = {'min': np.min, 'mean': np.mean}[p.input.subtract]
+    first_data  = first._data.as_numpy_array()
+    second_data = second._data.as_numpy_array()
+    for n in bins.range_all():
+      selection     = bins.array_indices(n).as_numpy_array()
+      first_select  = first_data[selection]
+      if first_select.size: first_data[selection] -= func(first_select)
+      second_select = second_data[selection]
+      if second_select.size: second_data[selection] -= func(second_select)
+    first._data  = flex.double(first_data)
+    second._data = flex.double(second_data)
   corr   = first.correlation(second, use_binning=True, assert_is_similar_symmetry=False)
   corr.show()
   ccall  = first.correlation(second, assert_is_similar_symmetry=False).coefficient()
