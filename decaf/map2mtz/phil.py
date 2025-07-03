@@ -20,7 +20,10 @@ def phil_parse(args=None):
           .help = 'Resolution range (or max if one value provided)'
         cutoff = None
           .type = float
-          .help = 'Cutoff value for valid intensities (minimum is used if nothing is provided)'
+          .help = 'Cutoff value for valid intensities'
+        center = False
+          .type = bool
+          .help = 'Put corner on origin'
       }
       output
         .help = "Output files"

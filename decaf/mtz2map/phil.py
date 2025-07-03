@@ -21,9 +21,9 @@ def phil_parse(args=None):
         resolution = 0
           .type = floats
           .help = 'Resolution range (or max if one value provided)'
-        fill = -1000
+        fill = None
           .type = float
-          .help = 'Cutoff value for valid intensities (minimum is used if nothing is provided)'
+          .help = 'Fill value'
       }
       output
         .help = "Output files"

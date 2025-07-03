@@ -22,7 +22,7 @@ def run(args):
   origin  = abs(ind).max(axis=0)
   shape   = 2 * origin + 1
   grid    = np.zeros(shape=shape, dtype=float)
-  grid[:] = p.input.fill
+  grid[:] = p.input.fill if p.input.fill is not None else min(data.min(),0)-1000
   grid[tuple((-ind + origin).T)] = data
   grid[tuple(( ind + origin).T)] = data
 
