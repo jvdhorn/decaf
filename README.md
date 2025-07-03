@@ -64,7 +64,7 @@ Run any of the modules without arguments to get an overview of the available par
 
 ### stimpy
 * `image` - raw image file
-* `polar` - polarization-corrected intermediate background
+* `radial` - polarization-corrected radial average
 * `bin_counts` - bin regions within this range of counts (default `1.0`)
 * `N` - expected number of independent rotations (default `1.0`)
 * `median_size` - kernel size of the median filter (default `9`)
