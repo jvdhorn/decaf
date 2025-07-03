@@ -97,6 +97,8 @@ Run any of the modules without arguments to get an overview of the available par
 * `sc_size` - size of the supercell for drawing Bragg positions (e.g. `"5 5 10"`)
 * `log` - plot log10 of the intensities (default `False`)
 * `min` and `max` - minimum and maximum values to plot
+* `autoscale` - decrease upper bound for more detail in skewed slices (default `True`)
+* `zoom` - zoom in around a given coordinate (`"[x] [y] [pad]"`, e.g. `"65 65 27"`)
 * `contours` - plot this many contours instead of raw values (e.g. `127`)
 * `center` - shift grid to put the corner in the center (default `False`)
 
