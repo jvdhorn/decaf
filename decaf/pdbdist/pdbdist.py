@@ -19,8 +19,9 @@ def run(args):
   calp = hier.select(sel)
   resi = [atom.parent().parent().resseq_as_int() for atom in
           calp.models()[p.params.chain].chains()[p.params.chain].atoms()]
-  lim  = p.params.limit_ca or max(resi)
-  sel  = flex.size_t([resi.index(n) for n in sorted(set(resi)) if n <= lim])
+  rrng = p.params.residue_range or [min(resi), max(resi)]
+  lo,hi= min(rrng), max(rrng)
+  sel  = flex.size_t([resi.index(n) for n in sorted(set(resi)) if lo <= n <= hi])
   resi = [resi[i] for i in sel]
   grid = []
 
@@ -29,14 +30,16 @@ def run(args):
     dmat = [(xyz - coord).dot()**0.5 for coord in xyz]
     grid.append(dmat)
 
-  grid = np.array(grid).std(axis=0)
+  mode = {'std':np.std, 'var':np.var, 'mean':np.mean}[p.params.mode]
+  grid = mode(np.array(grid), axis=0)
   grid[np.triu_indices(grid.shape[0],1)] = np.nan
 
-  lo, hi = min(resi), max(resi)
   for n in range(lo, hi):
     if n not in resi:
       grid = np.insert(grid, n-lo, np.nan, axis=0)
       grid = np.insert(grid, n-lo, np.nan, axis=1)
+
+  mlbl = {'std':'standard deviation', 'var':'variance', 'mean':'mean'}[p.params.mode]
 
   fig, ax = plt.subplots(figsize=(5,4))
   im = ax.imshow(grid, origin='lower', vmin=p.params.min, vmax=p.params.max,
@@ -47,8 +50,10 @@ def run(args):
   ax.set_xlabel('Residue number')
   ax.set_ylabel('Residue number')
   cb = fig.colorbar(im)
-  cb.set_label('C$_{\\alpha}$ distance standard deviation ($\mathrm{\AA}$)')
+  cb.set_label('C$_{\\alpha}$ distance '+mlbl+' ($\mathrm{\AA}'
+               +'^{2}'*(p.params.mode in {'var'})+'$)')
   fig.tight_layout()
+  ax.set_yticks([t for t in ax.get_xticks() if lo <= t <= hi])
   plt.savefig(p.output.png_out, dpi=300)
 
   if p.params.show:
