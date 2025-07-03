@@ -921,7 +921,7 @@ class Model():
     L,D = shifts.shape
     if hasattr(self, 'environments'):
       indices = np.array(self.environments.indices)
-      weights = np.array(map(len, self.environments.dstlist)) ** weight_exp
+      weights = np.array(list(map(len, self.environments.dstlist))) ** weight_exp
     else:
       points = (points * self.fractmat).as_numpy_array() % 1
       N   = min(12, L-1)
@@ -972,7 +972,7 @@ class Model():
     indices = np.array(self.environments.indices)
     inverse = np.array(self.environments.inverse)
     translt = np.array(self.environments.translt)
-    weights = np.array(map(len, self.environments.dstlist)) ** weight_exp
+    weights = np.array(list(map(len, self.environments.dstlist))) ** weight_exp
     all_contacts = []
     for chain in self.working_chains:
       all_contacts.append(
@@ -1067,7 +1067,7 @@ class Model():
                self.environments.get_indices(n_level).items() if any(array)}
     translt = {i: np.array(array) for i, array in
                self.environments.get_translt(n_level).items()}
-    weights = {i: np.array(map(len,array)) ** weight_exp for i, array in
+    weights = {i: np.array(list(map(len,array))) ** weight_exp for i, array in
                self.environments.get_dstlist(n_level).items()}
     weights = {i: array.reshape(-1,1)/array.sum() for i, array in weights.items()}
     grpsort = self.environments.get_grpsort(n_level)
