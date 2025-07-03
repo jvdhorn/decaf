@@ -10,8 +10,11 @@ def run(args):
   p           = scope.extract().patterson
   print('Reading', p.input.mtz)
   obj    = mtz.object(p.input.mtz)
-  first  = obj.crystals()[0].miller_set(False).array(obj.get_column(
-           p.input.lbl).extract_values().as_double())
+  lores  = max(p.input.resolution)
+  hires  = min(p.input.resolution)
+  if lores == hires: lores = float('inf')
+  first  = obj.crystals()[0].miller_set(False).array(obj.get_column(p.input.lbl
+           ).extract_values().as_double()).resolution_filter(lores, hires)
 
   if p.params.bins > 0:
     print('Subtracting resolution shell means')
