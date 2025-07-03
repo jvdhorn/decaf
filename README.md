@@ -105,11 +105,11 @@ Run any of the modules without arguments to get an overview of the available par
 
 ### submtz
 * `mtz_1` - first input mtz-file
-* `mtz_2` - second input mtz-file
+* `mtz_2` - second input mtz-file (can be multiple)
 * `lbl_1` - first array of interest (default `IDFF`)
 * `lbl_2` - second array of interest (default `IDFF`)
 * `mode` - use a different operator (`sub`, `add`, `mul` or `div`, default `sub`)
-* `scale` - scale factor for second mtz-file (default `1.0`)
+* `scale` - scale factor for second mtz-file (`0` for autoscale, default `1.0`)
 
 ### plotmtz
 * `mtz` - input mtz-file (can be multiple)
