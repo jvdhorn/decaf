@@ -19,18 +19,26 @@ def run(args):
   first  = obj.crystals()[0].miller_set(False).array(obj.get_column(p.input.lbl
            ).extract_values().as_double()).resolution_filter(lores, hires)
   npdata = first.data().select(first.data() > p.input.cutoff).as_numpy_array()
+
+  # Determine number of local maxima
   ind    = first.indices().as_vec3_double().as_numpy_array().astype(int)
   offset = abs(ind).max(axis=0) + 1
   grid   = np.full(offset * 2 + 1, npdata.min()-1)
   grid[tuple((offset+ind).T)] = npdata
   grid[tuple((offset-ind).T)] = npdata
-  maxima = (ndimage.maximum_filter(grid, 3) == grid)[tuple((offset+ind).T)].sum()
+  ksize  = p.params.size if len(p.params.size) == 3 else p.params.size[0]
+  fgrid  = ndimage.maximum_filter(grid, ksize, mode='constant', cval=grid.min())
+  maxima = (grid == fgrid)[tuple((offset+ind).T)].sum()
+
+  # Determine other stats 
   norm   = (npdata - npdata.min()) / (npdata.max() - npdata.min())
   rmsc   = norm.std()
   spcont = npdata.var() / npdata.mean() ** 2
   distr  = np.histogram(npdata, bins=p.params.bins)[0] / npdata.size
   distr  = distr[distr > 0]
   entropy= -sum(distr * np.log(distr))
+
+  # Output
   print('Space group     :', first.space_group_info().symbol_and_number())
   print('Resolution range:', *map('{:.5f}'.format,first.resolution_range()))
   print('Min max indices :', *first.min_max_indices())
