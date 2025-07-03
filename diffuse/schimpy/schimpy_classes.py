@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 from scitbx import matrix
 from cctbx import adptbx, crystal, geometry_restraints, xray
-from mmtbx.tls import analysis, tools
+from mmtbx.tls import analysis, tools, tls_as_xyz
 from mmtbx.command_line.fmodel import fmodel_from_xray_structure_master_params
 from mmtbx.utils import fmodel_from_xray_structure
 from mmtbx.model import manager as model_manager_base
@@ -14,6 +14,7 @@ from smtbx.utils import connectivity_table
 import scitbx
 import iotbx
 import numpy as np
+import random
 import csv
 import json
 import multiprocessing as mp
@@ -145,14 +146,15 @@ def tls_from_csv(input_files, max_level, min_level, origin, cache, mult, log=Non
 def tls_from_pdb(input_files, max_level, min_level, cache, mult, log=None):
 
   tls_hierarchy = {}
-  for file_name in input_files:
-    n_layer = n_from_file_name(file_name)
+  for i, file_name in enumerate(input_files):
+    n_layer = i + 1
     if n_layer >= min_level and (n_layer <= max_level or max_level == -1):
       groups = TLS_Level()
       pdb_inp = iotbx.pdb.input(file_name = file_name)
       pdb_hierarchy = pdb_inp.construct_hierarchy()
       tls_params = pdb_inp.extract_tls_params(pdb_hierarchy).tls_params
-      for n, group in enumerate(tls_params):
+      for j, group in enumerate(tls_params):
+        n = j + 1
         selection   = cache.selection(group.selection_string)
         try:
           groups[n] = TLS(t                = group.t,
@@ -533,6 +535,7 @@ class Model():
                              heavy_only=heavy_only,
                              use_com_midpoint=use_com_midpoint,
                              inherit_contacts=inherit_contacts,
+                             need_restraints=regularize,
                              contact_level=contact_level)
 
     # Introduce shifts
@@ -854,6 +857,7 @@ class Model():
   def seed(self, seed=None):
 
     np.random.seed(seed)
+    random.seed(seed)
 
   def all_move_in_position(self):
     
@@ -1325,7 +1329,7 @@ class Model():
   def init_environments(self, dist_cutoff=3., rigid_only=False,
                         protein_only=True, heavy_only=False,
                         use_com_midpoint=False, inherit_contacts=True,
-                        contact_level=-1):
+                        contact_level=-1, need_restraints=False):
 
     self.environments = Environments(chains            = self.working_chains,
                                      crystal_symmetry  = self.sc_symm,
@@ -1339,6 +1343,7 @@ class Model():
                                      use_com_midpoint  = use_com_midpoint,
                                      inherit_contacts  = inherit_contacts,
                                      contact_level     = contact_level,
+                                     need_restraints   = need_restraints,
                         )
 
   def regularize(self, environments=False, special=None):
@@ -1374,7 +1379,7 @@ class Environments():
                inherit_contacts  = True,
                contact_level     = -1,
                write_environment = False,
-               write_pymol_stuff = False,
+               need_restraints   = False,
                log               = None):
 
     self.chains   = chains
@@ -1777,12 +1782,15 @@ class Environments():
                      )
 
     # Get restraints manager
-    self.restraints_manager     = model_manager(
+    if need_restraints:
+      self.restraints_manager     = model_manager(
                                     model_input      = None,
                                     pdb_hierarchy    = hierarchy,
                                     crystal_symmetry = cs_environment,
                                     log              = open(os.devnull,'w')
-                                  ).get_restraints_manager()
+                                    ).get_restraints_manager()
+    else:
+      self.restraints_manager = None
     
     # Write files with mean positions, environments and intermolecular dashes
     if write_environment:
@@ -1831,27 +1839,6 @@ class Environments():
       hier_copy.write_pdb_file('environment.pdb',
                                crystal_symmetry=base_symmetry,
                                open_append=True)
-    if write_pymol_stuff:
-      # Construct shared_bond_simple_proxy for pymol dashes
-      shared_bond_simple_proxy = geometry_restraints.shared_bond_simple_proxy()
-      for proxy in self.restraints_manager.geometry.pair_proxies().nonbonded_proxies.simple:
-        i,j = proxy.i_seqs
-        if i//xyz.size() != j//xyz.size():
-          shared_bond_simple_proxy.append(
-            geometry_restraints.bond_simple_proxy(
-              i_seqs         = proxy.i_seqs,
-              distance_ideal = proxy.vdw_distance,
-              weight         = 1
-            )
-          )
-      with open('environment_intermolecular_dashes.pml','w') as dashes:
-        dashes.write(shared_bond_simple_proxy.as_pymol_dashes(hierarchy))
-      with open('means.pdb','w') as means:means.write(xrs.as_pdb_file())
-      for chain in hierarchy.models()[0].chains():
-        chain.atoms()[0].xyz = chain.atoms().extract_xyz().mean()
-      hierarchy.select(
-        flex.size_t_range(0,hierarchy.atoms().size(),xyz.size())
-      ).write_pdb_file('environment_means.pdb')
 
   def get_contact(self, n_level):
 
@@ -2166,35 +2153,12 @@ class Modifier():
     self.residues = set(atom.fetch_labels().resseq_as_int() for atom in self.atoms)
     self.contacts = flex.size_t()
 
-  def step_i__get_dxdydz(self):
-
-    """
-    Generation of shifts from screw rotations.
-    """
-    dx0, dy0, dz0 = 0, 0, 0
-    if(abs(self.r.dx)>self.eps): dx0 = np.random.normal(0,self.r.dx)
-    if(abs(self.r.dy)>self.eps): dy0 = np.random.normal(0,self.r.dy)
-    if(abs(self.r.dz)>self.eps): dz0 = np.random.normal(0,self.r.dz)
-    return matrix.col((dx0, dy0, dz0))
-  
-  def formula_49(self):
-
-    """
-    Generate shifts from group translation.
-    """
-    tx0, ty0, tz0 = 0, 0, 0
-    if(self.r.tx>self.eps): tx0 = np.random.normal(0,self.r.tx)
-    if(self.r.ty>self.eps): ty0 = np.random.normal(0,self.r.ty)
-    if(self.r.tz>self.eps): tz0 = np.random.normal(0,self.r.tz)
-    d_r_V = matrix.col((tx0,ty0,tz0))
-    return self.r.R_MV * d_r_V
-
   def set_random(self, amp=1.):
 
     coordinates       = self.base_coordinates()
     sites_cart        = coordinates - self.origin
-    d0                = self.step_i__get_dxdydz() * self.amp * amp
-    d_r_M_V           = self.formula_49()         * self.amp * amp
+    d0                = matrix.col(tls_as_xyz.step_i__get_dxdydz(self.r, None)) * self.amp * amp
+    d_r_M_V           = tls_as_xyz.formula_49(self.r, None) * self.amp * amp
     new_coordinates   = apply_tls_shifts(
       sites_cart      = sites_cart,
       R_ML_transposed = self.r.R_ML.transpose(),
@@ -2428,16 +2392,7 @@ class TLS():
     self.origin            = origin
     self.selection_string  = selection_string
     self.selection         = selection
-    self.analyze()
 
-  def analyze(self):
-
-    # NPD check
-    if(not adptbx.is_positive_definite(self.T.as_sym_mat3(), self.eps)):
-      raise Sorry("T matrix is not positive definite.")
-    if(not adptbx.is_positive_definite(self.L.as_sym_mat3(), self.eps)):
-      raise Sorry("L matrix is not positive definite.")
-    # Create tls_from_motions object (r)
     try:
       self.r = analysis.run(T              = self.T,
                             L              = self.L,

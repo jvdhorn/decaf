@@ -7,7 +7,7 @@ A Python package for simulating diffuse scattering of X-rays in protein crystals
 * matplotlib
 
 # Usage
-Make sure `cctbx.python` is available.
+Make sure `cctbx.python` is available, which can be obtained [here](https://github.com/cctbx/cctbx_project?tab=readme-ov-file#installation).
 
 Clone the repository
 ```
