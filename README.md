@@ -84,7 +84,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `dilation_size` - kernel size of the mask dilation (default `5`)
 
 ### slicemtz
-* `mtz` - input mtz-file
+* `mtz` - input mtz or map-file
 * `lbl` - array of interest (default `IDFF`)
 * `slice` - desired slice to plot (default `hk0`)
 * `save` - save image as high-res PNG instead of plotting (default `False`)
