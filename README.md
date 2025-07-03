@@ -52,7 +52,8 @@ Run any of the modules without arguments to get an overview of the available par
 ## Most important command-line parameters
 ### schimpy
 * `pdb_in` - refined structure file (pdb)
-* `tls_in` - result of the ECHT B-factor distribution (json)
+* `tls_in` - result of the [ECHT](https://www.nature.com/articles/s41467-021-25814-x) B-factor distribution (json)
+  - if not provided, refined TLS-matrices are extracted from `pdb_in` (if available)
 * `sc_size` - size of the supercell (e.g. `"5 5 10"`)
 * `correlate` - enable or disable correlation of TLS-groups (default `True`)
 * `stretch` - stretch parameter for the anchor points (default `0.25`)
