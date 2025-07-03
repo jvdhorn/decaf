@@ -44,6 +44,7 @@ def run(args):
 
   # Plot distribution
   plt.close()
+  plt.figure(figsize=(16/3,4))
   scf = ticker.ScalarFormatter()
   scf.set_powerlimits((-2,2))
   scf.set_useMathText(True)
