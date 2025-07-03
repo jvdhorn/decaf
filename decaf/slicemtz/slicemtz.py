@@ -78,19 +78,19 @@ def run(args):
   if p.params.mode != 'sum':
     name += p.params.mode
   with np.errstate(all='ignore'):
-    if p.params.mode == 'front':
+    if p.params.mode == 'solid':
       def func(a, axis):
         sel = np.argmax(~np.isnan(slab),axis)[(slice(None),)*axis+(None,)]
         return np.take_along_axis(slab, sel, axis).squeeze(axis)
     else:
-      func  = getattr(np, 'nan' + p.params.mode)
+      func = getattr(np, 'nan' + p.params.mode)
     layer = func(slab, axis=dim).T
     nans  = np.isnan(slab).all(axis=dim).T
     layer[nans] = np.nan
 
   # Construct projection
   if p.params.projection:
-    width  = 721
+    width  = p.params.width // 4 * 4 + 1
     if p.params.projection == 'gp':
       phi  = np.arcsin(np.linspace(-1, 1, int(width // np.pi * 2 + 1)))
     elif p.params.projection == 'eq':
@@ -102,12 +102,10 @@ def run(args):
     z      = np.sin(phi)
     xyz    = np.hstack((np.outer((1-z*z)**0.5, xy).view(float).reshape(-1,2),
                         z.repeat(xy.size)[...,None])) * radius
-    if 'hk' in p.params.slice:
-      pass
-    elif 'kl' in p.params.slice:
-      xyz = xyz[:,(1,2,0)]
-    else:
+    if   dim == 0:
       xyz = xyz[:,(2,0,1)]
+    elif dim == 1:
+      xyz = xyz[:,(1,2,0)]
     hkl    = frac(flex.vec3_double(xyz)).as_numpy_array().astype(int) + offset
     layer  = grid[tuple(hkl.T)].reshape(z.size, -1)
     nans   = np.isnan(layer)
@@ -184,8 +182,8 @@ def run(args):
     mask[:,y//2] = 1.
     mask[x//2,:] = 1.
     if p.params.projection:
-      mask[:,y//4    ] = 1.
-      mask[:,y//4 * 3] = 1.
+      mask[:,y  //4] = 1.
+      mask[:,y*3//4] = 1.
 
   # Trim mask to convex hull
   if mask.any():
