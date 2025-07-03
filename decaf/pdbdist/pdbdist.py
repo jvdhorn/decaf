@@ -155,8 +155,8 @@ def run(args):
   fig, ax = plt.subplots(figsize=(5,4))
   im = ax.imshow(grid, origin='lower', vmin=p.params.min, vmax=p.params.max,
                  extent=(lo-.5,hi+.5,lo-.5,hi+.5), cmap=cmap)
-  ax.xaxis.set_ticks_position('top')
-  ax.xaxis.set_label_position('top')
+  ax.xaxis.set_ticks_position(p.params.xlabel)
+  ax.xaxis.set_label_position(p.params.xlabel)
   ax.set_frame_on(False)
   ax.set_xlabel('Residue number')
   ax.set_ylabel('Residue number')
