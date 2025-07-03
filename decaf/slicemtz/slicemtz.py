@@ -375,7 +375,7 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
   scf.set_powerlimits((-2,2))
   scf.set_useMathText(True)
   bar = fig.colorbar(im, cax=cax, format=scf)
-  bar.ax.tick_params(width=2. * scale, size=6. * scale, labelsize=22. * scale)
+  bar.ax.tick_params(width=2. * scale, size=8. * scale, labelsize=22. * scale)
   bar.ax.yaxis.get_offset_text().set(size=22. * scale)
   bar.ax.yaxis.get_offset_text().set_position((0, 0))
 
