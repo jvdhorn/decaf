@@ -19,13 +19,13 @@ def log10(value):
 
 class Hull(spatial.ConvexHull):
 
-  def filter(self, pts):
+  def mask_inside(self, pts):
 
     mask = np.array(
              [np.dot(eq[:-1], pts.T) + eq[-1] < 1e-12 for eq in self.equations]
            ).T.all(axis=1).ravel()
 
-    return pts[mask]
+    return mask
 
 
 def run(args):
@@ -139,16 +139,21 @@ def run(args):
   if p.params.sc_size is not None:
     sc_size = list(p.params.sc_size)
     sc_size.pop(dim)
-    hull  = Hull(np.array(np.where(~nans)).T)
     b_ind = np.array(np.meshgrid(*map(range, mask.shape))).reshape(2,-1).T
     b_ind = b_ind[((b_ind-off2d) % sc_size[::-1] == 0).all(axis=1)]
-    mask[tuple(hull.filter(b_ind).T)] = 1.
+    mask[tuple(b_ind.T)] = 1.
 
   # Overlay axes
   if p.params.axes:
-    x, y   = mask.shape
+    x, y  = mask.shape
     mask[:,y//2] = 1.
     mask[x//2,:] = 1.
+
+  # Trim mask to convex hull
+  if mask.any():
+    hull  = Hull(np.array(np.where(~nans)).T)
+    where = np.array(np.where(mask)).T
+    mask[tuple(where[~hull.mask_inside(where)].T)] = np.nan
 
   # Trim
   i, j = off2d
