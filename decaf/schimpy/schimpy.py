@@ -185,8 +185,9 @@ def model_worker(n_model):
       print('Collecting shifts {}'.format(n_model))
       model.shifts_collected = collector.shifts_collect(model.shifts_total, model.n_chains)
 
-    if n_model == 0 and p.input.max_level > 0:
-      model.write_com_displacements()
+    if n_model == 0:
+      print('Writing visualizations for {}'.format(n_model))
+      model.write_com_displacements(scale=p.output.scale_displacements)
       model.write_all_environments()
 
     if keep: model.add_coms_to_hierarchy()
