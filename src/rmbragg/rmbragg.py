@@ -11,7 +11,9 @@ def run(args):
 
 def main(args, log):
 
-  p             = phil.phil_parse(args = args).rmbragg
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().rmbragg
   print('Reading', p.input.mtz_1)
   keep          = p.params.keep
   sc_size       = list(map(int, p.params.sc_size))

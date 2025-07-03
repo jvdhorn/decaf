@@ -11,7 +11,9 @@ def run(args):
 
 def main(args, log):
 
-  p      = phil.phil_parse(args = args).pdbrad
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().pdbrad
   print('Reading', p.input.pdb)
   inp    = pdb.input(p.input.pdb)
   hier   = inp.construct_hierarchy()

@@ -11,7 +11,9 @@ def run(args):
 
 def main(args, log):
 
-  p      = phil.phil_parse(args = args).mtzstats
+  scope       = phil.phil_parse(args = args)
+  if not args: scope.show(attributes_level=2); return
+  p           = scope.extract().mtzstats
   print('Reading', p.input.mtz_1)
   obj    = mtz.object(p.input.mtz_1)
   first  = obj.crystals()[0].miller_set(False).array(obj.get_column(
