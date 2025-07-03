@@ -182,7 +182,7 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, d
   plt.rc('font', size=scale*11.)
   figsize = 8 * scale, 6 * scale
   fig, (ax, dx, cax, pad) = plt.subplots(1,4,figsize=figsize,
-    gridspec_kw={'width_ratios':[0.85, 0.04, 0.03, 0.08], 'wspace':0})
+    gridspec_kw={'width_ratios':[0.85, 0.04, 0.03, 0.08], 'wspace':0, 'hspace':0})
   fig.tight_layout()
   ax.set_axis_off()
   dx.set_axis_off()
@@ -203,6 +203,8 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, d
     for p, c in zip(patches, clrs): p.set_facecolor(c)
     dx.margins(x=0, y=.001)
     dx.invert_xaxis()
+    pos = dx.get_position()
+    dx.set_position([pos.x0, pos.y0-.025, pos.width, pos.height])
 
   # Plot image
   j,i = np.array(layer.shape) // 2
@@ -240,8 +242,13 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip, cnt, scale, rep, d
 
   # Plot colorbar
   scf = ticker.ScalarFormatter()
-  scf.set_powerlimits((-3,3))
+  scf.set_powerlimits((-2,2))
+  scf.set_useMathText(True)
   bar = fig.colorbar(im, cax=cax, format=scf)
-  bar.ax.tick_params(width=scale, size=4.*scale)
+  bar.ax.tick_params(width=2*scale, size=8.*scale, labelsize=22. * scale)
+  bar.ax.yaxis.get_offset_text().set(size=22. * scale)
+  bar.ax.yaxis.get_offset_text().set_position((0, 0))
+  pos = bar.ax.get_position()
+  bar.ax.set_position([pos.x0, pos.y0-.025, pos.width, pos.height])
 
   return fig
