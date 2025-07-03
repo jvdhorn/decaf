@@ -83,7 +83,7 @@ def run(args):
 
   # Plot all traces
   for chain, arg in zip(chains, files):
-    if arg == 'skip': colors(); continue
+    if arg.startswith('skip'): colors(); continue
 
     x, y, label = interpret_reduce(arg, chain)
 
