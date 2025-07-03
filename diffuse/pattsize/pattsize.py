@@ -48,20 +48,10 @@ def main(args, log):
   i, j = next((i-1, i) for i, j in enumerate(y) if j <= lim)
   size = (y[i] - lim) / (y[i] - y[j]) * p.input.binsize + x[i]
 
-  func = None
-  '''
-  func = lambda x, a, b, c, d, e: a * np.exp(-x/b) + c * np.exp(-x/d) + e
-  popt, pcov = curve_fit(func, x, np.log(y))
-  size = minimize_scalar(lambda x: (func(x, *popt) - np.log(lim)) ** 2).x
-  print('Fit:', *('{}={:.2f};'.format(n,v)
-                  for n, v in zip(func.__code__.co_varnames[1:], popt)))
-  '''
-
   print('Estimated object size:', size)
 
   plt.title('Patterson map intensity distribution')
   plt.plot(x, y, label='Mean absolute intensity in shell')
-  if func: plt.plot(x, np.exp(func(x, *popt)), label='$f(x)=ae^{-x/b}+be^{-x/d}$ fit')
   plt.axhline(lim, color='C6', label='Intensity cutoff ({:.1f}$\sigma$)'.format(p.input.sigma))
   plt.vlines(size, 0, lim, linestyle='dashed')
   plt.yscale(p.input.scale)
