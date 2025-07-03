@@ -148,6 +148,7 @@ def model_worker(n_model):
                       uncorrelate=p.correlation.uncorrelate,
                       percentile=p.correlation.energy_percentile,
                       skip=p.correlation.skip_levels,
+                      override=p.correlation.override_weights,
                       max_level=p.input.max_level,
                       rigid_only=p.environments.rigid_only,
                       protein_only=p.environments.protein_only,

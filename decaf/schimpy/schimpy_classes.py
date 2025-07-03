@@ -463,6 +463,7 @@ class Model():
                   disallow_good_frac=0.,
                   pairs_frac=1.,
                   skip=(),
+                  override=None,
                   require_both=False,
                   uncorrelate=False,
                   percentile=0,
@@ -556,7 +557,7 @@ class Model():
                                  abf=allow_bad_frac, dgf=disallow_good_frac,
                                  require_both=require_both, uncorrelate=uncorrelate,
                                  percentile=percentile, stretch=stretch, 
-                                 pairs_frac=pairs_frac, skip=skip)
+                                 pairs_frac=pairs_frac, skip=skip, override=override)
       else:
         self.all_set_random(amp=amp, max_level=correlate_after, reverse=reverse)
         if correlate:
@@ -1065,7 +1066,8 @@ class Model():
 
   def optimize_level(self, n_level, weight_exp=2., spring_weights=2., seq=0, iso=0,
                      allow_bad_frac=0., disallow_good_frac=0., require_both=False,
-                     uncorrelate=False, percentile=0, stretch=1., pairs_frac=1.):
+                     uncorrelate=False, percentile=0, stretch=1., pairs_frac=1., 
+                     override=None):
 
     contact = np.array(self.environments.get_contact(n_level))
     conshft = np.array(self.environments.get_conshft(n_level))
@@ -1081,6 +1083,10 @@ class Model():
 
     exp     = spring_weights / 2.
     chains  = self.working_chains
+
+    if override is not None:
+      weights = {i: np.array((override+[0]*len(w))[:len(w)])[...,None]
+                 for i,w in weights.items()}
 
     for chain in chains:
       for n_group, mod in chain.mod_hierarchy[n_level].items():
@@ -1182,14 +1188,14 @@ class Model():
 
   def correlate_level(self, n_level, weight_exp=2., spring_weights=2., seq=0, iso=0,
                       abf=0., dgf=0., require_both=False, uncorrelate=False,
-                      percentile=0, stretch=1., pairs_frac=1.):
+                      percentile=0, stretch=1., pairs_frac=1., override=None):
 
     orders = self.optimize_level(n_level, weight_exp=weight_exp,
                                  spring_weights=spring_weights, seq=seq, iso=iso,
                                  allow_bad_frac=abf, disallow_good_frac=dgf,
                                  require_both=require_both, uncorrelate=uncorrelate,
                                  percentile=percentile, stretch=stretch,
-                                 pairs_frac=pairs_frac)
+                                 pairs_frac=pairs_frac, override=override)
 
     for n_group, order in orders.items():
       done = set()
@@ -1203,7 +1209,7 @@ class Model():
   def shift_and_correlate(self, amp=1.0, weight_exp=2., spring_weights=2.,
                           seq=0, iso=0, reverse=False, abf=0., dgf=0.,
                           require_both=False, uncorrelate=False, percentile=0,
-                          stretch=1., pairs_frac=1., skip=()):
+                          stretch=1., pairs_frac=1., skip=(), override=None):
 
     levels = sorted(self.tls_hierarchy.keys())
     levels = [lvl for lvl in levels if lvl <= self.max_level or self.max_level < 0]
@@ -1215,7 +1221,7 @@ class Model():
         self.correlate_level(n_level, weight_exp=weight_exp, spring_weights=spring_weights,
                              seq=seq, iso=iso, abf=abf, dgf=dgf, require_both=require_both,
                              uncorrelate=uncorrelate, percentile=percentile, stretch=stretch,
-                             pairs_frac=pairs_frac)
+                             pairs_frac=pairs_frac, override=override)
 
   def random_analysis(self, amp=1.0):
 
