@@ -7,11 +7,11 @@ If you use this software, please cite the following paper:
 TBC
 
 # Requirements
-* [phenix/cctbx](https://github.com/cctbx/cctbx_project?tab=readme-ov-file#installation): runs in cctbx.python (2.7.x / 3.x) and depends on cctbx modules
+* [phenix/cctbx](https://github.com/cctbx/cctbx_project?tab=readme-ov-file#computational-crystallography-toolbox): runs in cctbx.python (2.7.x / 3.x) and depends on cctbx modules
 * [dials/dxtbx](https://github.com/dials/dxtbx?tab=readme-ov-file#diffraction-experiment-toolbox): used for reading crystallographic image files
-* numpy
-* scipy
-* matplotlib
+* [numpy](https://github.com/numpy/numpy?tab=readme-ov-file)
+* [scipy](https://github.com/scipy/scipy?tab=readme-ov-file)
+* [matplotlib](https://github.com/matplotlib/matplotlib?tab=readme-ov-file)
 
 # Usage
 Make sure `cctbx.python` is available and the `dxtbx` package is installed.
