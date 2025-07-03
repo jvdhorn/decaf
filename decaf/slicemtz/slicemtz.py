@@ -320,6 +320,7 @@ def run(args):
   dstr = p.params.distribution
   loc  = p.params.position
   fs   = p.output.figscale
+  omap = p.params.overlay
 
   if not p.params.label:
     label = ''
@@ -331,13 +332,13 @@ def run(args):
 
   if p.params.save:
     fig  = plot_layer(layer, mask, low, high, cmap, ang, asp,
-                      clip, cnt, fs, dstr, inset, ext, loc, label)
+                      clip, cnt, fs, dstr, inset, ext, omap, loc, label)
     name = p.output.png_out or p.input.mtz.replace('.mtz', name+'.png')
     fig.savefig(name)
 
   else:
     fig = plot_layer(layer, mask, low, high, cmap, ang, asp,
-                     clip, cnt, 1, dstr, inset, ext, loc, label)
+                     clip, cnt, 1, dstr, inset, ext, omap, loc, label)
     plt.show()
 
 
@@ -351,7 +352,8 @@ def data_to_axes(ax, xy):
     return ax.transAxes.inverted().transform(ax.transData.transform(xy))
 
 
-def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
+def plot_section(ax, layer, mask, vmin, vmax, asp,
+                 cmap, cnt, ang, clip, ext, omap):
 
   # Dummy plot
   im  = ax.imshow(layer, cmap=cmap, alpha=0, vmin=vmin, vmax=vmax, aspect=asp,
@@ -389,7 +391,9 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
 
   # Plot axes and Bragg positions
   if not np.isnan(mask).all():
-    ax.imshow(mask, cmap='binary_r', transform=trans, aspect=asp,
+    rgb = colors.to_rgb(omap.lower())
+    col = colors.LinearSegmentedColormap.from_list('',[omap]*2)
+    ax.imshow(mask, cmap=col, transform=trans, aspect=asp,
               origin='lower', extent=ext, interpolation='none', zorder=1)
 
   # Set plot limits
@@ -417,8 +421,8 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
   return im
 
 
-def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
-               clip, cnt, scale, dstr, inset, ext, loc, label):
+def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip,
+               cnt, scale, dstr, inset, ext, omap, loc, label):
 
   plt.close()
   plt.rc('font', size=5. * scale)
@@ -453,7 +457,8 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp,
     dx.invert_xaxis()
 
   # Plot data
-  im = plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext)
+  im = plot_section(ax, layer, mask, vmin, vmax, asp,
+                    cmap, cnt, ang, clip, ext, omap)
 
   # Plot inset
   if inset is not None:
