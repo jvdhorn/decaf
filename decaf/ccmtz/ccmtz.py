@@ -40,7 +40,7 @@ def run(args):
   else:
     sel  = first.data() > np.percentile(first.data().as_numpy_array(), 100 - perc)
   first  = first.select(sel)
-  first, second = first.common_sets(second)
+  first, second = first.common_sets(second, assert_is_similar_symmetry=False)
   print('Calculating correlation coefficients')
   first.setup_binner(n_bins=p.input.bins)
   corr   = first.correlation(second, use_binning=True, assert_is_similar_symmetry=False)

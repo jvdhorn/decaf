@@ -24,7 +24,7 @@ def run(args):
     second  = obj.crystals()[0].miller_set().array(obj.get_column(
               p.input.lbl_2).extract_values().as_double())
     second = second.select(second.data() > p.params.cutoff)
-    first, second = first.common_sets(second)
+    first, second = first.common_sets(second, assert_is_similar_symmetry=False)
     if p.params.scale == 0:
       scale = fscale / flex.sum(second.data() ** 2)**.5
       print('Using scale factor', scale)
