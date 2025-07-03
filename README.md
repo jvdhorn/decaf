@@ -17,12 +17,12 @@ Clone the repository
 git clone https://github.com/jvdhorn/decaf
 ```
 
-Add package to `PATH` with
+Update `PATH` and `PYTHONPATH`
 ```
 source source_env.sh
 ```
 
-Optional: install package with
+Optional: install package
 ```
 cctbx.python -m pip install .
 ```
