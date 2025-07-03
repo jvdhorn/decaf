@@ -78,7 +78,7 @@ def phil_parse(args=None):
           .help = 'Supercell size; draw Bragg positions when given'
         zoom = None
           .type = floats
-          .help = 'Zoom around index: "x, y, [number of voxels to pad]"'
+          .help = 'Zoom around index: "x, y, [number of voxels to pad]", can be fractional'
         inset = None
           .type = floats
           .help = 'Create inset with zoom around index, using zoom syntax'
@@ -88,7 +88,7 @@ def phil_parse(args=None):
         dotsize = 1
           .type = int
           .help = 'Width of the axes and Bragg position indicators (higher = thinner)'
-        filter_size = 0
+        filter = 0
           .type = int
           .help = 'Before plotting, apply Gaussian filter with this sigma'
         fmode = *gaussian gausslap uniform min max median
