@@ -4,6 +4,8 @@ from iotbx import pdb
 from . import phil
 import numpy as np
 
+biso_const = (8./3) * (np.pi ** 2)
+
 def run(args):
 
   scope       = phil.phil_parse(args = args)
@@ -15,6 +17,9 @@ def run(args):
   if p.input.models:
     for model in hier.models()[p.input.models:]:
       hier.remove_model(model)
+
+  if len(hier.models()) < 2:
+    print('Please provide multistate PDB'); return
 
   # Reduce to common atoms
   common = set()
@@ -36,24 +41,17 @@ def run(args):
   means *= 1./len(hier.models())
 
   print('Calculating covariances')
-  adps   = []
-  isos   = []
-  for i_atom, mean in enumerate(means):
+  for i_atom, atom in enumerate(hier.models()[0].atoms()):
     M = np.array([model.atoms()[i_atom].xyz for model in hier.models()]
-                 ).reshape(-1,3) - [mean]
-    cov = sum((np.dot(k[:,None],k[None,:]) for k in M), np.zeros((3,3))
-              ) / (M.shape[0] - 1 or 1)
-    adps.append(tuple(cov[(0,1,2,0,0,1),(0,1,2,1,2,2)]))
-    isos.append((M**2).sum()/M.shape[0] * (8./3) * np.pi**2)
-
-  for model in hier.models()[1:]:
-    hier.remove_model(model)
+                 ).reshape(-1,3) - [means[i_atom]]
+    cov = np.dot(M.T, M) / (M.shape[0] - 1)
+    atom.set_uij(tuple(cov[(0,1,2,0,0,1),(0,1,2,1,2,2)]))
+    atom.set_b((M**2).sum()/M.shape[0] * biso_const)
 
   hier.models()[0].atoms().set_xyz(means)
 
-  for atom, adp, biso in zip(hier.models()[0].atoms(), adps, isos):
-    atom.set_uij(adp)
-    atom.set_b(biso)
+  for model in hier.models()[1:]:
+    hier.remove_model(model)
 
   print('Writing new PDB')
   hier.write_pdb_file(p.input.pdb.replace('.pdb','_adp.pdb'),
