@@ -74,7 +74,20 @@ def run(args):
   lneg  = (-l >= min(llim)) & (-l <= max(llim))
   mask &= (hpos & kpos & lpos) | (hneg & kneg & lneg)
 
+  # Invert selection
   if p.params.keep: mask = ~mask
+
+  # Radial correction
+  if p.params.subtract:
+    print('Applying radial corrections')
+    bins = arr.setup_binner(n_bins=p.params.bins)
+    func = {'min': np.min, 'mean': np.mean}[p.params.subtract]
+    for n in bins.range_all():
+      selection = bins.array_indices(n).as_numpy_array()
+      if selection.size: data[selection] -= func(data[mask][selection])
+    obj.get_column(p.input.lbl).set_values(flex.float(data))
+
+  # Apply
   remove = flex.size_t(np.where(~mask)[0])
   obj.delete_reflections(remove)
 

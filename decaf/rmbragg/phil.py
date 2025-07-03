@@ -43,6 +43,12 @@ def phil_parse(args=None):
         keep = False
           .type = bool
           .help = 'Invert selection'
+        subtract = min mean
+          .type = choice
+          .help = 'Subtract radial minimum or average'
+        bins = 50
+          .type = int
+          .help = 'Number of bins for radial subtraction'
       }
       output
         .help = "Output files"

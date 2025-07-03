@@ -3,6 +3,7 @@ from scitbx.array_family import flex
 from iotbx import mtz
 from cctbx import crystal
 from . import phil
+from scipy import stats
 import numpy as np
 
 def run(args):
@@ -37,6 +38,7 @@ def run(args):
   print('Median          :', np.median(npdata))
   print('Std. deviation  :', npdata.std())
   print('Variance        :', npdata.var())
+  print('Skewness        :', float(stats.skew(npdata)))
   print('RMS contrast    :', rmsc)
   print('Var[I]/Mean[I]^2:', spcont)
   print('Shannon entropy :', entropy)
