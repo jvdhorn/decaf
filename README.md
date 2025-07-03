@@ -79,6 +79,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `reverse` - start procedure at highest level of the hierarchy (default `True`)
 * `remove_waters` - remove all water molecules from the input (default `True`)
 * `swap_frac` - end correlation prematurely after this fraction of swaps (default `1.0`)
+* `randomize_after` - randomly swap positions of all molecules after this level (e.g. `2`)
 * `energy_percentile` - only allow swaps for which local energy exceeds this percentile (default `0.0`)
 * `single_mtz` - write MTZ file with phases after first supercell (default `False`)
 * `processes` - number of parallel simulations (default `1`, watch memory usage!)
