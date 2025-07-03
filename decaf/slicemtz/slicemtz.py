@@ -78,7 +78,12 @@ def run(args):
   if p.params.mode != 'sum':
     name += p.params.mode
   with np.errstate(all='ignore'):
-    func  = getattr(np, 'nan' + p.params.mode)
+    if p.params.mode == 'front':
+      def func(a, axis):
+        sel = np.argmax(~np.isnan(slab),axis)[(slice(None),)*axis+(None,)]
+        return np.take_along_axis(slab, sel, axis).squeeze(axis)
+    else:
+      func  = getattr(np, 'nan' + p.params.mode)
     layer = func(slab, axis=dim).T
     nans  = np.isnan(slab).all(axis=dim).T
     layer[nans] = np.nan
