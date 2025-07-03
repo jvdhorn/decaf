@@ -110,7 +110,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz_2` - second input mtz-file (can be multiple)
 * `lbl_1` - first array of interest (default `IDFF`)
 * `lbl_2` - second array of interest (default `IDFF`)
-* `mode` - use a different operator (`sub`, `add`, `mul` or `div`, default `sub`)
+* `mode` - use a different operator (`sub`, `add`, `mul`, `div` or `merge`, default `sub`)
 * `scale` - scale factor for second mtz-file (`0` for autoscale, default `1.0`)
 
 ### plotmtz
@@ -126,12 +126,14 @@ Run any of the modules without arguments to get an overview of the available par
 * `lbl_2` - second array of interest (default `IDFF`)
 * `bins` - number of resolution shells (default `10`)
 * `hlim` and `klim` and `llim` - limit h, k, and l (e.g. `"-20 20"`)
+* `resolution` - low and high resolution (e.g. `"3.6 3.4"`)
 
 ### rmbragg
 * `mtz` - input mtz-file
 * `sc_size` - supercell size (e.g. `"5 5 10"`)
 * `box` - number of voxels to remove around every Bragg position (default `"1 1 1"`)
 * `fraction` - remove this fraction of highest intensities in every box (e.g. `0.05`)
+* `subtract` - subtract common intensities in resolution shells (`mean` or `min`)
 * `keep` - invert selection (default `False`)
 
 ### mtzstats
