@@ -34,7 +34,7 @@ def run(args):
     grid    = reader.map_data().as_numpy_array()
     minimum = grid.min()
     cutoff  = (p.input.cutoff if p.input.cutoff is not None else minimum if
-               minimum == stats.mode(grid,axis=None).mode[0] else minimum - 1)
+               minimum == stats.mode(grid,axis=None).mode else minimum - 1)
     grid[grid<=cutoff] = np.nan
     x, y, z = grid.shape
     offset  = x//2, y//2, z//2
