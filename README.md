@@ -99,6 +99,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `min` and `max` - minimum and maximum values to plot
 * `autoscale` - decrease upper bound for more detail in skewed slices (default `True`)
 * `zoom` - zoom in around a given coordinate (`"[x] [y] [pad]"`, e.g. `"65 65 27"`)
+* `inset` - inset zoom around a given coordinate (`"[x] [y] [pad]"`, e.g. `"65 65 27"`)
 * `contours` - plot this many contours instead of raw values (e.g. `127`)
 * `center` - shift grid to put the corner in the center (default `False`)
 
