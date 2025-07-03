@@ -23,9 +23,8 @@ def main(args, log):
   first  = obj.crystals()[0].miller_set(False).array(obj.get_column(p.input.lbl
            ).extract_values().as_double()).resolution_filter(lores, hires)
   npdata = first.data().select(first.data() > p.input.cutoff).as_numpy_array()
-  rms    = (npdata - npdata.mean()).std()
   norm   = (npdata - npdata.min()) / (npdata.max() - npdata.min())
-  nrms   = (norm - norm.mean()).std()
+  rmsc   = norm.std()
   spcont = npdata.var() / npdata.mean() ** 2
   distr  = np.histogram(npdata, bins=p.params.bins)[0] / npdata.size
   distr  = distr[distr > 0]
@@ -38,8 +37,7 @@ def main(args, log):
   print('Median          :', np.median(npdata))
   print('Std. deviation  :', npdata.std())
   print('Variance        :', npdata.var())
-  print('RMS contrast    :', rms)
-  print('   >  normalized:', nrms)
+  print('RMS contrast    :', rmsc)
   print('Var[I]/Mean[I]^2:', spcont)
   print('Shannon entropy :', entropy)
 
