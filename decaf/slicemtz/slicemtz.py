@@ -471,7 +471,8 @@ def plot_layer(layer, mask, vmin, vmax, cmap, ang, asp, clip,
     ins    = fig.add_axes([x, y, w, h])
     ins.tick_params(left=False,right=False,top=False,bottom=False,labelleft=False,
                     labelright=False,labeltop=False,labelbottom=False)
-    plot_section(ins, layer, mask, vmin, vmax, asp, cmap, cnt, ang, inset, ext)
+    plot_section(ins, layer, mask, vmin, vmax, asp,
+                 cmap, cnt, ang, inset, ext, omap)
     # Draw rectangle
     corners = [axes_to_data(ins, xy) for xy in [(0,0),(0,1),(1,1),(1,0),(0,0)]]
     ax.plot(*zip(*corners), color='black', lw=0.5 * scale)
