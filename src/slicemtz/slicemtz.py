@@ -19,8 +19,10 @@ def main(args, log):
   p           = scope.extract().slicemtz
   print('Reading', p.input.mtz_1)
   obj     = mtz.object(p.input.mtz_1)
+  labels  = obj.column_labels()
+  label   = p.input.lbl_1 if p.input.lbl_1 in labels else labels[3]
   arr     = obj.crystals()[0].miller_set(False).array(obj.get_column(
-            p.input.lbl_1).extract_values()).expand_to_p1()
+            label).extract_values()).expand_to_p1()
   data    = arr.data().as_numpy_array()
   ind     = arr.indices().as_vec3_double().as_numpy_array().astype(int)
   offset  = abs(ind).max(axis=0)
