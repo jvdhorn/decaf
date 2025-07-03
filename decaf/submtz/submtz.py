@@ -33,11 +33,12 @@ def run(args):
 
     if p.params.scale:
       scale = p.params.scale
-    elif p.params.scale_common:
-      scale = scale_arrays(*copy.common_sets(second,
-                                             assert_is_similar_symmetry=False))
     else:
-      scale = scale_arrays(copy, second)
+      if p.params.scale_common:
+        scale = scale_arrays(*copy.common_sets(second,
+                                               assert_is_similar_symmetry=False))
+      else:
+        scale = scale_arrays(copy, second)
       print('Using scale factor', scale)
     second._data *= scale
 
