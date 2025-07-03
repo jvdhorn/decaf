@@ -114,13 +114,16 @@ def run(args):
   high = np.nanmax(layer)
   low  = np.nanmin(layer)
   if p.params.autoscale:
-    values   = layer[~nans]
-    while True:
-      mean   = np.mean(values)
-      lim    = p.params.sigma * np.std(values)
-      mask   = (values > mean - lim) & (values < mean + lim)
+    values = layer[~nans]
+    while values.size:
+      mean = np.mean(values)
+      lim  = p.params.sigma * np.std(values)
+      mask = (values > mean - lim) & (values < mean + lim)
       if mask.all(): break
-      else: values = values[mask]
+      else         : values = values[mask]
+    else:
+      mean = np.nanmean(layer)
+      lim  = p.params.sigma * np.nanstd(layer)
     high = min(high, mean + lim)
     low  = max(low, mean - lim)
 
