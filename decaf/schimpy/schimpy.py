@@ -33,7 +33,8 @@ def run(args):
                            min_level   = p.input.min_level,
                            sc_size     = p.input.sc_size,
                            seed_offset = p.input.seed,
-                           reset_b     = p.input.reset_b)
+                           reset_b     = p.input.reset_b,
+                           remove_waters = p.input.remove_waters)
 
   miller_set = miller.build_set(crystal_symmetry = manager.sc_symm,
                                 d_min            = p.params.resolution,
