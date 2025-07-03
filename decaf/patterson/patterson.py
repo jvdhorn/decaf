@@ -19,7 +19,7 @@ def run(args):
   if p.input.fill is not None and first.completeness() < 1:
     first = first.complete_array(new_data_value=p.input.fill)
 
-  if p.params.bins > 0:
+  if p.params.bins:
     print('Subtracting resolution shell means')
     data   = first.data().as_numpy_array()
     binner = first.setup_binner(n_bins=p.params.bins)
@@ -29,8 +29,14 @@ def run(args):
       data[ind == i] -= sel.mean()
     first._data = flex.double(data)
 
+  isiarray = obj.column_types()[obj.column_labels().index(p.input.lbl)] == 'J'
+  if not p.params.use_intensities and isiarray:
+    first = first.f_sq_as_f()
+  if p.params.use_intensities and not isiarray:
+    first = first.f_as_f_sq()
+
   print('Calculating Patterson')
-  patt   = first.f_sq_as_f().patterson_map(resolution_factor = 1./p.params.sample)
+  patt = first.patterson_map(resolution_factor = 1./p.params.sample)
 
   if p.params.center:
     patt._real_map = pdata = patt._real_map.as_numpy_array()
