@@ -140,6 +140,7 @@ def run(args):
   # Trim
   i, j = off2d
   ext  = [-i-0.5, i+0.5, -j-0.5, j+0.5]
+  clip = None
 
   if p.params.trim:
     notnans  = ~np.isnan(layer)
@@ -155,13 +156,12 @@ def run(args):
     mask     = mask [int(nwext[2]-ext[2]):int(nwext[3]-ext[3]) or None,
                      int(nwext[0]-ext[0]):int(nwext[1]-ext[1]) or None]
     ext      = nwext
+    clip     = []
 
   # Prepare zoom
   if p.params.zoom is not None:
     clip  = (p.params.zoom+[15])[:3]
     name += '_zoom'
-  else:
-    clip  = None
 
   # Prepare inset
   if p.params.inset is not None:
@@ -180,12 +180,6 @@ def run(args):
   bigmask = ndi.convolve(bigmask, kernel, mode='constant') // 2
   bigmask[bigmask==0] = np.nan
   mask    = bigmask
-
-  # Extract transformations
-  lens = list(cell[:3])
-  lens.pop(dim)
-  ang  = np.radians(90 - cell[3 + dim])
-  asp  = lens[1]/lens[0] * np.cos(ang)
 
   # Create custom colormap
   cmaps   = plt.colormaps()
@@ -208,6 +202,12 @@ def run(args):
     cmap  = poscmap
   elif high <= 0:
     cmap  = negcmap
+
+  # Extract transformations
+  lens = list(cell[:3])
+  lens.pop(dim)
+  ang  = np.radians(90 - cell[3 + dim])
+  asp  = lens[1]/lens[0] * np.cos(ang)
 
   # Make plot
   cnt  = p.params.contours
@@ -286,7 +286,7 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
             origin='lower', extent=ext, interpolation='none', zorder=1)
 
   # Set plot limits
-  if clip is not None:
+  if clip:
     x,y,z = clip
     if z <= 1:
       x,y = axes_to_data(ax, (x,y))
@@ -303,7 +303,9 @@ def plot_section(ax, layer, mask, vmin, vmax, asp, cmap, cnt, ang, clip, ext):
     axxy = data_to_axes(ax, mesh)
     x0,_ = axes_to_data(ax, (axxy[:,0].min(), 0.5))
     x1,_ = axes_to_data(ax, (axxy[:,0].max(), 0.5))
-    ax.set_xlim((x0-0.5, x1+0.5))
+    x0,x1= x0 - 0.5, x1 + 0.5
+    if clip is None: x0, x1 = min(x0, ext[0]), max(x1, ext[1])
+    ax.set_xlim((x0, x1))
 
   return im
 
