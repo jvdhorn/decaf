@@ -113,6 +113,7 @@ Run any of the modules without arguments to get an overview of the available par
 * `mtz` - input mtz-file
 * `lbl` - array of interest (default `IDFF`)
 * `sg` - space group for R-int (symbol or number, e.g. `P43212` or `96`)
+* `resolution` - low and high resolution (e.g. `"3.6 3.4"`)
 
 ### stimpy3d
 * `mtz` - input mtz-file
