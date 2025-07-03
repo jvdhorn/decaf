@@ -1,6 +1,6 @@
 # Whatever else
-*/log.txt
-*/*.swp
+*log.txt
+*.swp
 tests/*
 
 # Byte-compiled / optimized / DLL files
