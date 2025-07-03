@@ -1,3 +1,3 @@
 #!/bin/sh
 
-cctbx.python -m src.submtz.__init__ "$@"
+cctbx.python -m diffuse.submtz.__init__ "$@"

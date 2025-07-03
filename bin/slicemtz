@@ -1,3 +1,3 @@
 #!/bin/sh
 
-cctbx.python -m src.slicemtz.__init__ "$@"
+cctbx.python -m diffuse.slicemtz.__init__ "$@"

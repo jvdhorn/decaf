@@ -1,3 +1,3 @@
 #!/bin/sh
 
-cctbx.python -m src.stimpy.__init__ "$@"
+cctbx.python -m diffuse.stimpy.__init__ "$@"
