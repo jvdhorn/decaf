@@ -225,7 +225,7 @@ class Manager():
   def __init__(self, tls_in, pdb_in, tls_origin, mult, max_level, min_level,
                sc_size, seed_offset=0, reset_b=False, log=None):
 
-    self.log            = log
+    self.log            = open('log.txt', 'a')
     self.input_files    = tls_in
     self.pdb_in         = pdb_in
     self.origin         = tls_origin
@@ -841,6 +841,9 @@ class Model():
       del self.environments
     if hasattr(self, 'intermolecular_proxies'):
       del self.intermolecular_proxies
+    if hasattr(self, 'log'):
+      self.log.close()
+      del(self.log)
 
   def coordinates(self,fractional=False):
 
@@ -1274,8 +1277,7 @@ class Model():
     params.fmodel.b_cart   = b_cart
 
     f_model = fmodel_from_xray_structure(xray_structure = xray_structure,
-                                         params         = params,
-                                         out            = self.log)
+                                         params         = params,)
     if dump_file is not None:
       f_model.write_to_file(file_name = dump_file)
     return f_model.f_model
