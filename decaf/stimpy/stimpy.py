@@ -117,40 +117,51 @@ def filter_sigma(array, sigma=3, repeat=99):
 
 def draw_from_enw(N1, Sigma1, N2, Sigma2, mu, sigma, size):
 
-  gamma1_rvs = stats.gamma(N1, Sigma1/N1).rvs(size=size)
-  gamma2_rvs = stats.gamma(N2, Sigma2/N2).rvs(size=size)
+  gamma1_rvs = stats.gamma(N1, scale=Sigma1/N1).rvs(size=size)
+  gamma2_rvs = stats.gamma(N2, scale=Sigma2/N2).rvs(size=size)
   normal_rvs = stats.norm(mu, sigma).rvs(size=size)
 
   return gamma1_rvs + gamma2_rvs + normal_rvs
 
 def nw_stats_dual(N, data):
 
+  data = data.copy()
+  data.sort()
+
   N1   = 1
   N2   = N
   size = data.shape[0]
   mean = data.mean()
+  var  = data.var()
+  std  = data.std()
+  skew = max(0,stats.skew(data))
 
   class target(object):
-    def __init__(self, p=0.0, q=2.0):
+    def __init__(self, p=0., q=1.):
       self.p = p
       self.q = q
-    def __call__(self, (S1, S2, M, V)):
-      ks = stats.ks_2samp(
-             draw_from_enw(N1, S1, N2, S2, M, max(0,V)**.5, size),
-             data
-           ).statistic
-      mean_penalty  = abs(S1 + S2 + M - mean)
-      neg_penalty   = abs(S1)-S1 + abs(S2)-S2 + abs(M)+M + abs(V)-V
-      result        = ks + self.p * mean_penalty + self.p * neg_penalty
-      self.p       *= self.q
+    def __call__(self, (S1, S2, V)):
+      result   = 0
+      M        = mean - S1 - S2
+      for n in range(1):
+        sample   = draw_from_enw(N1, max(0,S1), N2, max(0,S2), M, max(0,V)**.5, size)
+        ks       = stats.ks_2samp(data, sample).statistic
+        mean_dev = abs(mean-sample.mean())/mean if mean else 0
+        std_dev  = abs(std-sample.std())/std if var else 0
+        skew_dev = abs(skew-stats.skew(sample))/skew if skew else 0
+        result  += ks + skew_dev + std_dev + mean_dev
+      self.p  *= self.q
       return result
-
-  init = (mean/3.,)*4
-  mthd = 'Nelder-Mead'
-  opts = {'maxfev':100000}
-  res  = optimize.minimize(target(1e-3,1.01), x0=init, method=mthd, options=opts)
-  print(res.success, res.nfev, res.fun, res.message)
-  Sigma1, Sigma2, Mu, Var = res.x
+#  init = (mean/3.,)*4
+#  mthd = 'Nelder-Mead'
+#  opts = {'maxfev':1000}
+#  res  = optimize.minimize(target(), x0=init, method=mthd, options=opts)
+#  print(res.success, res.nfev, res.fun, res.message)
+#  Sigma1, Sigma2, Mu, Var = res.x
+  res = optimize.brute(target(), (slice(0,mean,mean/10),)*3, finish=optimize.fmin)
+  print(target()(res))
+  Sigma1, Sigma2, Var = res
+  Mu  = mean - Sigma1 - Sigma2
 
   return Sigma1, Sigma2, Var, Mu
 
