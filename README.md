@@ -1,13 +1,13 @@
 A Python package for simulating diffuse scattering of X-rays in protein crystals
 
 # Requirements
-* Phenix/cctbx: runs in phenix.python (2.7.x) and depends on cctbx modules
+* Phenix/cctbx: runs in cctbx.python (2.7.x) and depends on cctbx modules
 * Numpy
 * Scipy
 * Matplotlib
 
 # Usage
-Make sure `phenix.python` is available.
+Make sure `cctbx.python` is available.
 
 Add package to `PATH` with
 ```
