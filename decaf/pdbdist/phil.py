@@ -44,7 +44,7 @@ def phil_parse(args=None):
         ensemble = *std var mean
           .type = choice
           .help = 'Ensemble treatment'
-        mode = *combine sub div add mul mean
+        mode = *combine sub div add mul
           .type = choice
           .help = 'Multiple input treatment'
       }
