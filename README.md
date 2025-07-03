@@ -57,6 +57,7 @@ Run any of the modules without arguments to get an overview of the available par
 * [`qdep`](#qdep) - Find power law for intensity decay around Bragg positions in mtz-file
 * [`pdbrad`](#pdbrad) - Estimate the size of a pdb-object
 * [`pdbdist`](#pdbdist) - Plot C-alpha distance stdev matrix for multistate pdb
+* [`ensemble2adp`](#ensemble2adp) - Convert multistate pdb to (anisotropic) ADPs
 * [`btrace`](#btrace) - Plot C-alpha B-factor trace
 
 ## Most important command-line parameters
@@ -200,6 +201,10 @@ Run any of the modules without arguments to get an overview of the available par
 * `pdb` - input multistate pdb-file (can be multiple)
 * `ensemble` - ensemble treatment (`std`, `var` or `mean`, default `std`)
 * `mode` - multiple input treatment (`combine`, `sub`, `div`, `add` or `mul`, default `combine`)
+
+### ensemble2adp
+* `pdb` - input pdb-file
+* `models` - limit number of models from the input pdb (e.g. `100`)
 
 ### btrace
 * `input` - input pdb or json (can be multiple)
