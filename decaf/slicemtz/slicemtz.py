@@ -50,6 +50,19 @@ def sigma_cutoff(a, sigma):
   return values
 
 
+def expanddiag(a):
+
+  with np.errstate(all='ignore'):
+    a      = a.copy()
+    offset = np.array(a.shape) // 2
+    ind    = np.mgrid[tuple(map(slice, a.shape))].reshape(3,-1).T - offset
+    signs  = ind // abs(ind)
+    nans   = np.isnan(a)
+    a[nans]= a[tuple((ind-signs+offset).T)][nans.ravel()]
+
+  return a
+
+
 def run(args):
 
   scope       = phil.phil_parse(args = args)
@@ -140,11 +153,12 @@ def run(args):
              ).as_numpy_array().astype(int) + offset
     valid  = (((0,0,0) <= hkl) & (hkl < grid.shape)).all(axis=1)
     layer  = np.full(hkl.shape[0], np.nan)
-    layer[valid] = grid[tuple(hkl[valid].T)]
+    layer[valid] = expanddiag(grid)[tuple(hkl[valid].T)]
     layer  = layer.reshape(z.size, -1)
     nans   = np.isnan(layer)
     cell   = (1,1,1,90,90,90)
     del xyz, hkl, valid
+    name  += '_%s'%p.params.projection
 
   # Clean up
   del grid, slab
