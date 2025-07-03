@@ -1,6 +1,6 @@
 import sys
 
-import pdbrad
+from . import pdbrad
 
 
 def main():

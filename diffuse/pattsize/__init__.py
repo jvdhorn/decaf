@@ -1,6 +1,6 @@
 import sys
 
-import pattsize
+from . import pattsize
 
 
 def main():

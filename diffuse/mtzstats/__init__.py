@@ -1,6 +1,6 @@
 import sys
 
-import mtzstats
+from . import mtzstats
 
 
 def main():

@@ -1,6 +1,6 @@
 import sys
 
-import filter_mtz
+from . import filter_mtz
 
 
 def main():

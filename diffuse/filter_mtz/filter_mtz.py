@@ -3,7 +3,7 @@ from iotbx import mtz
 from scitbx.array_family import flex
 from scipy.ndimage import gaussian_filter, uniform_filter
 import numpy as np
-import phil
+from . import phil
 
 def run(args):
 

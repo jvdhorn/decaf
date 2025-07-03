@@ -3,7 +3,7 @@ from scitbx.array_family import flex
 from iotbx import mtz
 from matplotlib import pyplot as plt
 import numpy as np
-import phil
+from . import phil
 
 def run(args):
 

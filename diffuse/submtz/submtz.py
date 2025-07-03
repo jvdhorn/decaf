@@ -2,7 +2,7 @@ from __future__ import division, print_function
 from scitbx.array_family import flex
 from iotbx import mtz
 import numpy as np
-import phil
+from . import phil
 
 def run(args):
 

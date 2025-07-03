@@ -1,6 +1,6 @@
 import sys
 
-import ccmtz
+from . import ccmtz
 
 
 def main():

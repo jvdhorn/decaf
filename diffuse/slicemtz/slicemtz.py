@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt, colors, transforms as tr
 from scipy import ndimage as ndi
 import numpy as np
 import warnings
-import phil
+from . import phil
 
 def run(args):
 

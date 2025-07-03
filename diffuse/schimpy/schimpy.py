@@ -3,8 +3,8 @@ from cctbx import miller
 import iotbx
 import sys
 import glob
-import phil
-import schimpy_classes as tls
+from . import phil
+from . import schimpy_classes as tls
 import multiprocessing as mp
 import time
 import gc

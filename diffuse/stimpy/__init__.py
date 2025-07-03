@@ -1,6 +1,6 @@
 import sys
 
-import stimpy
+from . import stimpy
 
 
 def main():

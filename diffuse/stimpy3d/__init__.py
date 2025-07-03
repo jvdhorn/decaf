@@ -1,6 +1,6 @@
 import sys
 
-import stimpy3d
+from . import stimpy3d
 
 
 def main():

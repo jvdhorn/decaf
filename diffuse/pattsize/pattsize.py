@@ -2,7 +2,7 @@ from __future__ import division, print_function
 from scitbx.array_family import flex
 from iotbx.map_manager import map_manager
 from scipy.optimize import curve_fit, minimize_scalar
-import phil
+from . import phil
 import numpy as np
 import boost_adaptbx.boost.python as bp
 import matplotlib.pyplot as plt

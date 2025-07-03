@@ -1,6 +1,6 @@
 import sys
 
-import submtz
+from . import submtz
 
 
 def main():
