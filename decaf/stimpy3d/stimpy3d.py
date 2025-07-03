@@ -16,6 +16,24 @@ def nw_stats(N, mean, var, skew):
   return (Sigma, Var, Mu)
 
 
+def nw_stats_dual(N, mean, var, skew, gain):
+
+  if skew < 0: skew = 0
+
+  def S1_from_S2(S2):
+    return np.cbrt(skew/2.*var**(3./2) - S2**3/N**2)
+
+  def target(S2):
+    S1 = S1_from_S2(S2)
+    return abs((var-S1**2-S2**2/N)-gain*(mean-S1-S2))
+
+  Sigma2 = optimize.brute(target, [slice(0,mean,mean/1000.)], finish=optimize.fmin)
+  Sigma1 = S1_from_S2(Sigma2)
+  Mu     = mean - Sigma1 - Sigma2
+  Var    = var - Sigma1**2 - Sigma2**2/N
+  return (Sigma1, Sigma2, Var, Mu)
+  
+
 def filter_sigma(array, sigma=3, repeat=99):
 
   array            = np.array(array)
@@ -45,7 +63,7 @@ def run(args):
   first = obj.crystals()[0].miller_set(False).array(obj.get_column(
           p.input.lbl).extract_values()).expand_to_p1()
   first = first.select(first.data() > p.input.cutoff)
-  d_min = first.d_spacings().data().min_max_mean().min
+  d_min = first.resolution_range()[-1]
   first.setup_binner(d_max=float('inf'), d_min=d_min, n_bins=p.input.bins)
   bins  = first.binner()
   data  = first.data().as_numpy_array()
@@ -75,8 +93,17 @@ def run(args):
       skewnorm        = stats.skewnorm(*fit)
       mean, var, skew = skewnorm.stats(moments='mvs')
       print('Fit stats: mean={:.2f}; var={:.2f}; skew={:.2f}'.format(mean, var, skew))
-    Sigma, Var, Mu  = nw_stats(p.input.N, mean, var, skew)
-    print('Noisy Wilson stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
+
+    if p.input.mode == 'continuous':
+      Sigma, Var, Mu  = nw_stats(p.input.N, mean, var, skew)
+      print('Noisy Wilson stats: Sigma={:.2f}; Var={:.2f}; Mu={:.2f}'.format(Sigma, Var, Mu))
+    elif p.input.mode == 'dual':
+      Sigma1, Sigma2, Var, Mu = nw_stats_dual(p.input.N, mean, var, skew, p.input.gain)
+      Sigma  = Sigma1 + Sigma2
+      Nequiv = Sigma ** 2 / (Sigma1 ** 2 + Sigma2 ** 2 / p.input.N) # stats.stackexchange.com/a/191912
+      print('Noisy Wilson stats: N(equiv)={:.2f} Sigma1={:.2f}; Sigma2={:.2f}; Var={:.2f}; Mu={:.2f}'.format(
+            *map(float,(Nequiv, Sigma1, Sigma2, Var, Mu))))
+
     muzerofunc      = lambda x: nw_stats(x, mean, var, skew)[-1]**2
     muzero          = optimize.minimize_scalar(muzerofunc, bounds=(0,9e9),
                                                method='bounded').x
@@ -125,9 +152,12 @@ def run(args):
 
   keep             = ~np.isnan(data)
   first            = first.select(flex.bool(keep))
-  processed_array  = first.customized_copy(data = flex.float(processed[keep]).as_double())
-  background_array = first.customized_copy(data = flex.float(background[keep]).as_double())
-  signal_array     = first.customized_copy(data = flex.float(signal[keep]).as_double())
+  processed_array  = first.customized_copy(data = flex.float(processed[keep]
+                     ).as_double()).merge_equivalents().array()
+  background_array = first.customized_copy(data = flex.float(background[keep]
+                     ).as_double()).merge_equivalents().array()
+  signal_array     = first.customized_copy(data = flex.float(signal[keep]).as_double()
+                     ).merge_equivalents().array()
 
   dataset = processed_array.as_mtz_dataset(column_root_label = p.input.lbl,
                                            column_types      = 'J')
