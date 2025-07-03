@@ -132,7 +132,7 @@ def nw_stats_dual(N, mean, var, skew, gain):
 
   def target(S2):
     S1 = S1_from_S2(S2)
-    return ((var-S1**2-S2**2/N)/(mean-S1-S2) - gain)**2
+    return abs((var-S1**2-S2**2/N)-gain*(mean-S1-S2))
 
   Sigma2 = optimize.brute(target, [slice(0,mean,mean/1000.)], finish=optimize.fmin)
   Sigma1 = S1_from_S2(Sigma2)
