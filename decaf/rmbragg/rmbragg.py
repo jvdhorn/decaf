@@ -74,6 +74,10 @@ def run(args):
   lneg  = (-l >= min(llim)) & (-l <= max(llim))
   mask &= (hpos & kpos & lpos) | (hneg & kneg & lneg)
 
+  # Limit resolution
+  hi,lo = (sorted(p.params.resolution) + [float('inf')])[:2]
+  mask &= arr.resolution_filter_selection(lo, hi).as_numpy_array()
+
   # Invert selection
   if p.params.keep: mask = ~mask
 
