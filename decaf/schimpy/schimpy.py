@@ -148,6 +148,7 @@ def model_worker(n_model):
                       pairs_frac=p.correlation.swap_frac,
                       require_both=p.correlation.require_both,
                       uncorrelate=p.correlation.uncorrelate,
+                      use_pbc=p.correlation.use_pbc,
                       percentile=p.correlation.energy_percentile,
                       skip=p.correlation.skip_levels,
                       override=p.correlation.override_weights,
