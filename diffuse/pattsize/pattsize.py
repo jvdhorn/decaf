@@ -19,7 +19,7 @@ def run(args):
   cell   = inp.unit_cell()
   data   = inp.map_data().as_numpy_array()
   lim    = data.std() * p.input.sigma
-  print('RMS cutoff:', lim)
+  print('Cutoff:', lim)
   radius = min(cell.parameters()[:3]) / 2
   xy     = []
   r      = p.input.binsize
