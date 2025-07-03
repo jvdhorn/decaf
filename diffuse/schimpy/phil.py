@@ -53,13 +53,13 @@ def phil_parse(args=None):
           .help = 'Set all B-factors to 0'
         processes = 1
           .type = int
-          .help = 'Number of simultaneous processes in paralellization'
+          .help = 'Number of parallel processes'
         seed = 0
           .type = int
           .help = 'Seed offset control (-1 for random)'
-        interval = 1
+        interval = 1.0
           .type = float
-          .help = 'Time delay (s) between initial simulations'
+          .help = 'Time delay in seconds between consecutive simulation starts'
       }
       environments
         .help = "Environment definition parameters"

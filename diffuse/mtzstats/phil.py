@@ -28,6 +28,9 @@ def phil_parse(args=None):
         sg = None
           .type = str
           .help = 'Space group symbol or number'
+        bins = 1000
+          .type = int
+          .help = 'Number of bins for calculating Shannon entropy'
       }
     }
     """)

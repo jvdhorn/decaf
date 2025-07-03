@@ -18,15 +18,16 @@ def main(args, log):
   print('Reading', p.input.mtz)
   obj    = mtz.object(p.input.mtz)
   first  = obj.crystals()[0].miller_set(False).array(obj.get_column(
-           p.input.lbl).extract_values().as_double()).expand_to_p1()
+           p.input.lbl).extract_values().as_double())
   npdata = first.data().select(first.data() > p.input.cutoff).as_numpy_array()
   rms    = (npdata - npdata.mean()).std()
   norm   = (npdata - npdata.min()) / (npdata.max() - npdata.min())
   nrms   = (norm - norm.mean()).std()
   spcont = npdata.var() / npdata.mean() ** 2
-  histo  = np.histogram(npdata, bins=1000)[0] / npdata.size
-  histo  = histo[histo > 0]
-  entropy= -sum(histo * np.log(histo))
+  distr  = np.histogram(npdata, bins=p.params.bins)[0] / npdata.size
+  distr  = distr[distr > 0]
+  entropy= -sum(distr * np.log(distr))
+  print('Number of refl. :', npdata.size)
   print('Min             :', npdata.min())
   print('Max             :', npdata.max())
   print('Mean            :', npdata.mean())
@@ -34,7 +35,7 @@ def main(args, log):
   print('RMS contrast    :', rms)
   print('   >  normalized:', nrms)
   print('Var[I]/Mean[I]^2:', spcont)
-  print('Shannon entropy :', entropy)
+  print('Shannon entropy :', entropy, '({} bins)'.format(p.params.bins))
 
   sg     = p.params.sg or str(first.space_group_info())
   symm   = crystal.symmetry(unit_cell=first.unit_cell(), space_group_symbol=sg)
