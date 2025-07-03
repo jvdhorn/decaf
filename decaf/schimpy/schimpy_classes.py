@@ -610,7 +610,8 @@ class Model():
       self.seed()
       self.replace_by_extremes(n=pick_extremes)
       if precorrelate_level:
-        self.correlate_level(precorrelate_level, swap_shifts=False)
+        swap_shifts = (extremes_from_level == precorrelate_level)
+        self.correlate_level(precorrelate_level, swap_shifts=swap_shifts)
       for chain in self.working_chains:
         chain.clear_shifts()
 
